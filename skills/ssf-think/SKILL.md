@@ -1,9 +1,9 @@
 ---
 name: ssf-think
-description: 阶段一（想）。用户输入 /ssf:think 或描述新想法/新功能时触发。用 gstack 风格的 CEO/Designer/Product 多角色反问，产出 Product Change Brief、Decision Record 和 design.md，然后进入 ssf-spec。
+description: 阶段一（想）。用户输入 /ssf-think 或描述新想法/新功能时触发。用 gstack 风格的 CEO/Designer/Product 多角色反问，产出 Product Change Brief、Decision Record 和 design.md，然后进入 ssf-spec。
 ---
 
-# ssf:think — 想清楚再动手
+# ssf-think — 想清楚再动手
 
 ## 目标
 
@@ -13,7 +13,7 @@ description: 阶段一（想）。用户输入 /ssf:think 或描述新想法/新
 
 ## 触发
 
-- 显式：`/ssf:think [idea]`
+- 显式：`/ssf-think [idea]`
 - 隐式：用户描述新产品、新功能、用户流程、MVP、体验设计、需求边界
 
 ## 输出产物
@@ -156,7 +156,7 @@ description: 阶段一（想）。用户输入 /ssf:think 或描述新想法/新
 输出后问：
 
 ```text
-design.md 确认吗？确认后进入 /ssf:spec。
+design.md 确认吗？确认后进入 /ssf-spec。
 ```
 
 ## Step 7 — 自动续接

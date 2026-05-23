@@ -1,9 +1,9 @@
 ---
 name: ssf-spec
-description: 阶段二（规）。用户输入 /ssf:spec 或由 ssf-think 续接时触发。生成 OpenSpec 风格 change contract：proposal.md、design.md、specs/*.md、tasks.md、Spec Readiness Review。
+description: 阶段二（规）。用户输入 /ssf-spec 或由 ssf-think 续接时触发。生成 OpenSpec 风格 change contract：proposal.md、design.md、specs/*.md、tasks.md、Spec Readiness Review。
 ---
 
-# ssf:spec — 写规格锁定需求
+# ssf-spec — 写规格锁定需求
 
 ## 目标
 
@@ -13,7 +13,7 @@ description: 阶段二（规）。用户输入 /ssf:spec 或由 ssf-think 续接
 
 ## 触发
 
-- 显式：`/ssf:spec [change-id]`
+- 显式：`/ssf-spec [change-id]`
 - 隐式：用户要求写规格、OpenSpec、acceptance criteria、拆任务、准备开发
 - 自动：`ssf-think` 确认后续接
 
@@ -188,7 +188,7 @@ qa/<change-id>/
 规格确认后，建议立即准备分支：
 
 ```text
-/ssf:branch [change-id] [topic]
+/ssf-branch [change-id] [topic]
 ```
 
 如果要提交规格文档，commit 必须为中文，例如：

@@ -70,4 +70,4 @@ tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 风险与回滚：
 ```
 
-不要直接提交，除非用户明确要求或当前命令是 `/ssf:commit`。
+不要直接提交，除非用户明确要求或当前命令是 `/ssf-commit`。

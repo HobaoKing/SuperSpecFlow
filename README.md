@@ -67,24 +67,26 @@ ssf-think → ssf-spec → ssf-build → ssf-review → ssf-qa → ssf-ship → 
 ### 显式调用
 
 ```text
-/ssf:think 会员续费提醒
-/ssf:spec add-membership-renewal-reminder
-/ssf:build all
-/ssf:review
-/ssf:qa add-membership-renewal-reminder
-/ssf:ship add-membership-renewal-reminder
-/ssf:archive add-membership-renewal-reminder
-/ssf:retro add-membership-renewal-reminder
+/ssf-think 会员续费提醒
+/ssf-spec add-membership-renewal-reminder
+/ssf-build all
+/ssf-review
+/ssf-qa add-membership-renewal-reminder
+/ssf-ship add-membership-renewal-reminder
+/ssf-archive add-membership-renewal-reminder
+/ssf-retro add-membership-renewal-reminder
+/ssf-decision 会员续费提醒入口放置位置
+/ssf-map add-membership-renewal-reminder
 ```
 
 Git 和 Karpathy 相关命令：
 
 ```text
-/ssf:karpathy 检查当前实现是否过度设计
-/ssf:git
-/ssf:branch add-membership-renewal-reminder 会员续费提醒
-/ssf:commit add-membership-renewal-reminder
-/ssf:pr add-membership-renewal-reminder
+/ssf-karpathy 检查当前实现是否过度设计
+/ssf-git
+/ssf-branch add-membership-renewal-reminder 会员续费提醒
+/ssf-commit add-membership-renewal-reminder
+/ssf-pr add-membership-renewal-reminder
 ```
 
 ## 核心原则
@@ -164,21 +166,21 @@ agents/
   release-manager.md
   git-steward.md
 commands/
-  ssf:think.md
-  ssf:spec.md
-  ssf:build.md
-  ssf:review.md
-  ssf:qa.md
-  ssf:ship.md
-  ssf:archive.md
-  ssf:retro.md
-  ssf:decision.md
-  ssf:map.md
-  ssf:karpathy.md
-  ssf:git.md
-  ssf:branch.md
-  ssf:commit.md
-  ssf:pr.md
+  ssf-think.md
+  ssf-spec.md
+  ssf-build.md
+  ssf-review.md
+  ssf-qa.md
+  ssf-ship.md
+  ssf-archive.md
+  ssf-retro.md
+  ssf-decision.md
+  ssf-map.md
+  ssf-karpathy.md
+  ssf-git.md
+  ssf-branch.md
+  ssf-commit.md
+  ssf-pr.md
 skills/
   ssf-think/
   ssf-spec/
@@ -192,17 +194,49 @@ skills/
   ssf-git/
 templates/
   product-change-brief.md
+  user-journey.md
   proposal.md
   spec.md
+  technical-design.md
   tasks.md
+  spec-readiness-review.md
+  implementation-plan.md
   spec-to-code-map.md
+  karpathy-preflight.md
+  karpathy-diff-audit.md
+  review-report.md
+  sync-check.md
+  git-hygiene-review.md
   acceptance-matrix.md
+  negative-test-matrix.md
   risk-matrix.md
+  regression-checklist.md
+  exploratory-test-notes.md
   qa-signoff.md
+  release-checklist.md
+  rollback-plan.md
+  monitoring-plan.md
+  ship-decision.md
+  migration-plan.md
+  dev-handoff.md
+  git-pr-gate.md
+  archive-summary.md
+  decision-record.md
+  documentation-coverage.md
+  git-pr-archive.md
+  retro.md
   commit-message.md
+  commit-gate.md
+  git-status-audit.md
   git-checklist.md
   pr-description.md
   git-hooks/commit-msg
+docs/
+  compatibility.md
+examples/
+  add-membership-renewal-reminder/
+scripts/
+  validate-pack.sh
 ```
 
 ## 设计来源

@@ -1,9 +1,9 @@
 ---
 name: ssf-git
-description: Git 工作流与中文提交规范。用户输入 /ssf:git、/ssf:branch、/ssf:commit、/ssf:pr，或要求建分支、提交、生成 PR、合并、rebase 时触发。强制分支、暂存、提交、PR 与 OpenSpec change-id/Spec ID 对齐；commit 内容必须使用中文。
+description: Git 工作流与中文提交规范。用户输入 /ssf-git、/ssf-branch、/ssf-commit、/ssf-pr，或要求建分支、提交、生成 PR、合并、rebase 时触发。强制分支、暂存、提交、PR 与 OpenSpec change-id/Spec ID 对齐；commit 内容必须使用中文。
 ---
 
-# ssf:git — Git 工作流与中文提交门禁
+# ssf-git — Git 工作流与中文提交门禁
 
 ## 目标
 
@@ -17,7 +17,7 @@ Spec ID → 任务 → 测试 → 最小实现 → 中文 commit → PR → Rele
 
 ## 触发
 
-- 显式：`/ssf:git`、`/ssf:branch <change-id>`、`/ssf:commit <change-id>`、`/ssf:pr <change-id>`
+- 显式：`/ssf-git`、`/ssf-branch <change-id>`、`/ssf-commit <change-id>`、`/ssf-pr <change-id>`
 - 隐式：用户说提交、commit、建分支、branch、PR、merge、rebase、cherry-pick、回滚、revert
 - 自动：`ssf-build` 完成一个可验证任务后建议提交；`ssf-ship` 前必须检查 Git 状态和 PR 内容
 
