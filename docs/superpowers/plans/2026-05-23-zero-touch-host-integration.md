@@ -4,9 +4,9 @@
 
 **Goal:** 让宿主项目无需修改 `CLAUDE.md` / `AGENTS.md` 即可启用 SuperSpecFlow Intake Gate，通过全局 routing 薄壳 + 项目级 `.superspecflow/enabled` sentinel 实现 opt-in。
 
-**Architecture:** 全局新增 `routing/CLAUDE.global.md` / `AGENTS.global.md` 作为薄壳，include 既有 `routing/CLAUDE.routing.md` / `AGENTS.routing.md` 主体；通过 C1（LLM 在会话首次 Bash 探测 `.superspecflow/enabled`）兜底 + C3（Claude Code SessionStart hook 注入 `<ssf-status>` 信号）加成两条腿判定 opt-in 状态；`.superspecflow/` 同时作为 SSF 自有产物归一根目录；OpenSpec 路径与既有 `install-project-symlinks.sh` 老用户路径不动；高风险关键词清单从项目根 `CLAUDE.md` 同步一段到 routing 主体（最小例外）。
+**Architecture:** 全局新增 `routing/CLAUDE.global.md` / `AGENTS.global.md` 作为薄壳，**指令式条件读取**既有 `routing/CLAUDE.routing.md` / `AGENTS.routing.md` 主体（不使用 `@` 自动 include，避免 disabled 项目被无条件注入）；通过 C1（LLM 在会话首次 Bash 探测 `.superspecflow/enabled`）兜底 + C3（Claude Code SessionStart hook 注入 `<ssf-status>` 信号）加成两条腿判定 opt-in 状态；`.superspecflow/` 同时作为 SSF 自有产物归一根目录；OpenSpec 路径与既有 `install-project-symlinks.sh` 老用户路径不动；高风险关键词清单从项目根 `CLAUDE.md` 同步一段到 routing 主体（最小例外）。
 
-**Tech Stack:** Bash（shell 脚本与 hook）、Markdown（routing / commands / docs）、bats-core（shell 测试，若仓库未安装则降级为可执行的手工断言脚本）。
+**Tech Stack:** Bash（shell 脚本与 hook）、Markdown（routing / commands / docs）、bats-core（shell 测试强依赖；不可用时先安装，不提供 fallback）。
 
 **关联 Spec:** `docs/superpowers/specs/2026-05-23-zero-touch-host-integration-design.md`
 **Change ID:** `zero-touch-host-integration`
@@ -31,9 +31,9 @@
 
 | 路径 | 责任 |
 |---|---|
-| `routing/CLAUDE.global.md` | Claude Code 全局 routing 薄壳。包含 C1 自检测前置段 + 项目级覆盖判定段 + include 既有 `CLAUDE.routing.md` |
-| `routing/AGENTS.global.md` | Codex / 其他 agent 全局 routing 薄壳，结构同上，include `AGENTS.routing.md` |
-| `scripts/hooks/session-start-detect.sh` | Claude Code SessionStart hook 脚本。检测 cwd 下 `.superspecflow/enabled` 是否存在，向 stdout 输出 `<ssf-status>enabled|disabled</ssf-status>`。任何异常都退化为 disabled |
+| `routing/CLAUDE.global.md` | Claude Code 全局 routing 薄壳。包含 C1 自检测前置段 + 项目级覆盖判定段 + **指令式条件读取**既有 `CLAUDE.routing.md`（不使用 `@` 自动 include） |
+| `routing/AGENTS.global.md` | Codex / 其他 agent 全局 routing 薄壳，结构同上，指令式条件读取 `AGENTS.routing.md` |
+| `scripts/hooks/session-start-detect.sh` | Claude Code SessionStart hook 脚本。按官方 hook 协议优先从 stdin JSON 解析 `cwd` 字段，回落 `$CLAUDE_PROJECT_DIR` 再回落 `$PWD`；检测 `.superspecflow/enabled` 是否存在；输出符合 hook 协议的 JSON（`hookSpecificOutput.additionalContext` 携带 `<ssf-status>` 标签）。任何异常都退化为 disabled 版本的合法 JSON |
 | `scripts/install-global.sh` | 全局安装脚本。检测 `~/.claude/CLAUDE.md`、`~/.codex/AGENTS.md` 是否已含 include 行，未含则打印提示；询问是否安装 hook，同意时打印应合并到 `~/.claude/settings.json` 的 JSON 片段；**不**擅自改写用户全局文件 |
 | `tests/hooks/test_session_start_detect.bats` | session-start-detect.sh 行为测试 |
 | `tests/install/test_install_global.bats` | install-global.sh 行为测试（在临时 HOME 下隔离运行） |
@@ -214,6 +214,7 @@ EOF
 
 **协议要点**（依据 Claude Code 官方 hooks 文档）：
 
+- 脚本通过 stdin 收到 JSON 输入，含 `cwd` 字段（项目根目录，权威来源）。**项目目录解析优先级**：stdin JSON 的 `cwd` → `$CLAUDE_PROJECT_DIR` → `$PWD`（最后兜底）。
 - 脚本通过 stdout 输出**单行 JSON**：
   ```json
   {"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"<ssf-status>enabled</ssf-status>"}}
@@ -273,6 +274,20 @@ extract_context() {
   [ "$ctx" = "<ssf-status>enabled</ssf-status>" ]
 }
 
+@test "stdin JSON 中的 cwd 字段优先于 CLAUDE_PROJECT_DIR 和 PWD" {
+  mkdir -p "$PROJECT/.superspecflow"
+  touch "$PROJECT/.superspecflow/enabled"
+  # PWD 与 CLAUDE_PROJECT_DIR 均指向无 sentinel 的临时目录
+  OTHER="$(ssf_make_tmp_project)"
+  cd "$OTHER"
+  payload=$(printf '{"session_id":"x","cwd":"%s","hook_event_name":"SessionStart","source":"startup"}' "$PROJECT")
+  CLAUDE_PROJECT_DIR="$OTHER" run bash -c "printf '%s' '$payload' | '$HOOK'"
+  [ "$status" -eq 0 ]
+  ctx="$(extract_context "$output")"
+  [ "$ctx" = "<ssf-status>enabled</ssf-status>" ]
+  ssf_cleanup_tmp "$OTHER"
+}
+
 @test "输出始终是符合 hook 协议的单行 JSON" {
   cd "$PROJECT"
   run "$HOOK"
@@ -300,7 +315,7 @@ extract_context() {
 bats tests/hooks/test_session_start_detect.bats
 ```
 
-预期：5 个测试 FAIL（脚本不存在）。
+预期：6 个测试 FAIL（脚本不存在）。
 
 - [ ] **Step 3: 实现 hook 脚本**
 
@@ -323,7 +338,17 @@ emit() {
 
 trap 'emit disabled' ERR
 
-project_dir="${CLAUDE_PROJECT_DIR:-$PWD}"
+# 优先级 1：stdin JSON 的 cwd（Claude Code 注入；最权威）
+stdin_cwd=""
+if [ ! -t 0 ]; then
+  # stdin 非 tty，尝试读取并解析
+  raw="$(cat 2>/dev/null)"
+  # 用 sed 提取 "cwd":"..." 字段；不依赖 jq
+  stdin_cwd="$(printf '%s' "$raw" | sed -nE 's/.*"cwd"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' | head -n1)"
+fi
+
+# 优先级 2/3：环境变量 / PWD
+project_dir="${stdin_cwd:-${CLAUDE_PROJECT_DIR:-$PWD}}"
 
 if [ ! -d "$project_dir" ]; then
   emit disabled
@@ -348,7 +373,7 @@ chmod +x scripts/hooks/session-start-detect.sh
 bats tests/hooks/test_session_start_detect.bats
 ```
 
-预期：5 PASS。
+预期：6 PASS。
 
 - [ ] **Step 5: Commit**
 
@@ -361,12 +386,12 @@ feat(scripts): 新增 SessionStart hook 探测项目级 opt-in 信号
 关联规格：docs/superpowers/specs/2026-05-23-zero-touch-host-integration-design.md（5.2 C3）
 
 变更内容：
-- 新增 scripts/hooks/session-start-detect.sh：按 Claude Code 官方 SessionStart hook 协议输出单行 JSON，additionalContext 字段携带 <ssf-status>enabled|disabled</ssf-status> 标签
+- 新增 scripts/hooks/session-start-detect.sh：按 Claude Code 官方 SessionStart hook 协议优先从 stdin JSON 解析 cwd 字段（回落 CLAUDE_PROJECT_DIR 再回落 PWD），输出 hookSpecificOutput.additionalContext 携带 <ssf-status>enabled|disabled</ssf-status> 标签的单行 JSON
 - 任何错误均退化为 disabled 版本的合法 JSON，避免会话启动报错
-- 新增 5 个 bats 测试覆盖 enabled / disabled / CLAUDE_PROJECT_DIR / 协议结构 / 异常退化
+- 新增 6 个 bats 测试覆盖 enabled / disabled / CLAUDE_PROJECT_DIR / stdin cwd 优先级 / 协议结构 / 异常退化
 
 验证方式：
-- bats tests/hooks/test_session_start_detect.bats（5 PASS）
+- bats tests/hooks/test_session_start_detect.bats（6 PASS）
 
 风险与回滚：
 - 风险：用户 settings.json 未配置该 hook 时 C3 不生效；C1 兜底仍然工作（见 Task 3）
@@ -1210,13 +1235,13 @@ cd "$TMP"
 bash <pack>/scripts/_ssf_init_apply.sh
 test -f .superspecflow/enabled && echo "OK: opt-in 信号已写入"
 
-# 验证 hook 脚本
+# 验证 hook 脚本（输出符合 Claude Code SessionStart hook JSON 协议）
 bash <pack>/scripts/hooks/session-start-detect.sh
-# 期望输出: <ssf-status>enabled</ssf-status>
+# 期望输出（单行）: {"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"<ssf-status>enabled</ssf-status>"}}
 
 cd /tmp
 bash <pack>/scripts/hooks/session-start-detect.sh
-# 期望输出: <ssf-status>disabled</ssf-status>
+# 期望输出（单行）: {"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"<ssf-status>disabled</ssf-status>"}}
 ```
 ```
 
@@ -1506,7 +1531,12 @@ teardown() {
   ssf_cleanup_tmp "$PROJECT"
 }
 
-@test "端到端：全局安装 → opt-in → hook 输出 enabled" {
+# 与 Task 2 一致：从 hook 输出 JSON 中提取 additionalContext。
+extract_context() {
+  printf '%s' "$1" | sed -nE 's/.*"additionalContext":"([^"]*)".*/\1/p'
+}
+
+@test "端到端：全局安装 → opt-in → hook additionalContext 为 enabled 标签" {
   bash "$REPO_ROOT/scripts/install-global.sh" --yes --no-hook
   [ -f "$HOME/.claude/CLAUDE.md" ]
   [ -f "$HOME/.codex/AGENTS.md" ]
@@ -1516,13 +1546,15 @@ teardown() {
   [ -f "$PROJECT/.superspecflow/enabled" ]
 
   run bash "$REPO_ROOT/scripts/hooks/session-start-detect.sh"
-  [ "$output" = "<ssf-status>enabled</ssf-status>" ]
+  ctx="$(extract_context "$output")"
+  [ "$ctx" = "<ssf-status>enabled</ssf-status>" ]
 }
 
-@test "端到端：未 opt-in 项目 → hook 输出 disabled" {
+@test "端到端：未 opt-in 项目 → hook additionalContext 为 disabled 标签" {
   cd "$PROJECT"
   run bash "$REPO_ROOT/scripts/hooks/session-start-detect.sh"
-  [ "$output" = "<ssf-status>disabled</ssf-status>" ]
+  ctx="$(extract_context "$output")"
+  [ "$ctx" = "<ssf-status>disabled</ssf-status>" ]
 }
 
 @test "端到端：opt-in 后宿主 CLAUDE.md / AGENTS.md 仍然零改动" {
