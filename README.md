@@ -1,2 +1,217 @@
 # SuperSpecFlow
-SuperSpec Flow: 以规范为基石，赋能超级开发体验。
+
+SuperSpecFlow 是一套面向 Claude Code / Codex CLI 的 AI 软件研发工作流，把 `想 → 规 → 建 → 审 → 测 → 发 → 档 → 复盘` 做成可以隐式和显式调用的研发体系。
+
+新版重点补强：
+
+- **OpenSpec 风格的 SpecOps**：需求、变更、验收、归档可追踪。
+- **Superpowers 风格的 AgentOps**：先理解、再计划、TDD、小步实现、处理 review 先验证。
+- **gstack 风格的 ReviewOps**：产品、设计、工程、QA、安全、发布多角色门禁。
+- **Karpathy 风格的 DiffOps**：编码前显式假设、简单优先、外科手术式修改、目标驱动验证。
+- **GitOps**：分支、暂存、中文 commit、PR、merge、rollback 与 change-id / Spec ID 对齐。
+
+目标不是让 AI 更会“写代码”，而是让 AI 像小型研发组织一样工作，并且每个决策、实现、测试、提交都能追踪。
+
+## 推荐安装位置
+
+项目级：
+
+```bash
+cp AGENTS.md CLAUDE.md .
+mkdir -p .claude
+cp -R agents commands skills .claude/
+```
+
+全局级：
+
+```bash
+mkdir -p ~/.claude/agents ~/.claude/commands ~/.claude/skills
+cp -R agents/* ~/.claude/agents/
+cp -R commands/* ~/.claude/commands/
+cp -R skills/* ~/.claude/skills/
+```
+
+Codex CLI 可参考 `AGENTS.md`，并把 `skills/` 复制到 `~/.codex/skills/`。
+
+可选：安装中文 commit message hook：
+
+```bash
+cp templates/git-hooks/commit-msg .git/hooks/commit-msg
+chmod +x .git/hooks/commit-msg
+```
+
+## 使用方式
+
+### 隐式调用
+
+你可以直接说：
+
+```text
+我要做一个会员续费提醒功能
+```
+
+系统应自动进入产品思考阶段：
+
+```text
+ssf-think → ssf-spec → ssf-build → ssf-review → ssf-qa → ssf-ship → ssf-archive → ssf-retro
+```
+
+如果你说：
+
+```text
+帮我提交这次改动
+```
+
+系统应自动进入 `ssf-git`，检查分支、diff、Spec ID、测试证据，并生成中文 commit。
+
+### 显式调用
+
+```text
+/ssf:think 会员续费提醒
+/ssf:spec add-membership-renewal-reminder
+/ssf:build all
+/ssf:review
+/ssf:qa add-membership-renewal-reminder
+/ssf:ship add-membership-renewal-reminder
+/ssf:archive add-membership-renewal-reminder
+/ssf:retro add-membership-renewal-reminder
+```
+
+Git 和 Karpathy 相关命令：
+
+```text
+/ssf:karpathy 检查当前实现是否过度设计
+/ssf:git
+/ssf:branch add-membership-renewal-reminder 会员续费提醒
+/ssf:commit add-membership-renewal-reminder
+/ssf:pr add-membership-renewal-reminder
+```
+
+## 核心原则
+
+1. 非平凡功能先想清楚，不直接写代码。
+2. 行为变更必须有 OpenSpec change-id。
+3. 没有 Spec ID 的行为变更不实现。
+4. 每条 requirement 至少映射一个测试。
+5. 每条 MUST NOT 至少映射一个负向测试。
+6. 高风险变更必须走 QA gate 和 release gate。
+7. 写代码前要显式说明假设、歧义和更简单方案。
+8. 修改必须外科手术式，只改必要内容，不做顺手重构。
+9. 每个可发布变更必须有 Git 分支、中文 commit、PR、回滚与监控说明。
+
+## Git 提交规范
+
+commit 内容必须是中文。
+
+推荐格式：
+
+```text
+<中文类型>(<中文范围>): <中文摘要>
+
+变更编号：<change-id>
+关联规格：<SPEC-ID-1>, <SPEC-ID-2>
+
+变更内容：
+- <中文说明>
+
+验证方式：
+- <测试命令或人工验证步骤>
+
+风险与回滚：
+- <风险和回滚方式>
+```
+
+示例：
+
+```text
+功能(会员): 增加续费提醒入口
+
+变更编号：add-membership-renewal-reminder
+关联规格：MEMBERSHIP-001
+
+变更内容：
+- 在会员中心增加续费提醒入口。
+
+验证方式：
+- 已运行 pnpm test membership。
+
+风险与回滚：
+- 可回滚该提交移除入口。
+```
+
+禁止：
+
+```text
+WIP
+update
+fix bug
+misc
+changes
+```
+
+## 包结构
+
+```text
+AGENTS.md
+CLAUDE.md
+NOTICE.md
+agents/
+  product-strategist.md
+  spec-architect.md
+  implementation-engineer.md
+  code-reviewer.md
+  qa-gatekeeper.md
+  release-manager.md
+  git-steward.md
+commands/
+  ssf:think.md
+  ssf:spec.md
+  ssf:build.md
+  ssf:review.md
+  ssf:qa.md
+  ssf:ship.md
+  ssf:archive.md
+  ssf:retro.md
+  ssf:decision.md
+  ssf:map.md
+  ssf:karpathy.md
+  ssf:git.md
+  ssf:branch.md
+  ssf:commit.md
+  ssf:pr.md
+skills/
+  ssf-think/
+  ssf-spec/
+  ssf-build/
+  ssf-review/
+  ssf-qa/
+  ssf-ship/
+  ssf-archive/
+  ssf-retro/
+  ssf-karpathy/
+  ssf-git/
+templates/
+  product-change-brief.md
+  proposal.md
+  spec.md
+  tasks.md
+  spec-to-code-map.md
+  acceptance-matrix.md
+  risk-matrix.md
+  qa-signoff.md
+  commit-message.md
+  git-checklist.md
+  pr-description.md
+  git-hooks/commit-msg
+```
+
+## 设计来源
+
+SuperSpecFlow 融合并适配了：
+
+- OpenSpec：规格驱动变更。
+- Superpowers：agentic engineering discipline。
+- gstack：多角色评审与发布门禁。
+- multica-ai/andrej-karpathy-skills：Think Before Coding、Simplicity First、Surgical Changes、Goal-Driven Execution。
+
+`ssf-karpathy` 是适配到本工作流的行为层，不是原仓库逐字复制。

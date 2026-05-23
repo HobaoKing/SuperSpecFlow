@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+MSG_FILE="$1"
+MSG="$(cat "$MSG_FILE")"
+FIRST_LINE="$(head -n 1 "$MSG_FILE")"
+
+# 必须包含中文字符。允许代码标识符、路径、Spec ID、change-id，但提交内容主体必须中文。
+if ! printf '%s' "$MSG" | grep -Eq '[一-龥]'; then
+  echo "错误：commit 内容必须包含中文。" >&2
+  exit 1
+fi
+
+# 禁止常见模糊英文提交。
+if printf '%s' "$FIRST_LINE" | grep -Eiq '^(wip|update|updates|change|changes|fix bug|misc|temp|test)$'; then
+  echo "错误：commit 标题过于模糊或为英文占位。请使用中文格式：<中文类型>(<中文范围>): <中文摘要>" >&2
+  exit 1
+fi
+
+# 推荐包含中文冒号格式。
+if ! printf '%s' "$FIRST_LINE" | grep -Eq '^[一-龥]+(\([一-龥A-Za-z0-9_-]+\))?：|^[一-龥]+(\([一-龥A-Za-z0-9_-]+\))?:'; then
+  echo "提示：建议使用格式：<中文类型>(<中文范围>): <中文摘要>" >&2
+fi
