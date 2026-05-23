@@ -5,19 +5,28 @@ MSG_FILE="$1"
 MSG="$(cat "$MSG_FILE")"
 FIRST_LINE="$(head -n 1 "$MSG_FILE")"
 
-# 必须包含中文字符。允许代码标识符、路径、Spec ID、change-id，但提交内容主体必须中文。
+# commit 摘要与正文必须包含中文。允许代码标识符、路径、命令、Spec ID、change-id 等以英文出现。
 if ! printf '%s' "$MSG" | grep -Eq '[一-龥]'; then
-  echo "错误：commit 内容必须包含中文。" >&2
+  echo "错误：commit 摘要与正文必须包含中文。" >&2
   exit 1
 fi
 
-# 禁止常见模糊英文提交。
-if printf '%s' "$FIRST_LINE" | grep -Eiq '^(wip|update|updates|change|changes|fix bug|misc|temp|test)$'; then
-  echo "错误：commit 标题过于模糊或为英文占位。请使用中文格式：<中文类型>(<中文范围>): <中文摘要>" >&2
+# 禁止常见模糊英文占位标题。
+if printf '%s' "$FIRST_LINE" | grep -Eiq '^(wip|update|updates|change|changes|fix bug|misc|temp)$'; then
+  echo "错误：commit 标题过于模糊。请使用格式：<英文类型>(<英文范围>): <中文摘要>" >&2
   exit 1
 fi
 
-# 推荐包含中文冒号格式。
-if ! printf '%s' "$FIRST_LINE" | grep -Eq '^[一-龥]+(\([一-龥A-Za-z0-9_-]+\))?：|^[一-龥]+(\([一-龥A-Za-z0-9_-]+\))?:'; then
-  echo "提示：建议使用格式：<中文类型>(<中文范围>): <中文摘要>" >&2
+# 标题必须符合 <英文类型>(<英文范围>): <中文摘要> 规范。
+# - 英文类型：conventional commits 标准 + 项目定制 spec
+# - 英文范围：可选；若提供，必须为 <根模块> 或 <根模块>:<业务子模块>，使用小写英文 kebab-case
+# - 中文摘要：必须包含至少一个中文字符
+TYPE_RE='(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|spec)'
+SCOPE_RE='\([a-z0-9][a-z0-9:_-]*\)'
+if ! printf '%s' "$FIRST_LINE" | grep -Eq "^${TYPE_RE}(${SCOPE_RE})?: .*[一-龥]"; then
+  echo "错误：commit 标题必须符合 <英文类型>(<英文范围>): <中文摘要> 格式。" >&2
+  echo "  允许的类型：feat / fix / docs / style / refactor / perf / test / build / ci / chore / revert / spec" >&2
+  echo "  范围采用 <根模块> 或 <根模块>:<业务子模块>，使用小写英文 kebab-case" >&2
+  echo "  示例：feat(skills:members): 增加续费提醒入口" >&2
+  exit 1
 fi

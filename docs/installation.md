@@ -22,7 +22,7 @@ SuperSpecFlow 集成的是多套研发方法，不是把它们都作为应用运
 | Superpowers | 先理解、再计划、TDD、小步实现、验证、处理 review 先验证 | 可选增强；如果用户已安装 Superpowers，SuperSpecFlow 与其纪律兼容；未安装也可使用本包内 `ssf-*` skills |
 | gstack | 产品、设计、工程、QA、安全、发布多角色门禁 | 通过 `agents/` 和 `skills/` 表达，不需要额外依赖 |
 | Karpathy skills | 编码前暴露假设、简单优先、外科手术式修改、目标驱动验证 | 已适配为 `skills/ssf-karpathy`，不是原仓库逐字复制 |
-| GitOps | 分支、暂存、中文 commit、PR、回滚与 Spec ID 对齐 | 使用宿主项目自己的 Git；可选安装 commit hook |
+| GitOps | 分支、暂存、commit（英文类型 + 中文正文）、PR、回滚与 Spec ID 对齐 | 使用宿主项目自己的 Git；可选安装 commit hook |
 
 ## 2. 推荐安装：软连接入
 
@@ -117,7 +117,7 @@ ln -sfn <SuperSpecFlow>/templates <project>/.superspecflow/templates
 
 ## 5. 可选安装项
 
-### 5.1 中文 commit hook
+### 5.1 commit message hook
 
 在宿主项目中执行：
 
@@ -126,7 +126,7 @@ cp templates/git-hooks/commit-msg .git/hooks/commit-msg
 chmod +x .git/hooks/commit-msg
 ```
 
-该 hook 只检查 commit message 是否符合中文提交底线，不替代 `ssf-git` 的 change-id / Spec ID / 验证证据门禁。
+该 hook 只检查 commit message 是否符合 `<英文类型>(<英文范围>): <中文摘要>` 标题规范与中文正文底线，不替代 `ssf-git` 的 change-id / Spec ID / 验证证据门禁。
 
 ### 5.2 Superpowers
 

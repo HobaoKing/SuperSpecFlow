@@ -8,7 +8,7 @@ SuperSpecFlow 是一套面向 Claude Code / Codex CLI 的 AI 软件研发工作�
 - **Superpowers 风格的 AgentOps**：先理解、再计划、TDD、小步实现、处理 review 先验证。
 - **gstack 风格的 ReviewOps**：产品、设计、工程、QA、安全、发布多角色门禁。
 - **Karpathy 风格的 DiffOps**：编码前显式假设、简单优先、外科手术式修改、目标驱动验证。
-- **GitOps**：分支、暂存、中文 commit、PR、merge、rollback 与 change-id / Spec ID 对齐。
+- **GitOps**：分支、暂存、commit（英文类型 + 中文正文）、PR、merge、rollback 与 change-id / Spec ID 对齐。
 
 目标不是让 AI 更会“写代码”，而是让 AI 像小型研发组织一样工作，并且每个决策、实现、测试、提交都能追踪。
 
@@ -37,7 +37,7 @@ cp -R skills/* ~/.claude/skills/
 
 Codex CLI 可把 `skills/` 复制到 `~/.codex/skills/`，并在宿主项目中软连 `.superspecflow/AGENTS.routing.md`。如果宿主项目没有 `AGENTS.md`，可以新建一个只包含项目自身约束和极薄入口的文件。
 
-可选：安装中文 commit message hook：
+可选：安装 commit message hook（校验 `<英文类型>(<英文范围>): <中文摘要>` 标题与中文正文底线）：
 
 ```bash
 cp templates/git-hooks/commit-msg .git/hooks/commit-msg
@@ -66,7 +66,7 @@ ssf-think → ssf-spec → ssf-build → ssf-review → ssf-qa → ssf-ship → 
 帮我提交这次改动
 ```
 
-系统应自动进入 `ssf-git`，检查分支、diff、Spec ID、测试证据，并生成中文 commit。
+系统应自动进入 `ssf-git`，检查分支、diff、Spec ID、测试证据，并生成符合规范的 commit（英文类型 + 英文范围 + 中文摘要，中文正文）。
 
 ### 显式调用
 
@@ -103,16 +103,16 @@ Git 和 Karpathy 相关命令：
 6. 高风险变更必须走 QA gate 和 release gate。
 7. 写代码前要显式说明假设、歧义和更简单方案。
 8. 修改必须外科手术式，只改必要内容，不做顺手重构。
-9. 每个可发布变更必须有 Git 分支、中文 commit、PR、回滚与监控说明。
+9. 每个可发布变更必须有 Git 分支、符合规范的 commit（英文类型 + 英文范围 + 中文摘要 + 中文正文）、PR、回滚与监控说明。
 
 ## Git 提交规范
 
-commit 内容必须是中文。
+commit 标题的类型与范围使用英文标识符（conventional commits），摘要、正文必须使用中文。
 
 推荐格式：
 
 ```text
-<中文类型>(<中文范围>): <中文摘要>
+<英文类型>(<英文范围>): <中文摘要>
 
 变更编号：<change-id>
 关联规格：<SPEC-ID-1>, <SPEC-ID-2>
@@ -127,10 +127,15 @@ commit 内容必须是中文。
 - <风险和回滚方式>
 ```
 
+字段约束：
+
+- `英文类型`：`feat / fix / docs / style / refactor / perf / test / build / ci / chore / revert / spec`。
+- `英文范围`：`<根模块>` 或 `<根模块>:<业务子模块>`。根模块取自仓库根目录划分（`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`examples`、`meta`），业务子模块使用小写英文 kebab-case。
+
 示例：
 
 ```text
-功能(会员): 增加续费提醒入口
+feat(skills:members): 增加续费提醒入口
 
 变更编号：add-membership-renewal-reminder
 关联规格：MEMBERSHIP-001
