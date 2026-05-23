@@ -1,9 +1,9 @@
 ---
 name: ssf-ship
-description: 阶段五（发）。用户输入 /ssf:ship 或由 ssf-qa 续接时触发。检查 QA signoff、release blockers、rollback、monitoring、PR 描述，给出 ship/no-ship。
+description: 阶段五（发）。用户输入 /ssf-ship 或由 ssf-qa 续接时触发。检查 QA signoff、release blockers、rollback、monitoring、PR 描述，给出 ship/no-ship。
 ---
 
-# ssf:ship — 发布门禁
+# ssf-ship — 发布门禁
 
 ## 目标
 
@@ -13,7 +13,7 @@ description: 阶段五（发）。用户输入 /ssf:ship 或由 ssf-qa 续接时
 
 ## 触发
 
-- 显式：`/ssf:ship [change-id]`
+- 显式：`/ssf-ship [change-id]`
 - 隐式：用户说 ship、deploy、release、merge、上线、发版、PR 描述
 - 自动：`ssf-qa` 推荐 Ship 后续接
 

@@ -1,9 +1,9 @@
 ---
 name: ssf-archive
-description: 阶段六（档）。用户输入 /ssf:archive 或由 ssf-ship 续接时触发。归档 OpenSpec change、同步文档、更新 decision ledger，并用 Diataxis 检查文档缺口。
+description: 阶段六（档）。用户输入 /ssf-archive 或由 ssf-ship 续接时触发。归档 OpenSpec change、同步文档、更新 decision ledger，并用 Diataxis 检查文档缺口。
 ---
 
-# ssf:archive — 归档与组织记忆
+# ssf-archive — 归档与组织记忆
 
 ## 目标
 
@@ -13,7 +13,7 @@ description: 阶段六（档）。用户输入 /ssf:archive 或由 ssf-ship 续�
 
 ## 触发
 
-- 显式：`/ssf:archive [change-id]`
+- 显式：`/ssf-archive [change-id]`
 - 隐式：用户要求归档、更新文档、整理本次变更
 - 自动：`ssf-ship` 确认后续接
 
@@ -93,7 +93,7 @@ openspec/changes/[change-id]
 
 ```text
 ✅ [change-id] cycle complete.
-下一步：/ssf:retro 或 /ssf:think [next idea]
+下一步：/ssf-retro 或 /ssf-think [next idea]
 ```
 
 ## Step 6 — Git / PR Archive

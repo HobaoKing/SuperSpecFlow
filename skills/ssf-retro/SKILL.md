@@ -1,9 +1,9 @@
 ---
 name: ssf-retro
-description: 复盘。用户输入 /ssf:retro 时触发。复盘本轮 SuperSpecFlow，检查产品、规格、开发、测试、发布各阶段的流程质量，输出可执行改进。
+description: 复盘。用户输入 /ssf-retro 时触发。复盘本轮 SuperSpecFlow，检查产品、规格、开发、测试、发布各阶段的流程质量，输出可执行改进。
 ---
 
-# ssf:retro — 复盘
+# ssf-retro — 复盘
 
 ## 目标
 
@@ -11,7 +11,7 @@ description: 复盘。用户输入 /ssf:retro 时触发。复盘本轮 SuperSpec
 
 ## 触发
 
-`/ssf:retro [change-id]`
+`/ssf-retro [change-id]`
 
 ## Step 1 — Cycle Review
 
