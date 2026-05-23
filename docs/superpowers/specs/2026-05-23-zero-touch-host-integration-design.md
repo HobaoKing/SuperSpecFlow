@@ -20,7 +20,7 @@ SuperSpecFlow 当前的接入方式（`scripts/install-project-symlinks.sh` + �
 
 1. 宿主项目 `CLAUDE.md` / `AGENTS.md` 零改动即可启用 SuperSpecFlow。
 2. 单次全局安装，对所有项目可用；但项目级仍需显式 opt-in，未 opt-in 项目不被自然语言接管。
-3. SSF 自有产物（decisions、retro、qa、reviews、karpathy、maps、ship）归一到 `.superspecflow/` 下。
+3. 为 SSF 自有产物（decisions、retro、qa、reviews、karpathy、maps、ship）**预留**统一目录骨架于 `.superspecflow/` 下；**本 spec 不迁移**任何 ssf-* skills / agents / commands 中既有的 artifact 输出路径（如 `engineering/<change-id>/`、`qa/<change-id>/`），迁移工作明确留作独立 future change（见 §10）。
 4. 兼容现有"软链 + 项目级 @入口"用户，老用户行为不变。
 5. 兼容 OpenSpec 既有目录 `openspec/changes/<id>/`，不破坏外部工具假设。
 
@@ -31,6 +31,7 @@ SuperSpecFlow 当前的接入方式（`scripts/install-project-symlinks.sh` + �
 3. 不在本 spec 设计 plan → code 之间的进度持久化协议（留作 `progress-tracking` change）。
 4. 不在本 spec 设计 Claude ↔ Codex 跨 CLI 互验协议（留作 `cross-agent-verification` change）。
 5. 不实现把外部用户的 `~/.claude/CLAUDE.md`、`~/.claude/settings.json` 强制覆盖的脚本；只做检测与提示。
+6. **不迁移**任何 ssf-* skills / agents / commands 中既有的 artifact 输出路径（如 `engineering/<change-id>/spec-to-code-map.md`、`qa/<change-id>/...`）到 `.superspecflow/` 下；本 spec 只建空骨架，迁移留作 `artifact-path-migration` future change。
 
 ## 3. 关键决策
 
@@ -266,3 +267,4 @@ SSF 状态 = enabled ?
 |---|---|---|
 | `progress-tracking` | plan → code 之间的进度档案、测试进度、中断恢复协议 | 本 spec 的 `.superspecflow/progress/` 占位 |
 | `cross-agent-verification` | Claude ↔ Codex 双签 / 互验门禁、共识协议 | `progress-tracking` |
+| `artifact-path-migration` | 将既有 ssf-* skills / agents / commands 的 artifact 输出路径（`engineering/<change-id>/`、`qa/<change-id>/` 等）迁移到 `.superspecflow/` 下对应子目录；改一批 skills / agents / commands 文本；提供旧路径回退期 | 本 spec 的 `.superspecflow/{decisions,retro,qa,reviews,karpathy,maps,ship}/` 骨架 |
