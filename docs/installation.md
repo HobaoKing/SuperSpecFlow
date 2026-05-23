@@ -24,7 +24,15 @@ SuperSpecFlow 集成的是多套研发方法，不是把它们都作为应用运
 | Karpathy skills | 编码前暴露假设、简单优先、外科手术式修改、目标驱动验证 | 已适配为 `skills/ssf-karpathy`，不是原仓库逐字复制 |
 | GitOps | 分支、暂存、commit（英文类型 + 中文正文）、PR、回滚与 Spec ID 对齐 | 使用宿主项目自己的 Git；可选安装 commit hook |
 
-## 2. 推荐安装：软连接入
+## 2. 版本控制边界
+
+SuperSpecFlow 仓库自身只提交工作流包源码和 OpenSpec 变更契约。`openspec/` 是本仓库行为规则变更的可追踪 contract，应随对应 change-id 提交；不要把它和运行时产物一起忽略。
+
+不要在 SuperSpecFlow 仓库提交本地 workflow 运行时、安装副本或缓存产物，例如 `superpowers/`、`.superspecflow/`、`.claude/`、`.codex/` 和 `.DS_Store`。这些产物可能由外部工具、本机安装或 agent 会话生成，应留在本地或重新生成。
+
+宿主业务项目的规则不同：如果宿主项目采用 OpenSpec 管理需求，其项目内 `openspec/` 应正常提交；如果团队选择 repo 内 opt-in，`.superspecflow/` 中的 routing 接入文件是否提交由宿主项目约定决定，但不要提交本机缓存、日志、工具安装副本或外部 `superpowers/` 运行产物。
+
+## 3. 推荐安装：软连接入
 
 软连安装让宿主项目引用 SuperSpecFlow 的集中路由和能力文件。升级 SuperSpecFlow 后，宿主项目不需要手动同步大段文本。
 
@@ -71,11 +79,11 @@ SuperSpecFlow 集成的是多套研发方法，不是把它们都作为应用运
 
 `/ssf-init` 是项目初始化动作：它创建 `.superspecflow/` 软链并提示添加 `@./.superspecflow/*.routing.md`。其他 `/ssf-*` 命令只是一次性调用，不会自动创建 `.superspecflow/`。
 
-## 3. Claude Code 安装
+## 4. Claude Code 安装
 
-### 3.1 项目级安装
+### 4.1 项目级安装
 
-优先使用第 2 节的软连脚本。
+优先使用第 3 节的软连脚本。
 
 如果团队不允许 symlink，可以复制能力文件，但仍不要覆盖宿主项目指令文件：
 
@@ -89,7 +97,7 @@ cp -R routing templates <project>/.superspecflow/
 
 不要执行覆盖式命令，例如把 SuperSpecFlow 根目录的 `AGENTS.md` 或 `CLAUDE.md` 直接复制到宿主项目根目录。
 
-### 3.2 全局安装
+### 4.2 全局安装
 
 ```bash
 ./update.sh
@@ -105,7 +113,7 @@ cp -R routing templates <project>/.superspecflow/
 
 该选项会在完成全局安装后调用项目初始化流程，为指定项目创建 `.superspecflow/` 软链，但仍不会覆盖宿主项目 `AGENTS.md` 或 `CLAUDE.md`。
 
-## 4. Codex CLI 安装
+## 5. Codex CLI 安装
 
 推荐全局安装 skills：
 
@@ -124,9 +132,9 @@ ln -sfn <SuperSpecFlow>/templates <project>/.superspecflow/templates
 
 再在宿主项目 `AGENTS.md` 中加入 `@./.superspecflow/AGENTS.routing.md`。如果宿主项目没有 `AGENTS.md`，可以新建一个，但内容应包含宿主项目自身约束和该 include。不要把 SuperSpecFlow 仓库根目录的 `AGENTS.md` 当作宿主项目完整替代品。
 
-## 5. 可选安装项
+## 6. 可选安装项
 
-### 5.1 commit message hook
+### 6.1 commit message hook
 
 在宿主项目中执行：
 
@@ -137,11 +145,11 @@ chmod +x .git/hooks/commit-msg
 
 该 hook 只检查 commit message 是否符合 `<英文类型>(<英文范围>): <中文摘要>` 标题规范与中文正文底线，不替代 `ssf-git` 的 change-id / Spec ID / 验证证据门禁。
 
-### 5.2 Superpowers
+### 6.2 Superpowers
 
 如果用户希望同时使用 Superpowers 原生 skills，可按 Superpowers 自身说明安装。SuperSpecFlow 不假设它一定存在；本包已经把必要纪律体现在 `ssf-think`、`ssf-build`、`ssf-review`、`ssf-karpathy` 等 skills 中。
 
-### 5.3 OpenSpec 目录
+### 6.3 OpenSpec 目录
 
 宿主项目第一次进入 `ssf-spec` 时，可以创建：
 
@@ -156,9 +164,9 @@ openspec/changes/<change-id>/
 
 如果宿主项目已有 OpenSpec 目录，沿用现有目录结构，不要移动或重写已有 change。
 
-## 6. 安装后烟测
+## 7. 安装后烟测
 
-### 6.1 软连检查
+### 7.1 软连检查
 
 在宿主项目中执行：
 
@@ -169,7 +177,7 @@ ls -l .claude/skills | grep ssf-
 
 期望：`.superspecflow/*.routing.md`、`.superspecflow/templates` 和 `.claude/skills/ssf-*` 指向 SuperSpecFlow 仓库。
 
-### 6.2 Intake Gate
+### 7.2 Intake Gate
 
 输入：
 
@@ -187,7 +195,7 @@ ls -l .claude/skills | grep ssf-
 
 期望：进入 Intake Gate，判定为高风险非平凡行为变更，然后进入 `ssf-think`，不得直接写代码。
 
-### 6.3 显式命令
+### 7.3 显式命令
 
 输入：
 
@@ -197,7 +205,7 @@ ls -l .claude/skills | grep ssf-
 
 期望：进入产品思考阶段，输出问题、用户路径、non-goals、success metrics，并准备 OpenSpec proposal 输入。
 
-### 6.4 Pack 自检
+### 7.4 Pack 自检
 
 在 SuperSpecFlow 仓库中运行：
 
@@ -207,7 +215,7 @@ ls -l .claude/skills | grep ssf-
 
 期望：检查通过，且不会出现旧冒号命令、`hw` 旧前缀、冒号文件名或覆盖宿主指令文件的安装说明。
 
-## 7. 升级流程
+## 8. 升级流程
 
 升级 SuperSpecFlow 时：
 
@@ -217,7 +225,7 @@ ls -l .claude/skills | grep ssf-
 4. 运行宿主项目自己的测试和 SuperSpecFlow pack 自检。
 5. 不自动覆盖宿主项目已有 `AGENTS.md` / `CLAUDE.md`。
 
-## 8. 卸载流程
+## 9. 卸载流程
 
 项目级卸载：
 
