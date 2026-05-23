@@ -38,7 +38,7 @@ SuperSpecFlow 当前的接入方式（`scripts/install-project-symlinks.sh` + �
 | 编号 | 决策 | 选项 | 选定 | 理由 |
 |---|---|---|---|---|
 | D-1 | 项目 opt-in 信号载体 | LLM 自检测 / sentinel + 上下文信号 / Claude Code hook | LLM 自检测 (C1) 兜底 + Claude Code SessionStart hook (C3) 加成 | C1 是最低公分母覆盖所有 agent；C3 在 Claude Code 里做到真自动化 |
-| D-2 | 全局 routing 文件组织 | 新文件直写 / 现有文件双模式 / 全局薄壳 include 现有 routing | 全局薄壳 + include (D3) | 主体 routing 仍是单一事实源，全局只套自检测闸门 |
+| D-2 | 全局 routing 文件组织 | 新文件直写 / 现有文件双模式 / 全局薄壳指令式条件读取现有 routing | 全局薄壳 + 指令式条件读取 (D3) | 主体 routing 仍是单一事实源；薄壳不使用 `@` 自动 include（会破坏 disabled 项目"不接管自然语言"承诺），改为指令 LLM 仅在 enabled 时主动用 Read 工具读取 |
 | D-3 | `.superspecflow/` 内容形态 | 纯 sentinel / sentinel + 可选覆盖 / 维持现有软链全套 | sentinel + 可选覆盖 (E2) | 默认零维护；少数项目可放项目级 routing 覆盖文件 |
 | D-4 | SSF 产物目录归一范围 | 全部强收（含 OpenSpec、Superpowers） / 仅收 SSF 自有产物 / 门面式间接 | 仅收 SSF 自有产物 (G2) | OpenSpec 留根目录兼容外部工具；Superpowers 是别人的工具不越权 |
 
@@ -88,7 +88,7 @@ SuperSpecFlow 当前的接入方式（`scripts/install-project-symlinks.sh` + �
    - 列出 `/ssf-*` 命令，强调这些命令与是否 opt-in 无关，永远可调用。
 
 3. **项目级覆盖判定段**：
-   - 指示 LLM 优先读取 `.superspecflow/CLAUDE.routing.md`（若存在）作为 routing 主体；否则回落到下一步的默认 include。
+   - 指示 LLM 优先读取 `.superspecflow/CLAUDE.routing.md`（若存在）作为 routing 主体；否则回落到下一步的指令式条件读取。
 
 4. **默认 routing 指令段**：
    - **不**使用 `@<repo>/routing/CLAUDE.routing.md` 这种自动展开 include 写法（因为 `@` 在任何会话都会被无条件解析，破坏 SSF 状态 = disabled 时"不接管自然语言"的承诺）。
@@ -121,8 +121,11 @@ SuperSpecFlow 当前的接入方式（`scripts/install-project-symlinks.sh` + �
 
 新增脚本 `scripts/hooks/session-start-detect.sh`：
 
-- 读取 `$CLAUDE_PROJECT_DIR` 或退化使用 `pwd`。
-- 检测 `.superspecflow/enabled` 是否存在，决定状态值为 `enabled` 或 `disabled`。
+- **项目目录解析优先级**（依据 Claude Code 官方 hook 协议，stdin 会接收包含 `cwd` 字段的 JSON）：
+  1. 解析 stdin JSON 中的 `cwd` 字段（最权威，由 Claude Code 注入）
+  2. 若 stdin 不可用或 JSON 解析失败，回落到 `$CLAUDE_PROJECT_DIR`
+  3. 最后回落到 `$PWD`（兜底，不保证准确）
+- 检测解析出的项目目录下 `.superspecflow/enabled` 是否存在，决定状态值为 `enabled` 或 `disabled`。
 - 输出**符合 Claude Code SessionStart hook 协议**的单行 JSON（不是裸 `<ssf-status>` 标签），结构：
 
   ```json
@@ -193,8 +196,8 @@ Claude Code 启动会话 (或 Codex / 其他 agent)
 [C1 路径] 全局 routing 文件指令 LLM 跑 test -f .superspecflow/enabled
     ↓
 SSF 状态 = enabled ?
-├─ yes → 读取 .superspecflow/CLAUDE.routing.md (若存在) 否则 @<repo>/routing/CLAUDE.routing.md → 执行完整 Intake Gate
-└─ no  → 仅暴露 /ssf-* 显式命令；自然语言按 LLM 默认行为响应
+├─ yes → 用 Read 工具读取 .superspecflow/CLAUDE.routing.md (若存在) 否则用 Read 工具读取 <repo>/routing/CLAUDE.routing.md → 执行完整 Intake Gate
+└─ no  → 不读取任何 routing 主体；仅暴露 /ssf-* 显式命令；自然语言按 LLM 默认行为响应
 ```
 
 ## 7. 风险与对策
