@@ -6,7 +6,7 @@
 - **Superpowers 风格**：执行时先理解、再计划、再测试、再实现、再验证。
 - **gstack 风格**：通过产品、设计、工程、QA、安全、发布角色做门禁审查。
 - **Karpathy 风格**：编码前暴露假设，简单优先，外科手术式修改，目标驱动验证。
-- **GitOps 风格**：分支、暂存、中文 commit、PR、回滚与 change-id / Spec ID 对齐。
+- **GitOps 风格**：分支、暂存、commit（英文类型 + 中文正文）、PR、回滚与 change-id / Spec ID 对齐。
 
 ## 0. 全局原则
 
@@ -261,7 +261,7 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 - rollback-plan.md
 - monitoring-plan.md
 - negative tests
-- 中文 commit 与中文 PR
+- 符合规范的 commit（英文类型 + 英文范围 + 中文摘要 + 中文正文）与符合规范的 PR
 
 ## 4. Spec-to-Code Rule
 
@@ -283,7 +283,7 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 提交格式：
 
 ```text
-<中文类型>(<中文范围>): <中文摘要>
+<英文类型>(<英文范围>): <中文摘要>
 
 变更编号：<change-id>
 关联规格：<SPEC-ID-1>, <SPEC-ID-2>
@@ -298,7 +298,9 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 - <风险和回滚方式>
 ```
 
-推荐中文类型：规格、功能、修复、测试、重构、文档、质量、性能、安全、配置、构建、发布、回滚。
+允许的英文类型：`feat / fix / docs / style / refactor / perf / test / build / ci / chore / revert / spec`。
+
+英文范围使用 `<根模块>` 或 `<根模块>:<业务子模块>` 形式。根模块取自仓库根目录划分（`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`examples`、`meta`），业务子模块使用小写英文 kebab-case。
 
 ## 7. Completion Criteria
 
@@ -311,6 +313,6 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 - review 无 🔴
 - QA signoff 存在
 - release blockers 已解决或显式豁免
-- Git 分支清晰，commit 内容为中文
-- PR 描述为中文，包含测试、风险、回滚、QA
+- Git 分支清晰，commit 标题符合 `<英文类型>(<英文范围>): <中文摘要>` 规范，正文中文
+- PR 标题遵循同样规范，PR 正文为中文，包含测试、风险、回滚、QA
 - archive / decision ledger 已更新

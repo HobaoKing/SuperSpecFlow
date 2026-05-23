@@ -12,7 +12,7 @@
 - `skills/ssf-review`：工程和代码审查
 - `skills/ssf-qa`：验收、风险、回归测试
 - `skills/ssf-ship`：发版门禁
-- `skills/ssf-git`：分支、暂存、中文 commit、PR、回滚
+- `skills/ssf-git`：分支、暂存、commit（英文类型 + 中文正文）、PR、回滚
 - `skills/ssf-karpathy`：编码前思考、简单优先、外科手术式修改、目标驱动验证
 - `skills/ssf-archive`：归档和文档同步
 - `skills/ssf-retro`：复盘
@@ -27,8 +27,8 @@
 6. Review 反馈必须先验证事实，再判断是否采纳。
 7. QA 不只测 happy path，必须包含负向和回归路径。
 8. 发布必须有 rollback / monitoring 意识。
-9. 所有 commit 内容必须是中文。
-10. 所有 PR 标题和正文必须是中文。
+9. commit 标题的类型与范围使用英文标识符（conventional commits），摘要、正文、字段名、说明全部使用中文。
+10. 所有 PR 标题（中文摘要部分）和正文必须是中文。
 
 ## Karpathy 编码纪律
 
@@ -68,8 +68,15 @@
 commit 标题格式：
 
 ```text
-<中文类型>(<中文范围>): <中文摘要>
+<英文类型>(<英文范围>): <中文摘要>
 ```
+
+- `英文类型`：使用 conventional commits 标准集合（见下）。
+- `英文范围`：必须采用 `<根模块>` 或 `<根模块>:<业务子模块>` 的形式。
+  - 根模块取自仓库根目录划分：`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`examples`、`meta`（用于 `CLAUDE.md`、`README.md` 等根级文档）。
+  - 业务子模块按本次改动实际涉及的业务模块填写，使用小写英文 kebab-case，例如 `members`、`payment`、`auth`。
+  - 示例：`feat(skills:members): 增加续费提醒入口`、`fix(routing:payment): 修复重试状态不一致`。
+- `中文摘要`：必须是中文。
 
 commit 正文格式：
 
@@ -87,7 +94,22 @@ commit 正文格式：
 - <主要风险和回滚方式>
 ```
 
-推荐中文类型：规格、功能、修复、测试、重构、文档、质量、性能、安全、配置、构建、发布、回滚。
+允许的英文类型（conventional commits 标准 + 项目定制 `spec`）：
+
+| 类型 | 用途 |
+|---|---|
+| feat | 新功能或新增行为 |
+| fix | 缺陷修复 |
+| docs | README、说明、runbook、用户文档 |
+| style | 不影响语义的格式调整 |
+| refactor | 不改变行为的结构调整 |
+| perf | 性能优化 |
+| test | 单测、集成测试、E2E、负向测试 |
+| build | 构建脚本、依赖、工具链 |
+| ci | CI 配置 |
+| chore | 杂项维护 |
+| revert | 回滚提交 |
+| spec | OpenSpec、需求、验收标准、任务（项目定制） |
 
 禁止使用：
 
@@ -168,6 +190,6 @@ Intake Gate 分类：
 - 相关测试通过或未运行原因明确
 - review 无 🔴
 - QA signoff 存在
-- Git commit 为中文
+- Git commit 标题符合 `<英文类型>(<英文范围>): <中文摘要>` 规范，且正文中文完整
 - PR / release 内容为中文
 - rollback / monitoring 说明完整
