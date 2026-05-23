@@ -211,7 +211,16 @@ EOF
 - Create: `scripts/hooks/session-start-detect.sh`
 - Create: `tests/hooks/test_session_start_detect.bats`
 
-**目标**：在 Claude Code 启动会话时输出 `<ssf-status>enabled|disabled</ssf-status>`，作为 C3 加成路径。任何异常都退化为 disabled，不抛错。
+**目标**：在 Claude Code 启动会话时输出**符合官方 SessionStart hook 协议**的 JSON，`additionalContext` 字段携带 `<ssf-status>enabled|disabled</ssf-status>` 标签，作为 C3 加成路径。任何异常都退化为 disabled，不抛错。
+
+**协议要点**（依据 Claude Code 官方 hooks 文档）：
+
+- 脚本通过 stdout 输出**单行 JSON**：
+  ```json
+  {"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"<ssf-status>enabled</ssf-status>"}}
+  ```
+- Claude Code 会把 `additionalContext` 注入会话上下文，后续 LLM 读取 routing 时即可看见 `<ssf-status>` 标签
+- 退出码恒为 0，任何错误均输出 disabled 版本的 JSON
 
 - [ ] **Step 1: 写失败测试**
 
@@ -231,20 +240,28 @@ teardown() {
   ssf_cleanup_tmp "$PROJECT"
 }
 
-@test "cwd 无 .superspecflow/enabled 时输出 disabled" {
+# 解析 JSON 中 additionalContext 字段的工具函数（不依赖 jq，使用 grep + sed）
+extract_context() {
+  # 输入：JSON 单行；输出：additionalContext 字符串值
+  printf '%s' "$1" | sed -nE 's/.*"additionalContext":"([^"]*)".*/\1/p'
+}
+
+@test "cwd 无 .superspecflow/enabled 时 additionalContext 为 disabled 标签" {
   cd "$PROJECT"
   run "$HOOK"
   [ "$status" -eq 0 ]
-  [ "$output" = "<ssf-status>disabled</ssf-status>" ]
+  ctx="$(extract_context "$output")"
+  [ "$ctx" = "<ssf-status>disabled</ssf-status>" ]
 }
 
-@test "cwd 有 .superspecflow/enabled 时输出 enabled" {
+@test "cwd 有 .superspecflow/enabled 时 additionalContext 为 enabled 标签" {
   mkdir -p "$PROJECT/.superspecflow"
   touch "$PROJECT/.superspecflow/enabled"
   cd "$PROJECT"
   run "$HOOK"
   [ "$status" -eq 0 ]
-  [ "$output" = "<ssf-status>enabled</ssf-status>" ]
+  ctx="$(extract_context "$output")"
+  [ "$ctx" = "<ssf-status>enabled</ssf-status>" ]
 }
 
 @test "CLAUDE_PROJECT_DIR 环境变量优先于 cwd" {
@@ -253,14 +270,28 @@ teardown() {
   cd /tmp
   CLAUDE_PROJECT_DIR="$PROJECT" run "$HOOK"
   [ "$status" -eq 0 ]
-  [ "$output" = "<ssf-status>enabled</ssf-status>" ]
+  ctx="$(extract_context "$output")"
+  [ "$ctx" = "<ssf-status>enabled</ssf-status>" ]
+}
+
+@test "输出始终是符合 hook 协议的单行 JSON" {
+  cd "$PROJECT"
+  run "$HOOK"
+  [ "$status" -eq 0 ]
+  # 必须包含官方协议三个关键字段
+  [[ "$output" == *"hookSpecificOutput"* ]]
+  [[ "$output" == *"\"hookEventName\":\"SessionStart\""* ]]
+  [[ "$output" == *"additionalContext"* ]]
+  # 必须是单行（行数 = 1）
+  line_count="$(printf '%s' "$output" | wc -l | tr -d ' ')"
+  [ "$line_count" = "0" ] || [ "$line_count" = "1" ]
 }
 
 @test "任何不可预期错误也只输出 disabled，不抛非零退出" {
-  # 模拟：CLAUDE_PROJECT_DIR 指向不存在路径
   CLAUDE_PROJECT_DIR="/nonexistent/$(uuidgen 2>/dev/null || echo xxx)" run "$HOOK"
   [ "$status" -eq 0 ]
-  [ "$output" = "<ssf-status>disabled</ssf-status>" ]
+  ctx="$(extract_context "$output")"
+  [ "$ctx" = "<ssf-status>disabled</ssf-status>" ]
 }
 ```
 
@@ -270,7 +301,7 @@ teardown() {
 bats tests/hooks/test_session_start_detect.bats
 ```
 
-预期：4 个测试 FAIL（脚本不存在）。
+预期：5 个测试 FAIL（脚本不存在）。
 
 - [ ] **Step 3: 实现 hook 脚本**
 
@@ -279,30 +310,31 @@ bats tests/hooks/test_session_start_detect.bats
 ```bash
 #!/usr/bin/env bash
 # SuperSpecFlow Claude Code SessionStart hook (C3 加成路径)
-# 检测当前项目是否 opt-in，向 stdout 输出 <ssf-status>...</ssf-status>。
-# 任何错误一律退化为 disabled，绝不向上抛异常。
+# 输出符合官方 SessionStart hook 协议的 JSON，additionalContext 字段携带 <ssf-status> 标签。
+# 任何错误一律退化为 disabled 版本的合法 JSON，绝不向上抛异常。
 
 set +e
 
-emit_disabled() {
-  printf '<ssf-status>disabled</ssf-status>\n'
+emit() {
+  # 单行 JSON，标签作为 additionalContext 字符串内容。
+  local status="$1"   # enabled | disabled
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"<ssf-status>%s</ssf-status>"}}\n' "$status"
   exit 0
 }
 
-trap 'emit_disabled' ERR
+trap 'emit disabled' ERR
 
 project_dir="${CLAUDE_PROJECT_DIR:-$PWD}"
 
 if [ ! -d "$project_dir" ]; then
-  emit_disabled
+  emit disabled
 fi
 
 if [ -f "$project_dir/.superspecflow/enabled" ]; then
-  printf '<ssf-status>enabled</ssf-status>\n'
-  exit 0
+  emit enabled
 fi
 
-emit_disabled
+emit disabled
 ```
 
 赋可执行权限：
@@ -317,7 +349,7 @@ chmod +x scripts/hooks/session-start-detect.sh
 bats tests/hooks/test_session_start_detect.bats
 ```
 
-预期：4 PASS。
+预期：5 PASS。
 
 - [ ] **Step 5: Commit**
 
@@ -330,15 +362,15 @@ feat(scripts): 新增 SessionStart hook 探测项目级 opt-in 信号
 关联规格：docs/superpowers/specs/2026-05-23-zero-touch-host-integration-design.md（5.2 C3）
 
 变更内容：
-- 新增 scripts/hooks/session-start-detect.sh：检测 .superspecflow/enabled 并输出 <ssf-status> 标签
-- 任何错误均退化为 disabled，避免会话启动报错
-- 新增 4 个 bats 测试覆盖 enabled / disabled / CLAUDE_PROJECT_DIR / 异常退化
+- 新增 scripts/hooks/session-start-detect.sh：按 Claude Code 官方 SessionStart hook 协议输出单行 JSON，additionalContext 字段携带 <ssf-status>enabled|disabled</ssf-status> 标签
+- 任何错误均退化为 disabled 版本的合法 JSON，避免会话启动报错
+- 新增 5 个 bats 测试覆盖 enabled / disabled / CLAUDE_PROJECT_DIR / 协议结构 / 异常退化
 
 验证方式：
-- bats tests/hooks/test_session_start_detect.bats（4 PASS）
+- bats tests/hooks/test_session_start_detect.bats（5 PASS）
 
 风险与回滚：
-- 风险：用户 settings.json 未配置该 hook 时 C3 不生效；C1 兜底仍然工作（见后续任务）
+- 风险：用户 settings.json 未配置该 hook 时 C3 不生效；C1 兜底仍然工作（见 Task 3）
 - 回滚：删除脚本与测试，从用户 settings.json 移除 hook 条目
 EOF
 )"
@@ -352,14 +384,16 @@ EOF
 - Create: `routing/CLAUDE.global.md`
 - Create: `routing/AGENTS.global.md`
 
-**目标**：实现 D3：薄壳 + include 既有 routing 主体。包含 C1 自检测指令、项目级覆盖判定、显式命令始终可用、最终 include。
+**目标**：实现 D3：薄壳 + **指令式条件读取**既有 routing 主体。包含 C1 自检测指令、项目级覆盖判定、显式命令始终可用、条件读取主体的指令。
+
+**关键决策**：**不使用 `@<repo>/routing/CLAUDE.routing.md` 自动 include 写法**。原因：`@` 在任何会话都会被无条件解析，那样 disabled 项目也会吃到完整 Intake Gate 文本，破坏方案 C 的核心承诺。改为对 LLM 的指令式约束："SSF 状态 = enabled 且无项目级覆盖时，**用 Read 工具读取**对应文件；disabled 时不得读取。"
 
 - [ ] **Step 1: 写 `routing/CLAUDE.global.md`**
 
 ```markdown
 # SuperSpecFlow Global Routing for Claude Code
 
-本文件是 SuperSpecFlow 的全局薄壳入口，被用户家目录 `~/.claude/CLAUDE.md` 通过 `@<repo>/routing/CLAUDE.global.md` 引用。它只做四件事：项目 opt-in 自检测、显式命令始终可用声明、项目级覆盖判定、include 主体 routing。
+本文件是 SuperSpecFlow 的全局薄壳入口，被用户家目录 `~/.claude/CLAUDE.md` 通过 `@<repo>/routing/CLAUDE.global.md` 引用。它只做四件事：项目 opt-in 自检测、显式命令始终可用声明、项目级覆盖判定、条件读取主体 routing。
 
 ## 1. 项目 opt-in 自检测（必须在响应任何非问答类请求前完成）
 
@@ -386,31 +420,36 @@ EOF
 
 ## 3. 项目级覆盖判定
 
-当 SSF 状态 = `enabled` 时：
+当 SSF 状态 = `enabled` 时，按下列顺序决定 routing 主体来源：
 
-- 若当前项目存在 `.superspecflow/CLAUDE.routing.md`，**优先**采用它作为 routing 主体，不再加载本文第 4 节的默认 include。
-- 否则采用第 4 节的默认 include。
+- 若当前项目存在 `.superspecflow/CLAUDE.routing.md`：**用 Read 工具读取该文件**，将其作为本会话 routing 主体，**不再**读取下一步的全局默认文件。
+- 否则进入第 4 节。
 
-## 4. 默认 routing 主体 include
+## 4. 条件读取默认 routing 主体（不使用 @ 自动 include）
 
-@<repo>/routing/CLAUDE.routing.md
+**重要**：本文件**故意不**使用 `@<repo>/routing/CLAUDE.routing.md` 自动展开写法。因为 `@` 在所有会话都会被无条件解析，会破坏 SSF 状态 = `disabled` 时"不接管自然语言"的承诺。
+
+替代约束（必须遵守）：
+
+- **当且仅当** SSF 状态 = `enabled` 且未命中第 3 节项目级覆盖时，你（LLM）须**主动用 Read 工具读取** `<repo>/routing/CLAUDE.routing.md`，并采用其内容作为本会话 routing 主体。
+- 当 SSF 状态 = `disabled` 时，**不得**读取该文件，也不得应用其中的约束。
+- 路径中的 `<repo>` 占位符会被 `install-global.sh` 替换为用户仓库绝对路径。
 
 ## 5. SSF 状态 = disabled 时的行为
 
 - 不接管自然语言请求，按 Claude Code 默认行为响应。
 - 仅当用户显式输入 `/ssf-*` 命令时执行对应 skill。
 - 不强制 Intake Gate、不强制 change-id、不要求中文 commit。
+- **不读取** `<repo>/routing/CLAUDE.routing.md`。
 
 ## 6. 安装说明
 
 本文件由 `scripts/install-global.sh` 协助引入 `~/.claude/CLAUDE.md`。已有用户全局文件时脚本只打印应追加行，不擅自改写。
 ```
 
-注意：第 4 节里的 `<repo>` 占位符是设计字面量，由用户安装时手动替换为他们 clone 出的仓库绝对路径。`install-global.sh` 会在打印 include 行时替换好。
-
 - [ ] **Step 2: 写 `routing/AGENTS.global.md`**
 
-结构同上，把所有 `CLAUDE` 替换为 `AGENTS`，把 `~/.claude/CLAUDE.md` 替换为 `~/.codex/AGENTS.md`，并把第 1 节"对话上下文已包含 `<ssf-status>`"那条删掉（Codex 没有等价 hook 机制；保留 Bash 探测作为唯一路径）。
+结构同上，把所有 `CLAUDE` 替换为 `AGENTS`，把 `~/.claude/CLAUDE.md` 替换为 `~/.codex/AGENTS.md`，并把第 1 节关于 `<ssf-status>` 标签的优先级条目删掉（Codex 没有等价 hook 机制；保留 Bash 探测作为唯一路径）。
 
 `routing/AGENTS.global.md`：
 
@@ -441,18 +480,23 @@ test -f .superspecflow/enabled && echo enabled || echo disabled
 
 ## 3. 项目级覆盖判定
 
-当 SSF 状态 = `enabled` 时：
+当 SSF 状态 = `enabled` 时，按下列顺序决定 routing 主体来源：
 
-- 若当前项目存在 `.superspecflow/AGENTS.routing.md`，优先采用它作为 routing 主体。
-- 否则采用第 4 节的默认 include。
+- 若当前项目存在 `.superspecflow/AGENTS.routing.md`：用工具读取该文件，作为本会话 routing 主体，不再进入第 4 节。
+- 否则进入第 4 节。
 
-## 4. 默认 routing 主体 include
+## 4. 条件读取默认 routing 主体（不使用 @ 自动 include）
 
-@<repo>/routing/AGENTS.routing.md
+**重要**：本文件**故意不**使用 `@<repo>/routing/AGENTS.routing.md` 自动展开写法，理由与 CLAUDE.global.md 相同。
+
+替代约束：
+
+- **当且仅当** SSF 状态 = `enabled` 且未命中第 3 节项目级覆盖时，主动读取 `<repo>/routing/AGENTS.routing.md`，并采用其内容作为本会话 routing 主体。
+- 当 SSF 状态 = `disabled` 时，不得读取该文件，也不得应用其中的约束。
 
 ## 5. SSF 状态 = disabled 时的行为
 
-不接管自然语言；仅响应 `/ssf-*` 显式命令；按 agent 默认行为处理其他请求。
+不接管自然语言；仅响应 `/ssf-*` 显式命令；按 agent 默认行为处理其他请求；不读取 `<repo>/routing/AGENTS.routing.md`。
 
 ## 6. 安装说明
 
@@ -463,11 +507,15 @@ test -f .superspecflow/enabled && echo enabled || echo disabled
 
 ```bash
 ls routing/CLAUDE.global.md routing/AGENTS.global.md
-grep -n "@<repo>/routing/CLAUDE.routing.md" routing/CLAUDE.global.md
-grep -n "@<repo>/routing/AGENTS.routing.md" routing/AGENTS.global.md
+# 必须不包含 @ 自动 include 写法
+! grep -E "^@<repo>/routing/CLAUDE\.routing\.md" routing/CLAUDE.global.md
+! grep -E "^@<repo>/routing/AGENTS\.routing\.md" routing/AGENTS.global.md
+# 必须包含指令式条件读取的关键字
+grep -q "主动用 Read 工具读取\|主动读取" routing/CLAUDE.global.md
+grep -q "主动用 Read 工具读取\|主动读取" routing/AGENTS.global.md
 ```
 
-预期：两文件存在；include 行存在。
+预期：两文件存在；不含 `@<repo>/routing/...` 行首 include；包含指令式条件读取关键字。
 
 - [ ] **Step 4: Commit**
 
@@ -480,16 +528,17 @@ feat(routing): 新增全局薄壳 routing 入口与项目级 opt-in 自检测
 关联规格：docs/superpowers/specs/2026-05-23-zero-touch-host-integration-design.md（4.1 / 5.1 / 5.2）
 
 变更内容：
-- 新增 routing/CLAUDE.global.md：C1 兜底（Bash 一次性探测）+ C3 优先（读 <ssf-status> 标签）+ 项目级覆盖判定 + include 既有 CLAUDE.routing.md
+- 新增 routing/CLAUDE.global.md：C1 兜底（Bash 一次性探测）+ C3 优先（读 <ssf-status> 标签）+ 项目级覆盖判定 + 指令式条件读取既有 CLAUDE.routing.md
 - 新增 routing/AGENTS.global.md：结构同上，去掉 hook 优先（Codex 无等价机制），保留 Bash 探测兜底
+- 故意不使用 @<repo>/routing/*.routing.md 自动 include 写法，避免 disabled 项目被无条件注入完整 routing 主体
 - 全局文件中 `<repo>` 为字面占位符，由 install-global.sh 在打印提示行时替换为用户仓库绝对路径
 
 验证方式：
-- 人工核对两文件存在且包含 include 行
+- 人工核对两文件存在且不含 @ 自动 include 写法
 - 后续 Task 9 在 validate-pack.sh 中追加结构断言
 
 风险与回滚：
-- 风险：用户全局 CLAUDE.md / AGENTS.md 中 include 行被忽略时接入失效；install-global.sh 与 docs/installation.md 须明示
+- 风险：依赖 LLM 严格遵守"disabled 不读取主体文件"指令；若 LLM 越界读取，会破坏方案 C 的"不接管"承诺
 - 回滚：删除两文件，从用户全局文件移除 include 行
 EOF
 )"
@@ -873,15 +922,18 @@ teardown() {
   [[ "$output" != *"session-start-detect.sh"* ]]
 }
 
-@test "默认（带 hook）打印 settings.json 应合并的 JSON 片段，且不擅自改写" {
+@test "默认（带 hook）打印 settings.json 应合并的官方 schema JSON 片段，且不擅自改写" {
   mkdir -p "$HOME/.claude"
   printf '{}' > "$HOME/.claude/settings.json"
   before="$(cat "$HOME/.claude/settings.json")"
   run "$INSTALL" --yes
   [ "$status" -eq 0 ]
   [ "$(cat "$HOME/.claude/settings.json")" = "$before" ]
+  # 官方 hook schema 关键字段必须全部出现
   [[ "$output" == *"session-start-detect.sh"* ]]
   [[ "$output" == *"SessionStart"* ]]
+  [[ "$output" == *"matcher"* ]]
+  [[ "$output" == *"\"type\": \"command\""* ]] || [[ "$output" == *"\"type\":\"command\""* ]]
 }
 
 @test "退出码恒为 0（脚本不应因用户拒绝合并而失败）" {
@@ -978,12 +1030,18 @@ if [ "$SKIP_HOOK" -eq 0 ]; then
   cat <<MSG
 
 —— 可选：Claude Code SessionStart hook ——
-建议在 ~/.claude/settings.json 中合并以下片段，让会话启动时自动检测项目 opt-in：
+建议在 ~/.claude/settings.json 中合并以下片段（使用 Claude Code 官方 hook schema），
+让会话启动时自动检测项目 opt-in：
 
 {
   "hooks": {
     "SessionStart": [
-      {"command": "${hook_path}"}
+      {
+        "matcher": "startup",
+        "hooks": [
+          {"type": "command", "command": "${hook_path}"}
+        ]
+      }
     ]
   }
 }
@@ -1025,7 +1083,7 @@ feat(scripts): 新增全局安装脚本 install-global.sh
 - 新增 scripts/install-global.sh：检测 ~/.claude/CLAUDE.md 与 ~/.codex/AGENTS.md 是否已含 include 行，未含且文件存在时仅打印提示，文件完全不存在时才直接创建
 - 默认输出 Claude Code SessionStart hook 应合并到 ~/.claude/settings.json 的 JSON 片段；--no-hook 可跳过
 - 全程不擅自改写用户已存在的全局文件，退出码恒为 0
-- 新增 7 个 bats 测试覆盖：首次创建 / 已含 include 行 / 缺 include 行 / --no-hook / 默认带 hook / 不修改 settings.json / 退出码
+- 新增 7 个 bats 测试覆盖：首次创建 / 已含 include 行 / 缺 include 行 / --no-hook / 默认带 hook（断言官方 schema 含 matcher 与 type:command）/ 不修改 settings.json / 退出码
 
 验证方式：
 - bats tests/install/test_install_global.bats（7 PASS）
@@ -1281,15 +1339,17 @@ EOF
 
 要新加的断言：
 
-1. `routing/CLAUDE.global.md` 存在且包含 `@<repo>/routing/CLAUDE.routing.md` include 行字面量
-2. `routing/AGENTS.global.md` 存在且包含 `@<repo>/routing/AGENTS.routing.md` include 行字面量
-3. `scripts/hooks/session-start-detect.sh` 存在且可执行
-4. `scripts/install-global.sh` 存在且可执行
-5. `scripts/_ssf_init_apply.sh` 存在且可执行
-6. `routing/CLAUDE.routing.md` 含一段以 `## 高风险关键词` 开头的清单，且包含字串 `登录、认证`
-7. `routing/AGENTS.routing.md` 同上
-8. 高风险关键词清单与项目根 `CLAUDE.md` 一致性检查：grep 出现次数 ≥ 1，且两 routing 文件的清单文本与根 CLAUDE.md 完全一致（防止后续漂移）
-9. `commands/ssf-init.md` **不**包含字符串 `ln -s`（防止退回到老软链语义）
+1. `routing/CLAUDE.global.md` 存在
+2. `routing/CLAUDE.global.md` **不**包含 `@<repo>/routing/CLAUDE.routing.md` 自动 include 行（防止退回 @ 自动展开导致 disabled 失效）
+3. `routing/CLAUDE.global.md` 包含指令式条件读取关键字（如 `主动用 Read 工具读取` 或 `主动读取`）
+4. `routing/AGENTS.global.md` 同 1-3
+5. `scripts/hooks/session-start-detect.sh` 存在且可执行
+6. `scripts/install-global.sh` 存在且可执行
+7. `scripts/_ssf_init_apply.sh` 存在且可执行
+8. `routing/CLAUDE.routing.md` 含一段以 `## 高风险关键词` 开头的清单，且包含字串 `登录、认证`
+9. `routing/AGENTS.routing.md` 同上
+10. 高风险关键词清单与项目根 `CLAUDE.md` 一致性检查：grep 出现次数 ≥ 1，且两 routing 文件的清单文本与根 CLAUDE.md 完全一致（防止后续漂移）
+11. `commands/ssf-init.md` **不**包含字符串 `ln -s`（防止退回到老软链语义）
 
 - [ ] **Step 1: 读现有 validate-pack.sh 找到追加点**
 
@@ -1306,22 +1366,27 @@ grep -n "^# " scripts/validate-pack.sh | head -20
 ```bash
 # ---- 方案 C 零侵入接入结构契约 ----
 
-# 全局 routing 薄壳存在且 include 主体
-if [ ! -f routing/CLAUDE.global.md ]; then
-  fail "missing routing/CLAUDE.global.md"
-elif ! grep -Fq "@<repo>/routing/CLAUDE.routing.md" routing/CLAUDE.global.md; then
-  fail "routing/CLAUDE.global.md missing include line"
-else
-  pass "routing/CLAUDE.global.md include OK"
-fi
-
-if [ ! -f routing/AGENTS.global.md ]; then
-  fail "missing routing/AGENTS.global.md"
-elif ! grep -Fq "@<repo>/routing/AGENTS.routing.md" routing/AGENTS.global.md; then
-  fail "routing/AGENTS.global.md missing include line"
-else
-  pass "routing/AGENTS.global.md include OK"
-fi
+# 全局 routing 薄壳存在且采用指令式条件读取，禁止 @ 自动 include 写法
+for pair in "routing/CLAUDE.global.md:CLAUDE.routing.md" "routing/AGENTS.global.md:AGENTS.routing.md"; do
+  global="${pair%%:*}"
+  main="${pair##*:}"
+  if [ ! -f "$global" ]; then
+    fail "missing $global"
+    continue
+  fi
+  # 必不含 @ 自动 include 写法（行首 @<repo>/routing/*.routing.md）
+  if grep -E "^@<repo>/routing/${main}" "$global" >/dev/null; then
+    fail "$global must not use @ auto-include for $main (breaks disabled-state opt-out)"
+  else
+    pass "$global free of @ auto-include for $main"
+  fi
+  # 必含指令式条件读取关键字
+  if grep -q "主动用 Read 工具读取\|主动读取" "$global"; then
+    pass "$global uses instruction-style conditional read"
+  else
+    fail "$global missing instruction-style conditional read for $main"
+  fi
+done
 
 # 脚本存在并可执行
 for f in scripts/hooks/session-start-detect.sh scripts/install-global.sh scripts/_ssf_init_apply.sh; do
@@ -1373,12 +1438,11 @@ bash scripts/validate-pack.sh
 - [ ] **Step 4: 模拟失败回归测试（手动验证）**
 
 ```bash
-# 故意把 include 行改坏验证 FAIL 触发
+# 故意在 global routing 里塞一行 @ 自动 include 写法，验证 FAIL 触发
 cp routing/CLAUDE.global.md /tmp/_bak
-sed -i.bak 's|@<repo>/routing/CLAUDE.routing.md|@<broken>|' routing/CLAUDE.global.md
+printf '\n@<repo>/routing/CLAUDE.routing.md\n' >> routing/CLAUDE.global.md
 bash scripts/validate-pack.sh && echo "BUG: should have failed" || echo "OK: failure path works"
 mv /tmp/_bak routing/CLAUDE.global.md
-rm -f routing/CLAUDE.global.md.bak
 bash scripts/validate-pack.sh  # 恢复后再确认通过
 ```
 
@@ -1395,12 +1459,12 @@ test(scripts): validate-pack 覆盖方案 C 零侵入接入的结构契约
 关联规格：docs/superpowers/specs/2026-05-23-zero-touch-host-integration-design.md（9.1）
 
 变更内容：
-- 在 scripts/validate-pack.sh 追加 9 条结构断言：全局 routing 文件存在且含 include / 三个脚本可执行 / 高风险关键词清单已同步且与根 CLAUDE.md 一致 / ssf-init.md 不退回 ln -s 语义
+- 在 scripts/validate-pack.sh 追加 11 条结构断言：全局 routing 文件存在且**不**含 @ 自动 include 写法 / 全局 routing 含指令式条件读取关键字 / 三个脚本可执行 / 高风险关键词清单已同步且与根 CLAUDE.md 一致 / ssf-init.md 不退回 ln -s 语义
 - 不重写既有检查逻辑
 
 验证方式：
 - bash scripts/validate-pack.sh（新增 PASS 行出现，无 FAIL）
-- 手动模拟破坏 include 行：确认 FAIL 触发；恢复后 PASS
+- 手动模拟在 global routing 里塞入 @ 自动 include 行：确认 FAIL 触发；恢复后 PASS
 
 风险与回滚：
 - 风险：高风险关键词一致性 sed 块对中文标点敏感；当前 CLAUDE.md 与 routing 主体使用同一组中文标点，无差异
