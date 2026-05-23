@@ -12,6 +12,12 @@ SuperSpecFlow 是一套面向 Claude Code / Codex CLI 的 AI 软件研发工作�
 
 目标不是让 AI 更会“写代码”，而是让 AI 像小型研发组织一样工作，并且每个决策、实现、测试、提交都能追踪。
 
+## 仓库提交边界
+
+SuperSpecFlow 仓库提交工作流包源码和 OpenSpec 变更契约：`routing/`、`skills/`、`commands/`、`agents/`、`templates/`、`scripts/`、用户文档和 `openspec/`。其中 `openspec/` 是本仓库行为规则变更的 change contract，不能被当作运行时产物忽略。
+
+不要提交本地 workflow 运行时、安装副本或缓存产物，例如 `superpowers/`、`docs/superpowers/`、`.superspecflow/`、`.claude/`、`.codex/` 和 `.DS_Store`。宿主业务项目如果采用 OpenSpec 管理需求，其项目内 `openspec/` 应正常提交；`.superspecflow/` 是否提交由宿主项目接入策略决定。
+
 ## 推荐安装位置
 
 SuperSpecFlow 是通用工作流包，不应覆盖宿主项目已有的 `AGENTS.md` 或 `CLAUDE.md`。宿主项目原有指令仍然是项目事实来源；SuperSpecFlow 通过软连接入集中路由和能力文件。
@@ -136,7 +142,7 @@ commit 标题的类型与范围使用英文标识符（conventional commits）�
 字段约束：
 
 - `英文类型`：`feat / fix / docs / style / refactor / perf / test / build / ci / chore / revert / spec`。
-- `英文范围`：`<根模块>` 或 `<根模块>:<业务子模块>`。根模块取自仓库根目录划分（`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`examples`、`meta`），业务子模块使用小写英文 kebab-case。
+- `英文范围`：`<根模块>` 或 `<根模块>:<业务子模块>`。根模块取自仓库根目录划分（`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`openspec`、`examples`、`meta`），业务子模块使用小写英文 kebab-case。
 
 示例：
 

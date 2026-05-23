@@ -6,6 +6,12 @@ SuperSpecFlow 是工作流包，不是应用运行时。它通过集中 routing�
 
 完整用户安装流程见 `docs/installation.md`。
 
+## Version-Control Boundary
+
+SuperSpecFlow 仓库自身提交包源码和 OpenSpec 变更契约，不提交本地 workflow 运行时、安装副本或缓存产物。`openspec/` 必须保留为可追踪 change contract；`superpowers/`、`.superspecflow/`、`.claude/`、`.codex/` 和 `.DS_Store` 不得进入 Git 跟踪列表。
+
+宿主项目如果使用 OpenSpec 管理需求，应正常提交自己的 `openspec/`；如果宿主项目选择 repo 内 opt-in，`.superspecflow/` 的提交策略由宿主项目约定决定，但不应提交工具缓存、日志或外部 Superpowers 运行产物。
+
 ## Claude Code
 
 推荐项目级软连安装：
@@ -100,4 +106,4 @@ Codex 中可以直接自然语言触发：
 ./scripts/validate-pack.sh
 ```
 
-该脚本检查命名、skill frontmatter、旧前缀残留、冒号文件名，以及 README / AGENTS / CLAUDE 与 `commands/` 的命令集合一致性。
+该脚本检查命名、skill frontmatter、旧前缀残留、冒号文件名、已跟踪运行时产物，以及 README / routing 与 `commands/` 的命令集合一致性。

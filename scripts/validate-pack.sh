@@ -112,6 +112,19 @@ check_no_colon_filenames() {
   fi
 }
 
+check_no_tracked_runtime_artifacts() {
+  local out_file
+  out_file="$(tmp_file)"
+
+  if git ls-files | grep -E '^(superpowers|\.superspecflow|\.claude|\.codex)/|(^|/)\.DS_Store$' >"$out_file"; then
+    cat "$out_file" >&2
+    fail "发现已被 Git 跟踪的 workflow 运行时或安装产物"
+  else
+    pass "Git 跟踪列表不包含 workflow 运行时或安装产物"
+  fi
+  rm -f "$out_file"
+}
+
 check_no_host_instruction_overwrite() {
   local out_file
   out_file="$(tmp_file)"
@@ -178,7 +191,7 @@ check_command_docs_consistency() {
     | sed 's#^#/#' \
     | sort -u >"$expected_file"
 
-  for doc in README.md AGENTS.md CLAUDE.md; do
+  for doc in README.md routing/AGENTS.routing.md routing/CLAUDE.routing.md; do
     grep -Eo '/ssf-[a-z]+' "$doc" | sort -u >"$actual_file" || true
 
     if diff -u "$expected_file" "$actual_file" >/tmp/ssf-command-diff.txt; then
@@ -228,6 +241,36 @@ check_routing_files() {
       pass "$routing_file 包含 Intake Gate、轻量任务边界和 Karpathy 编码纪律"
     fi
   done
+
+  if ! grep -q '| 类别 | 判定标准 | 处理方式 |' routing/AGENTS.routing.md; then
+    fail "routing/AGENTS.routing.md 缺少完整 Intake Gate 判定表"
+  elif ! grep -q 'Product Change Brief' routing/AGENTS.routing.md; then
+    fail "routing/AGENTS.routing.md 缺少 Product / Think 输出契约"
+  elif ! grep -q 'Spec-to-Code Rule' routing/AGENTS.routing.md; then
+    fail "routing/AGENTS.routing.md 缺少 Spec-to-Code Rule"
+  elif ! grep -q 'Completion Criteria' routing/AGENTS.routing.md; then
+    fail "routing/AGENTS.routing.md 缺少 Completion Criteria"
+  else
+    pass "routing/AGENTS.routing.md 保留完整路由契约"
+  fi
+
+  if ! grep -q 'Git 提交规范' routing/CLAUDE.routing.md; then
+    fail "routing/CLAUDE.routing.md 缺少 Git 提交规范"
+  elif ! grep -q '允许的英文类型' routing/CLAUDE.routing.md; then
+    fail "routing/CLAUDE.routing.md 缺少提交类型说明"
+  elif ! grep -q '高风险关键词' routing/CLAUDE.routing.md; then
+    fail "routing/CLAUDE.routing.md 缺少高风险关键词"
+  elif ! grep -q '完成定义' routing/CLAUDE.routing.md; then
+    fail "routing/CLAUDE.routing.md 缺少完成定义"
+  else
+    pass "routing/CLAUDE.routing.md 保留完整路由契约"
+  fi
+
+  if cmp -s routing/AGENTS.routing.md routing/CLAUDE.routing.md; then
+    pass "AGENTS 与 CLAUDE routing 内容一致"
+  else
+    fail "AGENTS 与 CLAUDE routing 内容不一致"
+  fi
 }
 
 check_integration_snippets_thin() {
@@ -252,6 +295,7 @@ check_integration_snippets_thin() {
 check_no_legacy_command_prefix
 check_no_hw_prefix
 check_no_colon_filenames
+check_no_tracked_runtime_artifacts
 check_no_host_instruction_overwrite
 check_skill_frontmatter
 check_command_file_names
