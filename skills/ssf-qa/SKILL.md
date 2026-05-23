@@ -1,9 +1,9 @@
 ---
 name: ssf-qa
-description: 阶段四点五（测）。用户输入 /ssf:qa 或由 ssf-review 续接时触发。基于 OpenSpec 生成 acceptance matrix、risk matrix、regression checklist、negative tests 和 QA signoff。
+description: 阶段四点五（测）。用户输入 /ssf-qa 或由 ssf-review 续接时触发。基于 OpenSpec 生成 acceptance matrix、risk matrix、regression checklist、negative tests 和 QA signoff。
 ---
 
-# ssf:qa — 规格驱动验收
+# ssf-qa — 规格驱动验收
 
 ## 目标
 
@@ -13,7 +13,7 @@ description: 阶段四点五（测）。用户输入 /ssf:qa 或由 ssf-review �
 
 ## 触发
 
-- 显式：`/ssf:qa [change-id]`
+- 显式：`/ssf-qa [change-id]`
 - 隐式：用户要求测试、QA、验收、测试用例、e2e、回归、能不能发
 - 自动：`ssf-review` 无 🔴 后续接
 

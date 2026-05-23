@@ -203,21 +203,21 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 如果用户显式输入以下命令，直接执行对应流程，不再重新判断：
 
 ```text
-/ssf:think <idea>
-/ssf:spec <change-id>
-/ssf:build [all|N]
-/ssf:review
-/ssf:qa <change-id>
-/ssf:ship <change-id>
-/ssf:archive <change-id>
-/ssf:retro <change-id>
-/ssf:decision <topic>
-/ssf:map <change-id>
-/ssf:karpathy <target>
-/ssf:git
-/ssf:branch <change-id> <topic>
-/ssf:commit <change-id>
-/ssf:pr <change-id>
+/ssf-think <idea>
+/ssf-spec <change-id>
+/ssf-build [all|N]
+/ssf-review
+/ssf-qa <change-id>
+/ssf-ship <change-id>
+/ssf-archive <change-id>
+/ssf-retro <change-id>
+/ssf-decision <topic>
+/ssf-map <change-id>
+/ssf-karpathy <target>
+/ssf-git
+/ssf-branch <change-id> <topic>
+/ssf-commit <change-id>
+/ssf-pr <change-id>
 ```
 
 ## 3. 高风险变更强制门禁

@@ -1,9 +1,9 @@
 ---
 name: ssf-build
-description: 阶段三（建）。用户输入 /ssf:build 或由 ssf-spec 续接时触发。按 OpenSpec tasks 执行，使用 Superpowers 风格：理解、计划、TDD、小步实现、验证、更新 spec-to-code-map。
+description: 阶段三（建）。用户输入 /ssf-build 或由 ssf-spec 续接时触发。按 OpenSpec tasks 执行，使用 Superpowers 风格：理解、计划、TDD、小步实现、验证、更新 spec-to-code-map。
 ---
 
-# ssf:build — 按规格执行
+# ssf-build — 按规格执行
 
 ## 目标
 
@@ -13,7 +13,7 @@ description: 阶段三（建）。用户输入 /ssf:build 或由 ssf-spec 续接
 
 ## 触发
 
-- 显式：`/ssf:build`、`/ssf:build all`、`/ssf:build N`
+- 显式：`/ssf-build`、`/ssf-build all`、`/ssf-build N`
 - 隐式：用户要求实现、修 bug、加 API、重构、根据 spec 开发
 - 自动：`ssf-spec` readiness 为 Ready 后续接
 
@@ -68,8 +68,8 @@ description: 阶段三（建）。用户输入 /ssf:build 或由 ssf-spec 续接
 
 ## Step 3 — 执行任务
 
-`/ssf:build all`：逐条执行。  
-`/ssf:build N`：只执行第 N 条。
+`/ssf-build all`：逐条执行。
+`/ssf-build N`：只执行第 N 条。
 
 每个任务遵循：
 
@@ -171,7 +171,7 @@ Tests: [运行结果]
 每完成一个可验证 task，建议进入：
 
 ```text
-/ssf:commit [change-id]
+/ssf-commit [change-id]
 ```
 
 如果用户明确开启自动提交，提交前仍必须执行：

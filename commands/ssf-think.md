@@ -7,4 +7,4 @@ Run the product thinking phase:
 2. Run CEO Court, Designer Court, Product Court.
 3. Produce Product Change Brief and Decision Record.
 4. Produce design.md.
-5. Ask for confirmation before entering /ssf:spec.
+5. Ask for confirmation before entering /ssf-spec.

@@ -3,7 +3,7 @@ name: ssf-karpathy
 description: Karpathy 风格的 AI 编码行为约束。用于写代码、review、重构、修 bug、提交前审查，防止错误假设、过度设计、无关改动和不可验证目标。
 ---
 
-# ssf:karpathy — 最小、清晰、可验证的 AI 编码纪律
+# ssf-karpathy — 最小、清晰、可验证的 AI 编码纪律
 
 ## 来源与定位
 
@@ -18,7 +18,7 @@ description: Karpathy 风格的 AI 编码行为约束。用于写代码、review
 
 ## 触发
 
-- 显式：`/ssf:karpathy [目标]`
+- 显式：`/ssf-karpathy [目标]`
 - 隐式：任何实现、修 bug、重构、代码审查、提交前检查
 - 自动：`ssf-build` 开始前、`ssf-review` 审查 diff 时、`ssf-git` 提交前
 

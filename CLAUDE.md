@@ -113,11 +113,31 @@ git diff --staged --stat
 
 ## 交互策略
 
-- 用户显式输入 `/ssf:*` 命令时，严格执行对应流程。
+- 用户显式输入 `/ssf-*` 命令时，严格执行对应流程。
 - 用户自然语言描述新功能时，隐式进入 `ssf-think`。
 - 用户自然语言要求开发时，如果没有 spec，先进入 `ssf-spec` 或要求确认 change-id。
 - 用户要求提交、PR、merge、rebase、回滚时，隐式进入 `ssf-git`。
 - 小型低风险修改可以走轻量模式，但仍需说明影响范围、最小改动和测试方式。
+
+显式命令集合：
+
+```text
+/ssf-think <idea>
+/ssf-spec <change-id>
+/ssf-build [all|N]
+/ssf-review
+/ssf-qa <change-id>
+/ssf-ship <change-id>
+/ssf-archive <change-id>
+/ssf-retro <change-id>
+/ssf-decision <topic>
+/ssf-map <change-id>
+/ssf-karpathy <target>
+/ssf-git
+/ssf-branch <change-id> <topic>
+/ssf-commit <change-id>
+/ssf-pr <change-id>
+```
 
 ## 高风险关键词
 

@@ -10,10 +10,10 @@
 
 - `skills/ssf-git/SKILL.md`
 - `agents/git-steward.md`
-- `commands/ssf:git.md`
-- `commands/ssf:branch.md`
-- `commands/ssf:commit.md`
-- `commands/ssf:pr.md`
+- `commands/ssf-git.md`
+- `commands/ssf-branch.md`
+- `commands/ssf-commit.md`
+- `commands/ssf-pr.md`
 - `templates/commit-message.md`
 - `templates/git-checklist.md`
 - `templates/pr-description.md`
@@ -39,7 +39,7 @@
 已补充：
 
 - `skills/ssf-karpathy/SKILL.md`
-- `commands/ssf:karpathy.md`
+- `commands/ssf-karpathy.md`
 - 在 `ssf-build` 中增加 Karpathy Preflight
 - 在 `ssf-review` 中增加 Karpathy Diff Audit
 - 在 `CLAUDE.md` 和 `AGENTS.md` 中加入隐式触发规则
@@ -50,7 +50,7 @@
 
 已补充：
 
-- 每完成一个可验证 task，建议进入 `/ssf:commit <change-id>`。
+- 每完成一个可验证 task，建议进入 `/ssf-commit <change-id>`。
 - 提交前必须展示 staged diff 摘要。
 - 每个 commit 对应一个清晰目标、Spec ID 和测试证据。
 
@@ -77,7 +77,7 @@
 ## 建议继续增强的方向
 
 1. 为不同技术栈增加测试命令探测，例如 Next.js、Rails、Django、Go、Rust。
-2. 增加 CI gate 模板，把 `/ssf:qa` 和 `/ssf:ship` 的检查转成 GitHub Actions。
+2. 增加 CI gate 模板，把 `/ssf-qa` 和 `/ssf-ship` 的检查转成 GitHub Actions。
 3. 增加 MCP / 浏览器 QA 适配，让 `ssf-qa` 能自动跑真实用户路径。
 4. 增加安全专用 agent，用于 auth、payment、webhook、secret、PII 等高风险场景。
 5. 增加多 worktree 并行开发规则，让大 change 拆成多个 Spec cluster。
