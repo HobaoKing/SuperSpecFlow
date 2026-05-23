@@ -1,9 +1,9 @@
 ---
 name: ssf-git
-description: Git 工作流与中文提交规范。用户输入 /ssf-git、/ssf-branch、/ssf-commit、/ssf-pr，或要求建分支、提交、生成 PR、合并、rebase 时触发。强制分支、暂存、提交、PR 与 OpenSpec change-id/Spec ID 对齐；commit 内容必须使用中文。
+description: Git 工作流与中文 commit 正文门禁。用户输入 /ssf-git、/ssf-branch、/ssf-commit、/ssf-pr，或要求建分支、提交、生成 PR、合并、rebase 时触发。强制分支、暂存、提交、PR 与 OpenSpec change-id/Spec ID 对齐；commit 标题的类型与范围使用英文标识符（conventional commits），摘要、正文、字段名必须使用中文。
 ---
 
-# ssf-git — Git 工作流与中文提交门禁
+# ssf-git — Git 工作流与中文 commit 正文门禁
 
 ## 目标
 
@@ -12,7 +12,7 @@ description: Git 工作流与中文提交规范。用户输入 /ssf-git、/ssf-b
 本阶段把 OpenSpec 的 change-id / Spec ID、Superpowers 的小步验证、Karpathy 的 surgical changes，以及 gstack 的发布门禁连接到 Git：
 
 ```text
-Spec ID → 任务 → 测试 → 最小实现 → 中文 commit → PR → Release Gate
+Spec ID → 任务 → 测试 → 最小实现 → 规范 commit（英文类型 + 中文正文） → PR → Release Gate
 ```
 
 ## 触发
@@ -23,10 +23,12 @@ Spec ID → 任务 → 测试 → 最小实现 → 中文 commit → PR → Rele
 
 ## 核心硬规则
 
-1. **commit 内容必须是中文。**
-   - 标题、正文、项目符号、风险说明、验证方式都必须使用中文。
+1. **commit 标题的类型与范围使用英文标识符，摘要与正文必须是中文。**
+   - 标题格式：`<英文类型>(<英文范围>): <中文摘要>`。
+   - 类型必须从下方“允许的英文类型”表中选取，范围必须采用 `<根模块>` 或 `<根模块>:<业务子模块>` 形式。
+   - 正文（项目符号、变更编号、关联规格、变更内容、验证方式、风险与回滚等字段及其说明）必须使用中文。
    - 允许出现不可避免的代码标识符、路径、命令、Spec ID、change-id，例如 `AUTH-001`、`src/api/user.ts`、`pnpm test`。
-   - 禁止 `WIP`、`update`、`fix bug`、`changes`、`misc` 这类模糊或英文提交信息。
+   - 禁止 `WIP`、`update`、`fix bug`、`changes`、`misc` 这类模糊提交信息。
 2. **没有 change-id，不提交行为变更。**
 3. **没有 Spec ID，不提交行为变更。**
 4. **没有验证证据，不提交完成态 commit。**
@@ -128,36 +130,44 @@ git add .
 
 除非已经明确确认所有改动都属于同一 change-id，并且没有生成物、缓存、日志、临时文件。
 
-## Step 4 — 中文 commit 格式
+## Step 4 — commit 标题与中文正文格式
 
 提交标题格式：
 
 ```text
-<中文类型>(<中文范围>): <中文摘要>
+<英文类型>(<英文范围>): <中文摘要>
 ```
 
-推荐中文类型：
+字段约束：
+
+- `英文类型`：从下方“允许的英文类型”表中选取，conventional commits 标准 + 项目定制 `spec`。
+- `英文范围`：必须采用 `<根模块>` 或 `<根模块>:<业务子模块>` 形式。
+  - 根模块取自仓库根目录划分：`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`examples`、`meta`（用于 `CLAUDE.md`、`README.md` 等根级文档）。
+  - 业务子模块按本次改动实际涉及的业务模块填写，使用小写英文 kebab-case。
+  - 示例：`skills`、`skills:members`、`routing:payment`、`meta`。
+- `中文摘要`：必须是中文，长度建议不超过 50 字符。
+
+允许的英文类型：
 
 | 类型 | 用途 |
 |---|---|
-| 规格 | OpenSpec、需求、验收标准、任务 |
-| 功能 | 新功能或新增行为 |
-| 修复 | 缺陷修复 |
-| 测试 | 单测、集成测试、E2E、负向测试 |
-| 重构 | 不改变行为的结构调整 |
-| 文档 | README、说明、runbook、用户文档 |
-| 质量 | 代码质量、边界处理、可维护性 |
-| 性能 | 性能优化 |
-| 安全 | 权限、认证、密钥、注入、防护 |
-| 配置 | 配置、环境、工具链 |
-| 构建 | 构建脚本、依赖、CI |
-| 发布 | release notes、回滚、监控 |
-| 回滚 | revert / rollback |
+| feat | 新功能或新增行为 |
+| fix | 缺陷修复 |
+| docs | README、说明、runbook、用户文档 |
+| style | 不影响语义的格式调整 |
+| refactor | 不改变行为的结构调整 |
+| perf | 性能优化 |
+| test | 单测、集成测试、E2E、负向测试 |
+| build | 构建脚本、依赖、工具链 |
+| ci | CI 配置 |
+| chore | 杂项维护 |
+| revert | 回滚提交 |
+| spec | OpenSpec、需求、验收标准、任务（项目定制） |
 
 提交正文格式：
 
 ```text
-<中文类型>(<中文范围>): <中文摘要>
+<英文类型>(<英文范围>): <中文摘要>
 
 变更编号：<change-id>
 关联规格：<SPEC-ID-1>, <SPEC-ID-2>
@@ -178,7 +188,7 @@ git add .
 示例：
 
 ```text
-功能(会员): 增加续费提醒入口
+feat(skills:members): 增加续费提醒入口
 
 变更编号：add-membership-renewal-reminder
 关联规格：MEMBERSHIP-001, MEMBERSHIP-002
@@ -206,7 +216,9 @@ git add .
 - [ ] 每个行为变更都有 Spec ID
 - [ ] 每个 Spec ID 有测试或明确人工验证
 - [ ] 已运行相关测试或说明无法运行原因
-- [ ] commit 标题为中文
+- [ ] commit 标题符合 `<英文类型>(<英文范围>): <中文摘要>` 规范
+- [ ] commit 标题的类型在允许列表中，范围符合 `<根模块>` 或 `<根模块>:<业务子模块>` 形式
+- [ ] commit 摘要为中文
 - [ ] commit 正文为中文
 - [ ] commit 正文包含 change-id、Spec ID、验证方式、风险与回滚
 - [ ] 没有 secret、日志、缓存、临时文件、无关格式化
@@ -218,7 +230,7 @@ git add .
 
 ```bash
 cat > /tmp/ssf-commit-msg.txt <<'COMMIT'
-功能(会员): 增加续费提醒入口
+feat(skills:members): 增加续费提醒入口
 
 变更编号：add-membership-renewal-reminder
 关联规格：MEMBERSHIP-001
@@ -238,10 +250,10 @@ git commit -F /tmp/ssf-commit-msg.txt
 
 ## Step 7 — PR 工作流
 
-PR 标题必须中文：
+PR 标题必须遵循 commit 标题规范（英文类型与范围 + 中文摘要）：
 
 ```text
-功能(会员): 增加续费提醒入口
+feat(skills:members): 增加续费提醒入口
 ```
 
 PR 正文：
@@ -289,12 +301,12 @@ git diff --stat origin/main...HEAD
 - `ssf-review` 无 🔴
 - `ssf-qa` 推荐 Ship 或 Ship with monitoring
 - `ssf-ship` 无阻塞
-- PR commits 均为中文提交
+- PR commits 均符合 `<英文类型>(<英文范围>): <中文摘要>` 规范，且正文为中文
 
-回滚提交也必须中文：
+回滚提交也必须遵循同样的标题规范，正文使用中文：
 
 ```text
-回滚(会员): 回滚续费提醒入口
+revert(skills:members): 回滚续费提醒入口
 
 变更编号：add-membership-renewal-reminder
 关联规格：MEMBERSHIP-001
@@ -314,7 +326,7 @@ git diff --stat origin/main...HEAD
 以下情况暂停并报告，不要提交：
 
 - staged diff 包含无关文件
-- commit message 无法满足中文规范
+- commit message 无法满足标题规范（英文类型 + 英文范围 + 中文摘要）或正文中文规范
 - 找不到 change-id 或 Spec ID
 - 测试失败且用户没有明确要求保存失败状态
 - 发现 secret、生产配置、隐私数据

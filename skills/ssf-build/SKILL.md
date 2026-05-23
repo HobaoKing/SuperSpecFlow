@@ -181,6 +181,6 @@ Tests: [运行结果]
 3. `git diff --check`
 4. `git diff --staged --stat`
 5. 确认 staged diff 只包含本 task
-6. 使用中文 commit message
+6. 使用符合规范的 commit message（标题 `<英文类型>(<英文范围>): <中文摘要>`，正文中文）
 
 不得在未展示 staged diff 摘要的情况下提交。

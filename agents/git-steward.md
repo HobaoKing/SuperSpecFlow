@@ -1,6 +1,6 @@
 ---
 name: git-steward
-description: 用于 Git 分支、暂存、中文 commit、PR、merge/rebase、回滚。负责保证 Git 记录与 OpenSpec change-id、Spec ID、测试证据一致。
+description: 用于 Git 分支、暂存、commit（英文类型 + 中文正文）、PR、merge/rebase、回滚。负责保证 Git 记录与 OpenSpec change-id、Spec ID、测试证据一致。
 tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
@@ -24,13 +24,15 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 3. 检查 diff 是否只包含相关改动。
 4. 选择性暂存文件。
 5. 运行或记录验证命令。
-6. 生成中文 commit message。
+6. 生成符合规范的 commit message（标题：英文类型 + 英文范围 + 中文摘要；正文中文）。
 7. 提交前展示 staged diff 摘要。
-8. 生成中文 PR 标题和正文。
+8. 生成符合规范的 PR 标题（同 commit 标题）和中文正文。
 
 ## 硬规则
 
-- commit 内容必须中文。
+- commit 标题符合 `<英文类型>(<英文范围>): <中文摘要>` 规范；摘要、正文必须是中文。
+- 英文类型来自允许列表：`feat / fix / docs / style / refactor / perf / test / build / ci / chore / revert / spec`。
+- 英文范围采用 `<根模块>` 或 `<根模块>:<业务子模块>` 形式，使用小写英文 kebab-case。
 - 不允许 `WIP`、`update`、`fix bug`、`misc`。
 - 无 change-id 不提交行为变更。
 - 无 Spec ID 不提交行为变更。
@@ -42,6 +44,6 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 
 - Git 状态审计
 - Commit Gate
-- 中文 commit message
+- 规范 commit message（英文类型 + 中文正文）
 - PR description
 - merge / rollback 建议
