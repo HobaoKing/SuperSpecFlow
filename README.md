@@ -24,18 +24,21 @@ SuperSpecFlow 是通用工作流包，不应覆盖宿主项目已有的 `AGENTS.
 ./scripts/install-project-symlinks.sh <project>
 ```
 
-然后在宿主项目已有 `AGENTS.md` / `CLAUDE.md` 中加入极薄入口，指向 `.superspecflow/AGENTS.routing.md` 或 `.superspecflow/CLAUDE.routing.md`。不要复制完整路由内容，也不要覆盖宿主项目文件。
+然后在宿主项目已有 `AGENTS.md` / `CLAUDE.md` 中加入 `@./.superspecflow/AGENTS.routing.md` 或 `@./.superspecflow/CLAUDE.routing.md`。不要复制完整路由内容，也不要覆盖宿主项目文件。
 
 全局级：
 
 ```bash
-mkdir -p ~/.claude/agents ~/.claude/commands ~/.claude/skills
-cp -R agents/* ~/.claude/agents/
-cp -R commands/* ~/.claude/commands/
-cp -R skills/* ~/.claude/skills/
+./update.sh
 ```
 
-Codex CLI 可把 `skills/` 复制到 `~/.codex/skills/`，并在宿主项目中软连 `.superspecflow/AGENTS.routing.md`。如果宿主项目没有 `AGENTS.md`，可以新建一个只包含项目自身约束和极薄入口的文件。
+全局安装默认只安装 skills / commands / agents，不启用自然语言路由。需要同时初始化某个项目时，显式打开开关：
+
+```bash
+./update.sh --enable-natural-language <project>
+```
+
+Codex CLI 可把 `skills/` 复制到 `~/.codex/skills/`，并在宿主项目中通过 `/ssf-init` 创建 `.superspecflow/AGENTS.routing.md` 软链。如果宿主项目没有 `AGENTS.md`，可以新建一个只包含项目自身约束和 `@./.superspecflow/AGENTS.routing.md` include 的文件。
 
 可选：安装 commit message hook（校验 `<英文类型>(<英文范围>): <中文摘要>` 标题与中文正文底线）：
 
@@ -81,7 +84,10 @@ ssf-think → ssf-spec → ssf-build → ssf-review → ssf-qa → ssf-ship → 
 /ssf-retro add-membership-renewal-reminder
 /ssf-decision 会员续费提醒入口放置位置
 /ssf-map add-membership-renewal-reminder
+/ssf-init
 ```
+
+`/ssf-init` 是项目初始化动作，用于创建 `.superspecflow/` 软链并提示加入 `@./.superspecflow/*.routing.md`。其他 `/ssf-*` 命令只执行对应的一次性流程，不会自动启用项目级自然语言路由。
 
 Git 和 Karpathy 相关命令：
 
@@ -189,6 +195,7 @@ commands/
   ssf-decision.md
   ssf-map.md
   ssf-karpathy.md
+  ssf-init.md
   ssf-git.md
   ssf-branch.md
   ssf-commit.md

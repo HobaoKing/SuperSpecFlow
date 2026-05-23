@@ -169,6 +169,7 @@ Intake Gate 分类：
 /ssf-decision <topic>
 /ssf-map <change-id>
 /ssf-karpathy <target>
+/ssf-init
 /ssf-git
 /ssf-branch <change-id> <topic>
 /ssf-commit <change-id>

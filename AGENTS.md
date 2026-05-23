@@ -237,6 +237,7 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 /ssf-decision <topic>
 /ssf-map <change-id>
 /ssf-karpathy <target>
+/ssf-init
 /ssf-git
 /ssf-branch <change-id> <topic>
 /ssf-commit <change-id>
