@@ -1,26 +1,30 @@
-Initialize SuperSpecFlow routing for the current project.
+Initialize SuperSpecFlow opt-in for the current project (zero-touch host integration).
 
 Argument: $ARGUMENTS
 
-This command is a project initialization action. It may create or update `.superspecflow/` symlinks in the current project, but it must not overwrite `AGENTS.md` or `CLAUDE.md`.
+This command is a project opt-in action. It creates `.superspecflow/` in the current project and **must not** modify the host project's `AGENTS.md` or `CLAUDE.md`.
 
 Steps:
-1. Confirm the current working directory is the project to initialize.
-2. Locate the SuperSpecFlow pack root. Prefer the directory that contains `routing/AGENTS.routing.md`, `routing/CLAUDE.routing.md`, `templates/`, `skills/`, `commands/`, and `agents/`.
-3. Create `.superspecflow/` in the current project.
-4. Symlink:
-   - `.superspecflow/AGENTS.routing.md` -> `<pack>/routing/AGENTS.routing.md`
-   - `.superspecflow/CLAUDE.routing.md` -> `<pack>/routing/CLAUDE.routing.md`
-   - `.superspecflow/templates` -> `<pack>/templates`
-5. If `.claude/` exists or the user wants Claude Code project-level commands, symlink `agents/`, `commands/ssf-*.md`, and `skills/ssf-*` into `.claude/`.
-6. Do not edit host `AGENTS.md` or `CLAUDE.md` automatically. Print the opt-in lines for the user to add:
 
-```markdown
-@./.superspecflow/AGENTS.routing.md
-```
+1. Confirm the current working directory is the project to opt in.
+2. Locate the SuperSpecFlow pack root. Prefer the directory that contains `routing/CLAUDE.global.md`, `routing/AGENTS.global.md`, `commands/`, `skills/`, and `agents/`.
+3. Run the contract script:
 
-```markdown
-@./.superspecflow/CLAUDE.routing.md
-```
+   ```bash
+   bash <pack>/scripts/_ssf_init_apply.sh
+   ```
 
-7. Explain that explicit `/ssf-*` commands are one-off actions and do not create `.superspecflow/`; only `/ssf-init` or an explicit install action opts the project into natural-language routing.
+   This creates:
+   - `.superspecflow/enabled` (sentinel, empty file)
+   - `.superspecflow/{decisions,retro,qa,reviews,karpathy,maps,ship}/` (产物子目录)
+   - `.superspecflow/progress/` (占位，保持空，由后续 progress-tracking change 定义)
+
+4. **Do not** create `.superspecflow/CLAUDE.routing.md`, `.superspecflow/AGENTS.routing.md`, or `.superspecflow/templates`. These are reserved for **optional** project-level overrides; users add them only when they want to override the global default routing.
+5. **Do not** edit the host `CLAUDE.md` or `AGENTS.md`. If the user wants global activation, point them at `scripts/install-global.sh`. If they want project-only activation without global install, they may manually add `@<pack>/routing/CLAUDE.global.md` to their project's `CLAUDE.md` themselves.
+6. Print the next-step guidance produced by the contract script.
+
+Notes:
+
+- Explicit `/ssf-*` commands work regardless of whether `.superspecflow/` exists; they are one-off actions and do not implicitly create the sentinel.
+- Re-running `/ssf-init` is idempotent: existing subdirectory contents are preserved.
+- For legacy compatibility, `scripts/install-project-symlinks.sh` still works and creates the older symlink-based layout. New users should prefer `/ssf-init` + `scripts/install-global.sh`.
