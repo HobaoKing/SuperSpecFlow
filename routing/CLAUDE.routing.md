@@ -44,6 +44,7 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 /ssf-decision <topic>
 /ssf-map <change-id>
 /ssf-karpathy <target>
+/ssf-init
 /ssf-git
 /ssf-branch <change-id> <topic>
 /ssf-commit <change-id>
@@ -58,6 +59,9 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 - QA 必须包含负向测试和回归路径。
 - 发布必须包含 rollback 和 monitoring。
 - commit 标题和正文必须使用中文。
+- 普通 `/ssf-*` 显式命令只执行一次性动作，不自动创建 `.superspecflow/`。
+- 只有 `/ssf-init` 或明确安装动作可以创建 `.superspecflow/`，使项目 opt-in 自然语言 Intake Gate。
+- 全局安装只提供能力；若当前项目没有 `.superspecflow/` 或显式 routing include，不默认接管自然语言。
 
 ## Karpathy 编码纪律
 

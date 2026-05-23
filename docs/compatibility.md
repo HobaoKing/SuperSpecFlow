@@ -14,22 +14,22 @@ SuperSpecFlow 是工作流包，不是应用运行时。它通过集中 routing�
 ./scripts/install-project-symlinks.sh <project>
 ```
 
-然后在宿主项目 `CLAUDE.md` 或 `AGENTS.md` 中加入极薄入口：
+然后在宿主项目 `CLAUDE.md` 或 `AGENTS.md` 中加入 `@` include：
 
 ```markdown
-本项目接入 SuperSpecFlow。请读取 `.superspecflow/CLAUDE.routing.md` 或 `.superspecflow/AGENTS.routing.md`，并按其中 Intake Gate 和 `ssf-*` 流程路由自然语言请求。
+@./.superspecflow/CLAUDE.routing.md
+@./.superspecflow/AGENTS.routing.md
 ```
 
-如果宿主项目已有 `CLAUDE.md` 或 `AGENTS.md`，只追加这类入口，并保留宿主项目原有规则。若规则冲突，宿主项目业务事实优先，SuperSpecFlow 负责流程门禁。
+如果宿主项目已有 `CLAUDE.md` 或 `AGENTS.md`，只追加对应 include，并保留宿主项目原有规则。若规则冲突，宿主项目业务事实优先，SuperSpecFlow 负责流程门禁。不支持 `@` include 时，使用 `templates/integration/*.snippet.md` 的极薄文字入口作为 fallback。
 
 推荐全局安装：
 
 ```bash
-mkdir -p ~/.claude/agents ~/.claude/commands ~/.claude/skills
-cp -R agents/* ~/.claude/agents/
-cp -R commands/* ~/.claude/commands/
-cp -R skills/* ~/.claude/skills/
+./update.sh
 ```
+
+默认只安装全局能力，不启用自然语言路由。需要同时初始化某个项目时，使用 `./update.sh --enable-natural-language <project>`。
 
 Claude Code 中可显式调用：
 
@@ -42,6 +42,7 @@ Claude Code 中可显式调用：
 /ssf-ship add-membership-renewal-reminder
 /ssf-archive add-membership-renewal-reminder
 /ssf-retro add-membership-renewal-reminder
+/ssf-init
 ```
 
 Git 相关命令：
@@ -61,7 +62,7 @@ mkdir -p ~/.codex/skills
 cp -R skills/* ~/.codex/skills/
 ```
 
-然后把 `.superspecflow/AGENTS.routing.md` 软连到宿主项目，并在宿主项目已有 `AGENTS.md` 中加入极薄入口。如果 Codex 环境支持项目内技能或命令发现，也可以软连 `skills/`、`commands/` 和 `templates/`，但仍不覆盖宿主项目已有指令文件。
+然后把 `.superspecflow/AGENTS.routing.md` 软连到宿主项目，并在宿主项目已有 `AGENTS.md` 中加入 `@./.superspecflow/AGENTS.routing.md`。如果 Codex 环境支持项目内技能或命令发现，也可以软连 `skills/`、`commands/` 和 `templates/`，但仍不覆盖宿主项目已有指令文件。
 
 Codex 中可以直接自然语言触发：
 
@@ -84,9 +85,9 @@ Codex 中可以直接自然语言触发：
 ## Compatibility Notes
 
 - 命令统一使用 `/ssf-xxx`，不要使用旧冒号格式。
-- 不覆盖宿主项目已有 `AGENTS.md` 或 `CLAUDE.md`，只加入指向 `.superspecflow/*.routing.md` 的极薄入口。
+- 不覆盖宿主项目已有 `AGENTS.md` 或 `CLAUDE.md`，优先用 `@./.superspecflow/*.routing.md` 显式 include。
 - Claude Code 使用 `commands/` 和 `.claude/commands/` 暴露显式命令。
-- Codex CLI 至少应读取宿主项目 `AGENTS.md` 中的极薄入口、`.superspecflow/AGENTS.routing.md` 和 `skills/`；显式命令是否可注册取决于当前 Codex 版本和运行环境。
+- Codex CLI 至少应读取宿主项目 `AGENTS.md` 中的 `@` include、`.superspecflow/AGENTS.routing.md` 和 `skills/`；显式命令是否可注册取决于当前 Codex 版本和运行环境。
 - 两端都必须保留 OpenSpec / Superpowers / gstack / Karpathy / GitOps 五层门禁。
 - 所有 commit message 和 PR 描述必须使用中文。
 - 行为变更必须关联 change-id 和 Spec ID。

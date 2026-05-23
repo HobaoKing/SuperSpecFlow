@@ -52,20 +52,24 @@ SuperSpecFlow 集成的是多套研发方法，不是把它们都作为应用运
 `AGENTS.md` 示例：
 
 ```markdown
-## SuperSpecFlow
-
-本项目接入 SuperSpecFlow。请读取 `.superspecflow/AGENTS.routing.md`，并按其中 Intake Gate 和 `ssf-*` 流程路由自然语言请求。
+@./.superspecflow/AGENTS.routing.md
 ```
 
 `CLAUDE.md` 示例：
 
 ```markdown
-## SuperSpecFlow
-
-本项目接入 SuperSpecFlow。请读取 `.superspecflow/CLAUDE.routing.md`，并按其中 Intake Gate 和 `ssf-*` 流程路由自然语言请求。
+@./.superspecflow/CLAUDE.routing.md
 ```
 
-这种方式仍会修改宿主项目指令文件，但只增加一小段引用，不复制 SuperSpecFlow 规则正文。
+这种方式仍会修改宿主项目指令文件，但只增加一行 include，不复制 SuperSpecFlow 规则正文。如果当前环境不支持 `@` include，再使用 `templates/integration/*.snippet.md` 中的极薄文字入口作为 fallback。
+
+也可以在支持 slash command 的环境中，在宿主项目里执行：
+
+```text
+/ssf-init
+```
+
+`/ssf-init` 是项目初始化动作：它创建 `.superspecflow/` 软链并提示添加 `@./.superspecflow/*.routing.md`。其他 `/ssf-*` 命令只是一次性调用，不会自动创建 `.superspecflow/`。
 
 ## 3. Claude Code 安装
 
@@ -88,13 +92,18 @@ cp -R routing templates <project>/.superspecflow/
 ### 3.2 全局安装
 
 ```bash
-mkdir -p ~/.claude/agents ~/.claude/commands ~/.claude/skills
-cp -R agents/* ~/.claude/agents/
-cp -R commands/* ~/.claude/commands/
-cp -R skills/* ~/.claude/skills/
+./update.sh
 ```
 
-全局安装后，仍建议在具体项目中通过 `.superspecflow/*.routing.md` 软连接入路由。否则 agent 可能能看到 skills / commands，但不知道自然语言默认如何进入 Intake Gate。
+全局安装默认只提供 skills / commands / agents 能力，不接管所有项目的自然语言。项目只有在存在 `.superspecflow/` 或显式 `@./.superspecflow/*.routing.md` include 时，才启用 SuperSpecFlow Intake Gate。
+
+如果全局安装时也要初始化某个项目的自然语言路由，显式打开开关：
+
+```bash
+./update.sh --enable-natural-language <project>
+```
+
+该选项会在完成全局安装后调用项目初始化流程，为指定项目创建 `.superspecflow/` 软链，但仍不会覆盖宿主项目 `AGENTS.md` 或 `CLAUDE.md`。
 
 ## 4. Codex CLI 安装
 
@@ -113,7 +122,7 @@ ln -sfn <SuperSpecFlow>/routing/AGENTS.routing.md <project>/.superspecflow/AGENT
 ln -sfn <SuperSpecFlow>/templates <project>/.superspecflow/templates
 ```
 
-再在宿主项目 `AGENTS.md` 中加入极薄入口，指向 `.superspecflow/AGENTS.routing.md`。如果宿主项目没有 `AGENTS.md`，可以新建一个，但内容应包含宿主项目自身约束和该入口。不要把 SuperSpecFlow 仓库根目录的 `AGENTS.md` 当作宿主项目完整替代品。
+再在宿主项目 `AGENTS.md` 中加入 `@./.superspecflow/AGENTS.routing.md`。如果宿主项目没有 `AGENTS.md`，可以新建一个，但内容应包含宿主项目自身约束和该 include。不要把 SuperSpecFlow 仓库根目录的 `AGENTS.md` 当作宿主项目完整替代品。
 
 ## 5. 可选安装项
 
@@ -227,6 +236,6 @@ rm -f <project>/.claude/commands/ssf-*.md
 rm -f <project>/.claude/skills/ssf-*
 ```
 
-然后从宿主项目 `AGENTS.md` / `CLAUDE.md` 中移除极薄入口。
+然后从宿主项目 `AGENTS.md` / `CLAUDE.md` 中移除 `@./.superspecflow/*.routing.md` include 或 fallback 极薄入口。
 
 全局卸载时，从 `~/.claude/` 或 `~/.codex/skills/` 删除对应 `ssf-*` skills 和 commands。
