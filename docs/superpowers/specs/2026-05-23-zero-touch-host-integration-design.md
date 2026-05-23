@@ -195,11 +195,12 @@ SSF 状态 = enabled ?
 - `commands/ssf-init.md`（升级为零侵入版 + 创建产物子目录骨架）
 - `docs/installation.md`（新增"推荐：方案 C 零侵入接入"章节，原软链方案降级为"兼容方案"）
 - `README.md`（接入指引指向新章节）
-- `CLAUDE.md` / `AGENTS.md`（仅必要补充：在交互策略与接入说明部分指明 opt-in 信号载体）
+- `CLAUDE.md` / `AGENTS.md`（仅必要补充：在交互策略与接入说明部分指明 opt-in 信号载体；具体补充行需在 plan 阶段以 diff 级粒度落定，禁止范围漂移）
+- `routing/CLAUDE.routing.md` / `routing/AGENTS.routing.md`（**仅同步高风险关键词清单一段**，从项目根 `CLAUDE.md` 第 179-183 行提取到 routing 主体，使全局接入路径也能识别"登录、认证、支付、权限"等高风险词；除该段以外的 routing 主体内容不动；此项为本 spec 的最小必要例外，不影响"主体事实源不变"的整体承诺）
 
 ### 8.3 不动
 
-- `routing/CLAUDE.routing.md`、`routing/AGENTS.routing.md`（主体事实源不变）
+- `routing/CLAUDE.routing.md`、`routing/AGENTS.routing.md` 主体内容不变（高风险关键词清单同步见 8.2，是仅有的最小例外）
 - `scripts/install-project-symlinks.sh`（保留为兼容方案）
 - 所有 ssf-* skills 中涉及 `openspec/` 路径的文件（OpenSpec 路径不动）
 
@@ -211,7 +212,7 @@ SSF 状态 = enabled ?
 |---|---|---|
 | 空目录、未跑 `/ssf-init` | 输入"解释一下 React useEffect" | 正常回答，不进 Intake Gate |
 | 空目录、未跑 `/ssf-init` | 输入"我要做一个登录" | 不强行接管；按 LLM 默认行为响应 |
-| 跑过 `/ssf-init` 的目录 | 输入"我要做一个登录" | 进入 Intake Gate，判定高风险，进入 ssf-think |
+| 跑过 `/ssf-init` 的目录 | 输入"我要做一个登录" | 进入 Intake Gate，判定为非平凡行为变更（且若 routing 主体已包含高风险关键词清单则进一步标为高风险），进入 ssf-think |
 | 跑过 `/ssf-init` 的目录 | 输入 `/ssf-think 续费提醒` | 显式命令直接执行，无需额外判定 |
 | 项目里有 `.superspecflow/CLAUDE.routing.md` | 自然语言请求 | 该覆盖文件生效，全局默认 routing 不被采用 |
 | Claude Code 装了 SessionStart hook | 启动会话 | 上下文中可见 `<ssf-status>` 标签，无需 LLM 跑探测命令 |
