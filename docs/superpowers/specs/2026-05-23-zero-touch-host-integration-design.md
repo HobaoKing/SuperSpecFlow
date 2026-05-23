@@ -80,7 +80,7 @@ SuperSpecFlow 当前的接入方式（`scripts/install-project-symlinks.sh` + �
 新增 `routing/CLAUDE.global.md`，结构如下：
 
 1. **自检测前置段**（C1 兜底逻辑）：
-   - 指示 LLM 在响应非问答类请求前，使用 Bash 执行 `test -f .superspecflow/enabled && echo on || echo off`，本会话只检测一次并缓存。
+   - 指示 LLM 在响应非问答类请求前，使用 Bash 执行 `test -f .superspecflow/enabled && echo enabled || echo disabled`，本会话只检测一次并缓存。
    - 若 Claude Code 已通过 SessionStart hook 注入 `<ssf-status>` 信号，优先使用该信号，不重复探测。
 
 2. **始终可用的显式命令段**：
@@ -89,8 +89,11 @@ SuperSpecFlow 当前的接入方式（`scripts/install-project-symlinks.sh` + �
 3. **项目级覆盖判定段**：
    - 指示 LLM 优先读取 `.superspecflow/CLAUDE.routing.md`（若存在）作为 routing 主体；否则回落到下一步的默认 include。
 
-4. **默认 routing include 段**：
-   - `@<repo>/routing/CLAUDE.routing.md`，保持主体内容单一事实源。
+4. **默认 routing 指令段**：
+   - **不**使用 `@<repo>/routing/CLAUDE.routing.md` 这种自动展开 include 写法（因为 `@` 在任何会话都会被无条件解析，破坏 SSF 状态 = disabled 时"不接管自然语言"的承诺）。
+   - 改为对 LLM 的指令式约束：当 SSF 状态 = `enabled` 且未命中第 3 节项目级覆盖时，**LLM 须自行用 Read 工具读取** `<repo>/routing/CLAUDE.routing.md`，并采用其作为 routing 主体。
+   - 当 SSF 状态 = `disabled` 时，**LLM 不得**读取该文件，也不得应用其中的约束。
+   - 该文件路径中的 `<repo>` 占位符由 `install-global.sh` 在用户全局文件中替换为绝对路径。
 
 `routing/AGENTS.global.md` 结构同上，仅替换 include 目标为 `AGENTS.routing.md`。
 
@@ -118,11 +121,35 @@ SuperSpecFlow 当前的接入方式（`scripts/install-project-symlinks.sh` + �
 新增脚本 `scripts/hooks/session-start-detect.sh`：
 
 - 读取 `$CLAUDE_PROJECT_DIR` 或退化使用 `pwd`。
-- 若存在 `.superspecflow/enabled`，输出 `<ssf-status>enabled</ssf-status>`。
-- 否则输出 `<ssf-status>disabled</ssf-status>`。
+- 检测 `.superspecflow/enabled` 是否存在，决定状态值为 `enabled` 或 `disabled`。
+- 输出**符合 Claude Code SessionStart hook 协议**的单行 JSON（不是裸 `<ssf-status>` 标签），结构：
+
+  ```json
+  {"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"<ssf-status>enabled</ssf-status>"}}
+  ```
+
+  Claude Code 会把 `additionalContext` 注入到会话上下文，使后续 LLM 读取 routing 时能看到 `<ssf-status>` 标签。
+- 任何错误（路径不存在、权限问题、shell 异常）一律退化为输出 `<ssf-status>disabled</ssf-status>` 包装在合法 JSON 中，不抛非零退出。
 - 不产生任何副作用，不写文件，不发起网络请求。
 
-安装方式由 `scripts/install-global.sh` 询问后协助写入 `~/.claude/settings.json`，或文档指导用户手动加入。
+`scripts/install-global.sh` 协助用户合并到 `~/.claude/settings.json` 的 JSON 片段使用 Claude Code 官方 hook schema（含 `matcher` 与嵌套 `hooks` 数组）：
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {"type": "command", "command": "<repo>/scripts/hooks/session-start-detect.sh"}
+        ]
+      }
+    ]
+  }
+}
+```
+
+脚本本身**不**擅自改写 `~/.claude/settings.json`，只打印应合并的片段并提示用户手动追加。
 
 ### 5.3 `/ssf-init`（升级为零侵入版）
 
