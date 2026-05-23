@@ -96,7 +96,7 @@ SuperSpecFlow 当前的接入方式（`scripts/install-project-symlinks.sh` + �
    - 当 SSF 状态 = `disabled` 时，**LLM 不得**读取该文件，也不得应用其中的约束。
    - 该文件路径中的 `<repo>` 占位符由 `install-global.sh` 在用户全局文件中替换为绝对路径。
 
-`routing/AGENTS.global.md` 结构同上，仅替换 include 目标为 `AGENTS.routing.md`。
+`routing/AGENTS.global.md` 结构同上，仅替换默认读取目标为 `AGENTS.routing.md`。
 
 ### 5.2 自检测两条腿
 
