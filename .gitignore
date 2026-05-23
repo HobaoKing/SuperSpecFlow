@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Claude Code 本地配置
+.claude/
+
+# 编辑器/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 日志
+*.log
+
+# 依赖与构建产物（通用占位，按技术栈补充）
+node_modules/
+dist/
+build/
