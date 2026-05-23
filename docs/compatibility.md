@@ -1,16 +1,28 @@
 # Claude Code / Codex Compatibility
 
-SuperSpecFlow 是工作流包，不是应用运行时。它通过项目指令、skills、agents、commands 和 templates 约束 AI coding agent 的研发流程。
+SuperSpecFlow 是工作流包，不是应用运行时。它通过项目指令片段、skills、agents、commands 和 templates 约束 AI coding agent 的研发流程。
+
+它不应该覆盖宿主项目已有的 `AGENTS.md` 或 `CLAUDE.md`。正确接入方式是安装能力文件，并把 SuperSpecFlow 路由片段合并到宿主项目自己的指令文件中。
+
+完整用户安装流程见 `docs/installation.md`。
 
 ## Claude Code
 
-推荐项目级安装：
+推荐项目级安装能力文件：
 
 ```bash
-cp AGENTS.md CLAUDE.md <project>/
 mkdir -p <project>/.claude
 cp -R agents commands skills <project>/.claude/
 ```
+
+然后手动合并路由片段：
+
+```text
+templates/integration/CLAUDE.snippet.md
+templates/integration/AGENTS.snippet.md
+```
+
+如果宿主项目已有 `CLAUDE.md` 或 `AGENTS.md`，把片段追加到合适章节，并保留宿主项目原有规则。若规则冲突，宿主项目业务事实优先，SuperSpecFlow 负责流程门禁。
 
 推荐全局安装：
 
@@ -44,15 +56,14 @@ Git 相关命令：
 
 ## Codex CLI
 
-Codex 侧重点是读取项目指令和 skills。推荐：
+Codex 侧重点是读取项目指令和 skills。推荐安装 skills：
 
 ```bash
-cp AGENTS.md <project>/
 mkdir -p ~/.codex/skills
 cp -R skills/* ~/.codex/skills/
 ```
 
-如果 Codex 环境支持项目内技能或命令发现，也可以把 `skills/`、`commands/` 和 `templates/` 放在项目根目录，由 `AGENTS.md` 负责路由说明。
+然后把 `templates/integration/AGENTS.snippet.md` 合并到宿主项目已有 `AGENTS.md`。如果 Codex 环境支持项目内技能或命令发现，也可以把 `skills/`、`commands/` 和 `templates/` 放在项目根目录，但仍不覆盖宿主项目已有指令文件。
 
 Codex 中可以直接自然语言触发：
 
@@ -75,8 +86,9 @@ Codex 中可以直接自然语言触发：
 ## Compatibility Notes
 
 - 命令统一使用 `/ssf-xxx`，不要使用旧冒号格式。
+- 不覆盖宿主项目已有 `AGENTS.md` 或 `CLAUDE.md`，只合并路由片段。
 - Claude Code 使用 `commands/` 和 `.claude/commands/` 暴露显式命令。
-- Codex CLI 至少应读取 `AGENTS.md` 和 `skills/`；显式命令是否可注册取决于当前 Codex 版本和运行环境。
+- Codex CLI 至少应读取宿主项目 `AGENTS.md` 中合并后的路由片段和 `skills/`；显式命令是否可注册取决于当前 Codex 版本和运行环境。
 - 两端都必须保留 OpenSpec / Superpowers / gstack / Karpathy / GitOps 五层门禁。
 - 所有 commit message 和 PR 描述必须使用中文。
 - 行为变更必须关联 change-id 和 Spec ID。

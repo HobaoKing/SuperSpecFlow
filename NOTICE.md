@@ -1,5 +1,7 @@
 # NOTICE
 
+SuperSpecFlow is released under the MIT License. See `LICENSE` for the full text.
+
 SuperSpecFlow integrates ideas from several open-source AI software-development workflows:
 
 - OpenSpec-style spec-driven change contracts.
