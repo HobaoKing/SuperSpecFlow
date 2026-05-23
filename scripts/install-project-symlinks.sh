@@ -41,10 +41,10 @@ SuperSpecFlow 软连安装完成。
 请在宿主项目已有 AGENTS.md / CLAUDE.md 中保留自己的项目规则，并只加入极薄入口说明，例如：
 
 AGENTS.md:
-本项目接入 SuperSpecFlow。请读取 .superspecflow/AGENTS.routing.md，并按其中 Intake Gate 和 ssf-* 流程路由自然语言请求。
+@./.superspecflow/AGENTS.routing.md
 
 CLAUDE.md:
-本项目接入 SuperSpecFlow。请读取 .superspecflow/CLAUDE.routing.md，并按其中 Intake Gate 和 ssf-* 流程路由自然语言请求。
+@./.superspecflow/CLAUDE.routing.md
 
 不要复制或覆盖宿主项目已有 AGENTS.md / CLAUDE.md。
 MSG

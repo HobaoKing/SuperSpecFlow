@@ -1,6 +1,6 @@
 # SuperSpecFlow Thin Entry for CLAUDE.md
 
-本片段是宿主项目 `CLAUDE.md` 中的极薄入口。推荐通过软连读取 `.superspecflow/CLAUDE.routing.md`，不要复制完整路由内容，也不要覆盖宿主项目文件。
+本片段是宿主项目 `CLAUDE.md` 中的极薄入口 fallback。优先使用 `@./.superspecflow/CLAUDE.routing.md`；仅在当前环境不支持 `@` include 时使用本片段。
 
 ## SuperSpecFlow
 
