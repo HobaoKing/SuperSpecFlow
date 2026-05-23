@@ -73,7 +73,7 @@ tests/
     └── test_ssf_init_zero_touch.bats
 ```
 
-如果 CI / 开发环境没有 bats-core，每个 `.bats` 文件第一行给出兜底说明："bats 不存在时使用 `bash tests/run-fallback.sh` 跑等价的纯 bash 断言"——这部分在最后一个任务里建。
+**测试运行依赖**：bats-core 是本计划的**强依赖**。Task 1 step 1 会检测并要求安装（`brew install bats-core` 或参考 https://bats-core.readthedocs.io）。仓库目前没有 CI 环境；不为不存在的 CI 需求另写纯 bash fallback。
 
 ---
 
@@ -106,14 +106,13 @@ tests/
 
 **目标**：让后续任务能立刻 TDD，先把"测试能跑"这件事跑通。
 
-- [ ] **Step 1: 检测 bats-core 是否可用**
+- [ ] **Step 1: 检测 bats-core 是否可用（强依赖）**
 
 ```bash
 command -v bats || echo "MISSING"
 ```
 
-预期：输出 bats 路径，或输出 `MISSING`。
-若 `MISSING`：在 macOS 上执行 `brew install bats-core`；其他平台参考 https://bats-core.readthedocs.io。安装后继续。
+预期：输出 bats 路径。若输出 `MISSING`，**必须**先安装再继续：macOS 上执行 `brew install bats-core`；其他平台参考 https://bats-core.readthedocs.io。本计划不提供 bats 不可用时的纯 bash fallback——若环境无法安装 bats，整个计划无法执行。
 
 - [ ] **Step 2: 写脚手架 helper**
 
@@ -1608,9 +1607,11 @@ EOF
 
 - `.superspecflow/progress/` 内部结构（留给 `progress-tracking` change）
 - Claude ↔ Codex 跨 CLI 互验（留给 `cross-agent-verification` change）
+- 既有 ssf-* skills / agents / commands 的 artifact 输出路径迁移（`engineering/<change-id>/`、`qa/<change-id>/` 等 → `.superspecflow/` 下对应子目录）。本计划只建空骨架，迁移留给 `artifact-path-migration` change
 - ssf-* skills / agents 中 `openspec/` 路径迁移（明确不动）
 - `scripts/install-project-symlinks.sh` 行为变化（明确不动，保持兼容）
 - `update.sh` 行为变化（明确不动）
+- bats 不可用时的纯 bash fallback（删除原 §1.4 承诺，统一要求安装 bats-core）
 
 ## 6. Skill 参考
 
