@@ -288,6 +288,33 @@ extract_context() {
   ssf_cleanup_tmp "$OTHER"
 }
 
+@test "stdin JSON 顶层 cwd 优先于嵌套对象中的 cwd（防止 sed 贪婪回归）" {
+  # 顶层 cwd 指向 enabled 项目；payload 后续嵌套对象的 cwd 指向 disabled 项目
+  mkdir -p "$PROJECT/.superspecflow"
+  touch "$PROJECT/.superspecflow/enabled"
+  NESTED="$(ssf_make_tmp_project)"
+  payload=$(printf '{"session_id":"x","cwd":"%s","hook_event_name":"SessionStart","source":"startup","tool_input":{"cwd":"%s"}}' "$PROJECT" "$NESTED")
+  cd /tmp
+  run bash -c "printf '%s' '$payload' | '$HOOK'"
+  [ "$status" -eq 0 ]
+  ctx="$(extract_context "$output")"
+  [ "$ctx" = "<ssf-status>enabled</ssf-status>" ]
+  ssf_cleanup_tmp "$NESTED"
+}
+
+@test "stdin JSON cwd 路径含空格时能正确解析" {
+  SPACED="$(mktemp -d "${TMPDIR:-/tmp}/ssf-proj space.XXXXXX")"
+  mkdir -p "$SPACED/.superspecflow"
+  touch "$SPACED/.superspecflow/enabled"
+  payload=$(printf '{"session_id":"x","cwd":"%s","hook_event_name":"SessionStart","source":"startup"}' "$SPACED")
+  cd /tmp
+  run bash -c "printf '%s' '$payload' | '$HOOK'"
+  [ "$status" -eq 0 ]
+  ctx="$(extract_context "$output")"
+  [ "$ctx" = "<ssf-status>enabled</ssf-status>" ]
+  rm -rf "$SPACED"
+}
+
 @test "输出始终是符合 hook 协议的单行 JSON" {
   cd "$PROJECT"
   run "$HOOK"
@@ -315,7 +342,7 @@ extract_context() {
 bats tests/hooks/test_session_start_detect.bats
 ```
 
-预期：6 个测试 FAIL（脚本不存在）。
+预期：8 个测试 FAIL（脚本不存在）。
 
 - [ ] **Step 3: 实现 hook 脚本**
 
@@ -339,12 +366,22 @@ emit() {
 trap 'emit disabled' ERR
 
 # 优先级 1：stdin JSON 的 cwd（Claude Code 注入；最权威）
+# 用 python3 解析顶层 cwd，避免 sed 贪婪匹配误取嵌套 cwd 字段或 JSON 转义截断。
+# 若 python3 不存在则跳过 stdin 解析，进入 env/PWD fallback。
 stdin_cwd=""
-if [ ! -t 0 ]; then
-  # stdin 非 tty，尝试读取并解析
-  raw="$(cat 2>/dev/null)"
-  # 用 sed 提取 "cwd":"..." 字段；不依赖 jq
-  stdin_cwd="$(printf '%s' "$raw" | sed -nE 's/.*"cwd"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' | head -n1)"
+if [ ! -t 0 ] && command -v python3 >/dev/null 2>&1; then
+  stdin_cwd="$(python3 -c 'import json,sys
+try:
+    data = json.load(sys.stdin)
+    if isinstance(data, dict):
+        v = data.get("cwd")
+        if isinstance(v, str):
+            print(v)
+except Exception:
+    pass' 2>/dev/null)"
+elif [ ! -t 0 ]; then
+  # python3 缺失时丢弃 stdin，避免阻塞
+  cat >/dev/null 2>&1
 fi
 
 # 优先级 2/3：环境变量 / PWD
@@ -373,7 +410,7 @@ chmod +x scripts/hooks/session-start-detect.sh
 bats tests/hooks/test_session_start_detect.bats
 ```
 
-预期：6 PASS。
+预期：8 PASS。
 
 - [ ] **Step 5: Commit**
 
@@ -386,12 +423,12 @@ feat(scripts): 新增 SessionStart hook 探测项目级 opt-in 信号
 关联规格：docs/superpowers/specs/2026-05-23-zero-touch-host-integration-design.md（5.2 C3）
 
 变更内容：
-- 新增 scripts/hooks/session-start-detect.sh：按 Claude Code 官方 SessionStart hook 协议优先从 stdin JSON 解析 cwd 字段（回落 CLAUDE_PROJECT_DIR 再回落 PWD），输出 hookSpecificOutput.additionalContext 携带 <ssf-status>enabled|disabled</ssf-status> 标签的单行 JSON
+- 新增 scripts/hooks/session-start-detect.sh：按 Claude Code 官方 SessionStart hook 协议解析 stdin JSON 顶层 cwd 字段（用 python3 解析，避免 sed 贪婪误取嵌套 cwd / JSON 转义截断；python3 不存在时跳过 stdin 解析），回落 CLAUDE_PROJECT_DIR 再回落 PWD；输出 hookSpecificOutput.additionalContext 携带 <ssf-status>enabled|disabled</ssf-status> 标签的单行 JSON
 - 任何错误均退化为 disabled 版本的合法 JSON，避免会话启动报错
-- 新增 6 个 bats 测试覆盖 enabled / disabled / CLAUDE_PROJECT_DIR / stdin cwd 优先级 / 协议结构 / 异常退化
+- 新增 8 个 bats 测试覆盖 enabled / disabled / CLAUDE_PROJECT_DIR / stdin cwd 优先级 / stdin 顶层 cwd 优先于嵌套 cwd（防 sed 贪婪回归）/ stdin cwd 含空格路径 / 协议结构 / 异常退化
 
 验证方式：
-- bats tests/hooks/test_session_start_detect.bats（6 PASS）
+- bats tests/hooks/test_session_start_detect.bats（8 PASS）
 
 风险与回滚：
 - 风险：用户 settings.json 未配置该 hook 时 C3 不生效；C1 兜底仍然工作（见 Task 3）
