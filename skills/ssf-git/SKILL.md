@@ -35,7 +35,8 @@ Spec ID → 任务 → 测试 → 最小实现 → 规范 commit（英文类型 
 5. **不得提交无关改动。**
 6. **不得把多个无关目标混在一个 commit。**
 7. **提交前必须检查 staged diff。**
-8. **merge / ship 前必须保证工作区干净，或明确列出未提交内容。**
+8. **不得提交本地 workflow 运行时、安装副本或缓存产物。**
+9. **merge / ship 前必须保证工作区干净，或明确列出未提交内容。**
 
 ## 分支命名规范
 
@@ -142,7 +143,7 @@ git add .
 
 - `英文类型`：从下方“允许的英文类型”表中选取，conventional commits 标准 + 项目定制 `spec`。
 - `英文范围`：必须采用 `<根模块>` 或 `<根模块>:<业务子模块>` 形式。
-  - 根模块取自仓库根目录划分：`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`examples`、`meta`（用于 `CLAUDE.md`、`README.md` 等根级文档）。
+  - 根模块取自仓库根目录划分：`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`openspec`、`examples`、`meta`（用于 `CLAUDE.md`、`README.md` 等根级文档）。
   - 业务子模块按本次改动实际涉及的业务模块填写，使用小写英文 kebab-case。
   - 示例：`skills`、`skills:members`、`routing:payment`、`meta`。
 - `中文摘要`：必须是中文，长度建议不超过 50 字符。
@@ -221,6 +222,7 @@ feat(skills:members): 增加续费提醒入口
 - [ ] commit 摘要为中文
 - [ ] commit 正文为中文
 - [ ] commit 正文包含 change-id、Spec ID、验证方式、风险与回滚
+- [ ] 没有 `superpowers/`、`.superspecflow/`、`.claude/`、`.codex/`、`.DS_Store` 等运行时、安装或缓存产物
 - [ ] 没有 secret、日志、缓存、临时文件、无关格式化
 ```
 
@@ -326,6 +328,7 @@ revert(skills:members): 回滚续费提醒入口
 以下情况暂停并报告，不要提交：
 
 - staged diff 包含无关文件
+- staged diff 包含本地 workflow 运行时、安装副本或缓存产物
 - commit message 无法满足标题规范（英文类型 + 英文范围 + 中文摘要）或正文中文规范
 - 找不到 change-id 或 Spec ID
 - 测试失败且用户没有明确要求保存失败状态

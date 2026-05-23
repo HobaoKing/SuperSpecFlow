@@ -5,6 +5,15 @@ MSG_FILE="$1"
 MSG="$(cat "$MSG_FILE")"
 FIRST_LINE="$(head -n 1 "$MSG_FILE")"
 
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  BAD_PATHS="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^(superpowers|\.superspecflow|\.claude|\.codex)/|(^|/)\.DS_Store$' || true)"
+  if [ -n "$BAD_PATHS" ]; then
+    echo "错误：staged diff 包含 workflow 运行时、安装或缓存产物，不能提交：" >&2
+    printf '%s\n' "$BAD_PATHS" >&2
+    exit 1
+  fi
+fi
+
 # commit 摘要与正文必须包含中文。允许代码标识符、路径、命令、Spec ID、change-id 等以英文出现。
 if ! printf '%s' "$MSG" | grep -Eq '[一-龥]'; then
   echo "错误：commit 摘要与正文必须包含中文。" >&2
