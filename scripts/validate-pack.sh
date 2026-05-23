@@ -205,7 +205,32 @@ check_command_file_names() {
   fi
 }
 
-check_integration_snippets_intake_gate() {
+check_routing_files() {
+  local routing_file
+
+  for routing_file in routing/AGENTS.routing.md routing/CLAUDE.routing.md; do
+    if [ ! -f "$routing_file" ]; then
+      fail "$routing_file 不存在"
+      continue
+    fi
+
+    if ! grep -q 'Intake Gate' "$routing_file"; then
+      fail "$routing_file 缺少 Intake Gate"
+    elif ! grep -q '轻量任务' "$routing_file"; then
+      fail "$routing_file 缺少轻量任务边界"
+    elif ! grep -q 'Karpathy 编码纪律' "$routing_file"; then
+      fail "$routing_file 缺少 Karpathy 编码纪律"
+    elif ! grep -q '外科手术式修改' "$routing_file"; then
+      fail "$routing_file 缺少外科手术式修改规则"
+    elif ! grep -q '目标驱动验证' "$routing_file"; then
+      fail "$routing_file 缺少目标驱动验证规则"
+    else
+      pass "$routing_file 包含 Intake Gate、轻量任务边界和 Karpathy 编码纪律"
+    fi
+  done
+}
+
+check_integration_snippets_thin() {
   local snippet
 
   for snippet in templates/integration/AGENTS.snippet.md templates/integration/CLAUDE.snippet.md; do
@@ -214,12 +239,12 @@ check_integration_snippets_intake_gate() {
       continue
     fi
 
-    if ! grep -q 'Intake Gate' "$snippet"; then
-      fail "$snippet 缺少 Intake Gate"
-    elif ! grep -q '轻量任务' "$snippet"; then
-      fail "$snippet 缺少轻量任务边界"
+    if ! grep -q '.superspecflow/.*routing.md' "$snippet"; then
+      fail "$snippet 缺少 .superspecflow routing 引用"
+    elif grep -q '^| 纯问答' "$snippet"; then
+      fail "$snippet 包含完整路由表，应保持极薄入口"
     else
-      pass "$snippet 包含 Intake Gate 和轻量任务边界"
+      pass "$snippet 是极薄入口"
     fi
   done
 }
@@ -230,7 +255,8 @@ check_no_colon_filenames
 check_no_host_instruction_overwrite
 check_skill_frontmatter
 check_command_file_names
-check_integration_snippets_intake_gate
+check_routing_files
+check_integration_snippets_thin
 check_command_docs_consistency
 
 if [ "$FAILED" -ne 0 ]; then
