@@ -14,13 +14,18 @@ SuperSpecFlow 是一套面向 Claude Code / Codex CLI 的 AI 软件研发工作�
 
 ## 推荐安装位置
 
-项目级：
+SuperSpecFlow 是通用工作流包，不应覆盖宿主项目已有的 `AGENTS.md` 或 `CLAUDE.md`。宿主项目原有指令仍然是项目事实来源；SuperSpecFlow 只提供可合并的流程路由。
+
+完整安装流程见 `docs/installation.md`。
+
+项目级推荐：
 
 ```bash
-cp AGENTS.md CLAUDE.md .
 mkdir -p .claude
 cp -R agents commands skills .claude/
 ```
+
+然后把 `templates/integration/AGENTS.snippet.md` 或 `templates/integration/CLAUDE.snippet.md` 中的路由片段，手动合并到宿主项目已有指令文件。不要直接覆盖宿主项目文件。
 
 全局级：
 
@@ -31,7 +36,7 @@ cp -R commands/* ~/.claude/commands/
 cp -R skills/* ~/.claude/skills/
 ```
 
-Codex CLI 可参考 `AGENTS.md`，并把 `skills/` 复制到 `~/.codex/skills/`。
+Codex CLI 可把 `skills/` 复制到 `~/.codex/skills/`，并把 `templates/integration/AGENTS.snippet.md` 的内容合并到宿主项目已有 `AGENTS.md`。如果宿主项目没有 `AGENTS.md`，可以新建一个只包含该片段和项目自身约束的文件。
 
 可选：安装中文 commit message hook：
 
@@ -195,6 +200,7 @@ skills/
 templates/
   product-change-brief.md
   user-journey.md
+  intake-gate.md
   proposal.md
   spec.md
   technical-design.md
@@ -231,7 +237,11 @@ templates/
   git-checklist.md
   pr-description.md
   git-hooks/commit-msg
+  integration/
+    AGENTS.snippet.md
+    CLAUDE.snippet.md
 docs/
+  installation.md
   compatibility.md
 examples/
   add-membership-renewal-reminder/

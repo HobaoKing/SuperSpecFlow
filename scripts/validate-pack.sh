@@ -19,32 +19,85 @@ tmp_file() {
   mktemp "${TMPDIR:-/tmp}/ssf-validate.XXXXXX"
 }
 
-check_no_legacy_command_prefix() {
-  local legacy_prefix
-  legacy_prefix='ssf:'
+# 选择递归搜索工具。优先 ripgrep；缺失时退化到 grep -REn。
+# 之前直接 `if rg ... ; then` 把 "rg 不存在 (exit 127)" 当作 "未发现残留"，造成假阳性。
+if command -v rg >/dev/null 2>&1; then
+  SEARCH_TOOL="rg"
+else
+  SEARCH_TOOL="grep"
+  printf 'WARN: 未检测到 ripgrep (rg)，使用 grep -REn 退化模式。\n' >&2
+fi
 
-  if rg --hidden -n "$legacy_prefix" \
-    --glob '!.git/**' \
-    --glob '!scripts/validate-pack.sh' \
-    --glob '!templates/git-hooks/commit-msg' \
-    . >/tmp/ssf-legacy-prefix.txt; then
-    cat /tmp/ssf-legacy-prefix.txt >&2
+# 在当前目录递归搜索正则。命中 -> 输出并返回 0；未命中 -> 返回 1。
+# 第 1 参数：正则
+# 第 2 参数：以空格分隔的相对路径白名单（除 .git 之外要额外排除的文件）
+# 第 3 参数：以空格分隔的搜索根路径列表，默认 "."
+search_repo() {
+  local pattern="$1"
+  local exclude_str="${2:-}"
+  local roots_str="${3:-.}"
+
+  local -a exclude_paths roots
+  # shellcheck disable=SC2206
+  exclude_paths=( ${exclude_str} )
+  # shellcheck disable=SC2206
+  roots=( ${roots_str} )
+
+  local status
+  if [ "$SEARCH_TOOL" = "rg" ]; then
+    local -a args
+    args=(--hidden -n "$pattern" --glob '!.git/**')
+    local e
+    for e in "${exclude_paths[@]}"; do
+      [ -n "$e" ] && args+=(--glob "!$e")
+    done
+    rg "${args[@]}" "${roots[@]}" && status=0 || status=$?
+    return "$status"
+  fi
+
+  # grep --exclude 只匹配 basename，本仓库豁免文件名唯一，够用。
+  local -a args
+  args=(-REn "$pattern" --exclude-dir=.git)
+  local e base
+  for e in "${exclude_paths[@]}"; do
+    [ -z "$e" ] && continue
+    base="$(basename "$e")"
+    args+=(--exclude="$base")
+  done
+  grep "${args[@]}" "${roots[@]}" && status=0 || status=$?
+  return "$status"
+}
+
+check_no_legacy_command_prefix() {
+  local out_file
+  out_file="$(tmp_file)"
+
+  if search_repo 'ssf:' \
+       'scripts/validate-pack.sh templates/git-hooks/commit-msg' \
+       '.' \
+       >"$out_file" 2>/dev/null; then
+    cat "$out_file" >&2
     fail "发现旧命令前缀残留，请统一使用 /ssf-xxx 和 commands/ssf-xxx.md"
   else
     pass "未发现旧命令前缀残留"
   fi
+  rm -f "$out_file"
 }
 
 check_no_hw_prefix() {
-  if rg --hidden -n '(^|[^A-Za-z0-9_/-])/?hw[-:]|commands/hw[-:]|skills/hw-' \
-    --glob '!.git/**' \
-    --glob '!scripts/validate-pack.sh' \
-    . >/tmp/ssf-hw-prefix.txt; then
-    cat /tmp/ssf-hw-prefix.txt >&2
+  local out_file
+  out_file="$(tmp_file)"
+
+  if search_repo '(^|[^A-Za-z0-9_/-])/?hw[-:]|commands/hw[-:]|skills/hw-' \
+       'scripts/validate-pack.sh' \
+       '.' \
+       >"$out_file" 2>/dev/null; then
+    cat "$out_file" >&2
     fail "发现 hw 旧前缀残留"
   else
     pass "未发现 hw 旧前缀残留"
   fi
+  rm -f "$out_file"
 }
 
 check_no_colon_filenames() {
@@ -57,6 +110,33 @@ check_no_colon_filenames() {
   else
     pass "未发现包含冒号的文件名"
   fi
+}
+
+check_no_host_instruction_overwrite() {
+  local out_file
+  out_file="$(tmp_file)"
+
+  set +e
+  if [ "$SEARCH_TOOL" = "rg" ]; then
+    rg -n 'cp[[:space:]]+AGENTS\.md|cp[[:space:]]+CLAUDE\.md' README.md docs templates \
+      >"$out_file" 2>/dev/null
+  else
+    grep -REn 'cp[[:space:]]+AGENTS\.md|cp[[:space:]]+CLAUDE\.md' README.md docs templates \
+      >"$out_file" 2>/dev/null
+  fi
+  local status=$?
+  set -e
+
+  if [ "$status" -eq 0 ]; then
+    cat "$out_file" >&2
+    fail "发现覆盖宿主项目 AGENTS.md / CLAUDE.md 的安装说明"
+  elif [ "$status" -eq 1 ]; then
+    pass "未发现覆盖宿主项目指令文件的安装说明"
+  else
+    cat "$out_file" >&2
+    fail "检查宿主项目指令覆盖说明时搜索失败"
+  fi
+  rm -f "$out_file"
 }
 
 check_skill_frontmatter() {
@@ -89,8 +169,7 @@ check_skill_frontmatter() {
 }
 
 check_command_docs_consistency() {
-  local expected actual doc expected_file actual_file
-
+  local doc expected_file actual_file
   expected_file="$(tmp_file)"
   actual_file="$(tmp_file)"
 
@@ -126,11 +205,32 @@ check_command_file_names() {
   fi
 }
 
+check_integration_snippets_intake_gate() {
+  local snippet
+
+  for snippet in templates/integration/AGENTS.snippet.md templates/integration/CLAUDE.snippet.md; do
+    if [ ! -f "$snippet" ]; then
+      fail "$snippet 不存在"
+      continue
+    fi
+
+    if ! grep -q 'Intake Gate' "$snippet"; then
+      fail "$snippet 缺少 Intake Gate"
+    elif ! grep -q '轻量任务' "$snippet"; then
+      fail "$snippet 缺少轻量任务边界"
+    else
+      pass "$snippet 包含 Intake Gate 和轻量任务边界"
+    fi
+  done
+}
+
 check_no_legacy_command_prefix
 check_no_hw_prefix
 check_no_colon_filenames
+check_no_host_instruction_overwrite
 check_skill_frontmatter
 check_command_file_names
+check_integration_snippets_intake_gate
 check_command_docs_consistency
 
 if [ "$FAILED" -ne 0 ]; then
