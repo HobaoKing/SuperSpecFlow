@@ -172,7 +172,12 @@ SuperSpecFlow 本仓库必须提交 OpenSpec 协议文件，但不得提交 `.su
 
 ## API / Interface Changes
 
-无代码 API 变更。第一版只定义文件协议和 agent 规则。
+无代码 API 变更。第一版只定义文件协议、agent 规则和可复用模板：
+
+- `templates/progress-state.json`
+- `templates/progress-timeline.md`
+- `templates/progress-verification.md`
+- `templates/progress-handoff.md`
 
 ## Data Model Changes
 

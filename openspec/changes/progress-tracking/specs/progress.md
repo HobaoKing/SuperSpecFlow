@@ -121,6 +121,19 @@
 - THEN 是否提交由宿主项目策略决定
 - AND SuperSpecFlow 协议不强制宿主项目提交或忽略 `.superspecflow/progress/`
 
+### Requirement: SSF-PROGRESS-012 提供 progress 文件模板
+
+系统必须在 SuperSpecFlow 包源码中提供 progress 文件模板，供 agent 创建宿主项目运行时 progress 文件时引用。
+
+#### Scenario: Agent 需要创建 progress 文件
+- GIVEN agent 需要为 `<change-id>` 创建 `.superspecflow/progress/<change-id>/`
+- WHEN agent 查找可复用模板
+- THEN 系统提供 `templates/progress-state.json`
+- AND 系统提供 `templates/progress-timeline.md`
+- AND 系统提供 `templates/progress-verification.md`
+- AND 系统提供 `templates/progress-handoff.md`
+- AND 模板本身作为包源码提交，不作为宿主项目运行时实例提交
+
 ## MODIFIED Requirements
 
 无。
@@ -137,4 +150,4 @@
 - SSF-PROGRESS-N4 Agent 不得用窄范围验证声明宽范围完成状态。
 - SSF-PROGRESS-N5 SuperSpecFlow 本仓库不得提交 `.superspecflow/progress/` 运行时实例。
 - SSF-PROGRESS-N6 第一版不得实现自动调度、UI 或跨 agent 签核。
-- SSF-PROGRESS-N7 第一版不得修改代码、README、routing、skills、commands、scripts、tests 或其他 change 目录。
+- SSF-PROGRESS-N7 第一版不得实现自动调度器、UI 或跨 agent 签核机制。

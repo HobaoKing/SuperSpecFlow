@@ -151,6 +151,12 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 7. 每完成一个 task 更新 tasks.md。
 8. 每个可验证任务完成后，建议进入 `ssf-git` 准备中文提交。
 
+Progress tracking:
+
+- 如果恢复已有 change，且 `.superspecflow/progress/<change-id>/` 存在，先读取 `state.json` 和 `handoff.md`，再读取 OpenSpec。
+- 如果本次工作会持续超过一个可验证 task，使用 `templates/progress-state.json`、`templates/progress-timeline.md`、`templates/progress-verification.md` 和 `templates/progress-handoff.md` 创建或维护 `.superspecflow/progress/<change-id>/`。
+- 声称 task、阶段或 change 完成前，必须在 `.superspecflow/progress/<change-id>/verification.md` 写入或引用 fresh verification，并让验证范围匹配完成声明范围。
+
 ### Karpathy 编码纪律 / Diff Discipline
 
 任何写代码、修 bug、重构、review、提交前，都要遵守：

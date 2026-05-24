@@ -1,0 +1,20 @@
+{
+  "change_id": "[change-id]",
+  "phase": "spec",
+  "status": "not_started",
+  "current_task": "",
+  "completed_tasks": [],
+  "blocked": false,
+  "blockers": [],
+  "last_updated": "",
+  "last_agent": "",
+  "last_verification": {
+    "timestamp": "",
+    "summary": "Not run",
+    "reference": "verification.md#not-run"
+  },
+  "openspec": {
+    "change_path": "openspec/changes/[change-id]",
+    "spec_ids": []
+  }
+}

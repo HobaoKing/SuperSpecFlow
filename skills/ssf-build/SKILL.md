@@ -30,6 +30,9 @@ description: 阶段三（建）。用户输入 /ssf-build 或由 ssf-spec 续接
 - 发现范围偏差，暂停，不自行扩展。
 - 每完成一个 task，更新 tasks.md。
 - 维护 `engineering/<change-id>/spec-to-code-map.md`。
+- 如果宿主项目存在或需要创建 progress 状态，维护 `.superspecflow/progress/<change-id>/state.json`、`timeline.md`、`verification.md` 和 `handoff.md`。
+- 中断、上下文压缩或换 agent 后恢复已有 change 时，先读取 `.superspecflow/progress/<change-id>/state.json` 和 `handoff.md`，再读取 OpenSpec。
+- 声称 task、阶段或 change 完成前，必须在 `.superspecflow/progress/<change-id>/verification.md` 写入或引用 fresh verification。
 
 ## Step 1 — Implementation Plan
 
@@ -66,7 +69,36 @@ description: 阶段三（建）。用户输入 /ssf-build 或由 ssf-spec 续接
 | SPEC-001 | ... | ... | ... | Planned |
 ```
 
-## Step 3 — 执行任务
+## Step 3 — Progress Tracking
+
+如果 `.superspecflow/progress/<change-id>/` 存在，或本次工作会持续超过一个可验证 task，使用 progress 协议记录运行状态：
+
+```text
+.superspecflow/progress/<change-id>/
+  state.json
+  timeline.md
+  verification.md
+  handoff.md
+```
+
+模板来源：
+
+```text
+templates/progress-state.json
+templates/progress-timeline.md
+templates/progress-verification.md
+templates/progress-handoff.md
+```
+
+规则：
+
+1. 开始或切换 task 时更新 `state.json`，并在 `timeline.md` 追加事件。
+2. 运行测试、静态检查、烟测或人工检查后，在 `verification.md` 记录范围、命令或方法、结果和输出摘要。
+3. `state.json.last_verification` 必须引用最近相关验证记录。
+4. 准备停止且仍有 meaningful work remains 时更新 `handoff.md`。
+5. fresh verification 必须晚于本次声明覆盖范围内的最新相关变更。
+
+## Step 4 — 执行任务
 
 `/ssf-build all`：逐条执行。
 `/ssf-build N`：只执行第 N 条。
@@ -85,7 +117,7 @@ Spec: [SPEC-ID]
 Tests: [运行结果]
 ```
 
-## Step 4 — 暂停条件
+## Step 5 — 暂停条件
 
 以下情况必须暂停：
 
@@ -112,7 +144,7 @@ Tests: [运行结果]
 ## 建议
 ```
 
-## Step 5 — Dev Handoff
+## Step 6 — Dev Handoff
 
 任务完成后输出：
 
@@ -136,7 +168,7 @@ Tests: [运行结果]
 ## QA Focus Areas
 ```
 
-## Step 6 — 自动续接
+## Step 7 — 自动续接
 
 用户确认后进入 `ssf-review`。
 
