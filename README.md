@@ -74,13 +74,53 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 
 ## 快速接入
 
-推荐方式是零侵入接入：全局安装能力，每个宿主项目自行 opt-in。
+SuperSpecFlow 同时支持 Claude Code 和 Codex CLI。默认会把全局 routing include 同时写入两个宿主；只装其中一个用 `--claude-only` 或 `--codex-only` 收窄。
 
-```bash
-./scripts/install-global.sh
+### 方式 1：让 AI 帮你装（推荐）
+
+打开你的 Claude Code 或 Codex CLI，把下面整段中文粘贴进去，AI 会自己完成 clone、安装和校验：
+
+```text
+请把 SuperSpecFlow 安装到本机：
+
+1. 如果 ~/.superspecflow/ 不存在，执行：
+   git clone --depth=1 https://github.com/HobaoKing/SuperSpecFlow.git ~/.superspecflow
+   如果已存在，执行：
+   git -C ~/.superspecflow fetch --depth=1 origin master && git -C ~/.superspecflow reset --hard origin/master
+2. 检测我在用哪个 CLI：
+   - 只有 ~/.claude/ 存在 → 运行 ~/.superspecflow/scripts/install-global.sh --claude-only
+   - 只有 ~/.codex/ 存在 → 运行 ~/.superspecflow/scripts/install-global.sh --codex-only
+   - 两个都存在 → 运行 ~/.superspecflow/scripts/install-global.sh --both
+   - 两个都不存在 → 停下来问我应该装哪一个，不要擅自创建目录
+3. 校验：grep "SuperSpecFlow" 对应的 ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md，确认 include 行已写入；如果脚本提示要我手动追加，把那一行原文展示给我。
+4. 简要报告每一步结果。
 ```
 
-然后进入要启用的宿主项目，执行：
+### 方式 2：一句话命令
+
+```bash
+# 两个 CLI 都装（默认）
+curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash
+
+# 只装 Claude Code
+curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --claude-only
+
+# 只装 Codex CLI
+curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --codex-only
+```
+
+bootstrap 会把仓库 clone 到 `~/.superspecflow/`（可用环境变量 `SUPERSPECFLOW_HOME` 覆盖），然后调用 `install-global.sh` 并透传参数。已存在 checkout 时会 `fetch + reset --hard origin/master` 更新到最新。一句话命令需要的 raw URL 始终指向 `master` 分支，开发分支上的改动合入 master 后才会被一句话安装拿到。
+
+### 方式 3：手动 clone
+
+```bash
+git clone https://github.com/HobaoKing/SuperSpecFlow.git ~/.superspecflow
+~/.superspecflow/scripts/install-global.sh --both     # 或 --claude-only / --codex-only
+```
+
+### 项目 opt-in
+
+任意一种方式装完后，进入要启用的宿主项目，执行：
 
 ```text
 /ssf-init
@@ -89,6 +129,64 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 `/ssf-init` 只创建 `.superspecflow/enabled` sentinel 和标准运行产物目录，不修改宿主项目的 `AGENTS.md` 或 `CLAUDE.md`。
 
 详细安装、兼容路径和卸载方式见 [docs/installation.md](docs/installation.md)。Claude Code / Codex 差异见 [docs/compatibility.md](docs/compatibility.md)。
+
+## 卸载
+
+与安装一对一对称，三种方式任选其一。卸载只移除 SuperSpecFlow 自己写入的 include 行，绝不改动用户在 `CLAUDE.md` / `AGENTS.md` 里的其他内容。
+
+### 方式 1：让 AI 帮你卸（推荐）
+
+打开你的 Claude Code 或 Codex CLI，把下面整段粘贴进去：
+
+```text
+请把 SuperSpecFlow 从本机卸载：
+
+1. 如果 ~/.superspecflow/scripts/uninstall-global.sh 存在，执行：
+   ~/.superspecflow/scripts/uninstall-global.sh --both --purge
+   该脚本会精确移除 ~/.claude/CLAUDE.md 和 ~/.codex/AGENTS.md 里的 SuperSpecFlow include 行（其他内容保留），并删除 ~/.superspecflow/ 目录。
+2. 如果 ~/.superspecflow/ 不存在，但 ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md 里还有指向其他路径的 SuperSpecFlow include 行：
+   找出形如 "@/path/to/SuperSpecFlow/routing/CLAUDE.global.md" 或 "@/path/to/SuperSpecFlow/routing/AGENTS.global.md" 的行，把那一行（且只有那一行）删除。如果文件因此变空，把文件本身也删除。
+3. 如果之前在 ~/.claude/settings.json 中合并过 SuperSpecFlow 的 SessionStart hook（command 指向 .../scripts/hooks/session-start-detect.sh），手动移除该 hook 条目。
+4. 简要报告每一步结果。
+```
+
+### 方式 2：本地脚本
+
+```bash
+# 同时移除两个宿主的 include，并删除 pack 目录
+~/.superspecflow/scripts/uninstall-global.sh --both --purge
+
+# 只清 Claude Code，保留 pack 目录
+~/.superspecflow/scripts/uninstall-global.sh --claude-only
+
+# 只清 Codex CLI，保留 pack 目录
+~/.superspecflow/scripts/uninstall-global.sh --codex-only
+```
+
+`--purge` 会删除 pack 目录所在路径（`~/.superspecflow/` 或你手动 clone 的位置），如果当前工作目录在 pack 内部会拒绝执行，避免 `rm -rf` 掉运行中的脚本。`settings.json` 里的 SessionStart hook 由脚本提示你手动清理，不擅自改写。
+
+### 方式 3：手动
+
+```bash
+# 1. 找出 include 行（形如 @<pack>/routing/CLAUDE.global.md）
+grep SuperSpecFlow ~/.claude/CLAUDE.md ~/.codex/AGENTS.md 2>/dev/null
+
+# 2. 用编辑器删除这些 include 行；如果文件因此变空，删除整个文件
+# 3. 删除 pack 目录
+rm -rf ~/.superspecflow
+
+# 4. 如有 SessionStart hook，从 ~/.claude/settings.json 中移除指向 .../session-start-detect.sh 的条目
+```
+
+### 项目级卸载
+
+宿主项目内的 SuperSpecFlow 运行时仅一个目录：
+
+```bash
+rm -rf <project>/.superspecflow
+```
+
+不会影响全局安装。`~/.superspecflow/`（家目录的装包路径）与 `<project>/.superspecflow/`（项目运行时）是两个互不依赖的目录。
 
 ## 使用方式
 
