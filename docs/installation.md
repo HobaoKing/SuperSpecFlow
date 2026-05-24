@@ -32,7 +32,77 @@ SuperSpecFlow 仓库自身只提交工作流包源码和 OpenSpec 变更契约�
 
 宿主业务项目的规则不同：如果宿主项目采用 OpenSpec 管理需求，其项目内 `openspec/` 应正常提交；如果团队选择 repo 内 opt-in，`.superspecflow/` 中的 routing 接入文件是否提交由宿主项目约定决定，但不要提交本机缓存、日志、工具安装副本或外部 `superpowers/` 运行产物。
 
-## 3. 推荐安装：软连接入
+## 3. 推荐：方案 C 零侵入接入
+
+方案 C 让宿主项目的 `CLAUDE.md` / `AGENTS.md` 零改动即可启用 SuperSpecFlow。一次性全局安装，按项目 opt-in。
+
+### 3.1 全局安装一次
+
+在 SuperSpecFlow 仓库中执行：
+
+```bash
+./scripts/install-global.sh
+```
+
+脚本会：
+
+- 检测 `~/.claude/CLAUDE.md`：不存在则创建并写入 `@<pack>/routing/CLAUDE.global.md`；存在则只打印应追加的行，不擅自改写。
+- 同样规则处理 `~/.codex/AGENTS.md`。
+- 询问是否启用 Claude Code SessionStart hook（推荐）。同意后打印应合并到 `~/.claude/settings.json` 的官方 schema JSON 片段，不擅自改写。
+
+### 3.2 给某个项目 opt-in
+
+进入宿主项目根目录，执行：
+
+```text
+/ssf-init
+```
+
+或等价的：
+
+```bash
+bash <pack>/scripts/_ssf_init_apply.sh
+```
+
+会创建：
+
+```text
+.superspecflow/
+├── enabled                 # sentinel，存在即 opt-in
+├── decisions/              # /ssf-decision 产物
+├── retro/                  # /ssf-retro 产物
+├── qa/                     # QA signoff
+├── reviews/                # /ssf-review 报告
+├── karpathy/               # /ssf-karpathy 报告
+├── maps/                   # spec-to-code-map.md
+├── ship/                   # release notes、rollback plan
+└── progress/               # 占位，由后续 progress-tracking change 定义
+```
+
+`/ssf-init` **不**修改宿主项目的 `CLAUDE.md` / `AGENTS.md`。
+
+### 3.3 项目级 routing 覆盖（可选）
+
+如果某个项目想覆盖全局默认 routing，可在该项目里手动创建：
+
+```text
+.superspecflow/CLAUDE.routing.md
+.superspecflow/AGENTS.routing.md
+```
+
+它们的内容会替代全局 routing 主体。默认不需要这两个文件。
+
+### 3.4 工作原理
+
+- 全局 routing 薄壳 `routing/CLAUDE.global.md` 在会话启动时执行 opt-in 自检测：
+  - 优先读取 Claude Code SessionStart hook 注入的 `<ssf-status>` 标签（C3 加成）。
+  - 否则在会话内执行一次 Bash：`test -f .superspecflow/enabled`（C1 兜底）。
+- 状态 = enabled：启用 Intake Gate。
+- 状态 = disabled：不接管自然语言，但 `/ssf-*` 显式命令始终可用。
+
+## 4. 兼容方案：项目软连接入
+
+> 老用户兼容路径。新用户优先使用上一节方案 C。
 
 软连安装让宿主项目引用 SuperSpecFlow 的集中路由和能力文件。升级 SuperSpecFlow 后，宿主项目不需要手动同步大段文本。
 
@@ -79,11 +149,11 @@ SuperSpecFlow 仓库自身只提交工作流包源码和 OpenSpec 变更契约�
 
 `/ssf-init` 是项目初始化动作：它创建 `.superspecflow/` 软链并提示添加 `@./.superspecflow/*.routing.md`。其他 `/ssf-*` 命令只是一次性调用，不会自动创建 `.superspecflow/`。
 
-## 4. Claude Code 安装
+## 5. Claude Code 安装
 
-### 4.1 项目级安装
+### 5.1 项目级安装
 
-优先使用第 3 节的软连脚本。
+优先使用第 4 节的软连脚本。
 
 如果团队不允许 symlink，可以复制能力文件，但仍不要覆盖宿主项目指令文件：
 
@@ -97,7 +167,7 @@ cp -R routing templates <project>/.superspecflow/
 
 不要执行覆盖式命令，例如把 SuperSpecFlow 根目录的 `AGENTS.md` 或 `CLAUDE.md` 直接复制到宿主项目根目录。
 
-### 4.2 全局安装
+### 5.2 全局安装
 
 ```bash
 ./update.sh
@@ -113,7 +183,7 @@ cp -R routing templates <project>/.superspecflow/
 
 该选项会在完成全局安装后调用项目初始化流程，为指定项目创建 `.superspecflow/` 软链，但仍不会覆盖宿主项目 `AGENTS.md` 或 `CLAUDE.md`。
 
-## 5. Codex CLI 安装
+## 6. Codex CLI 安装
 
 推荐全局安装 skills：
 
@@ -132,9 +202,9 @@ ln -sfn <SuperSpecFlow>/templates <project>/.superspecflow/templates
 
 再在宿主项目 `AGENTS.md` 中加入 `@./.superspecflow/AGENTS.routing.md`。如果宿主项目没有 `AGENTS.md`，可以新建一个，但内容应包含宿主项目自身约束和该 include。不要把 SuperSpecFlow 仓库根目录的 `AGENTS.md` 当作宿主项目完整替代品。
 
-## 6. 可选安装项
+## 7. 可选安装项
 
-### 6.1 commit message hook
+### 7.1 commit message hook
 
 在宿主项目中执行：
 
@@ -145,11 +215,11 @@ chmod +x .git/hooks/commit-msg
 
 该 hook 只检查 commit message 是否符合 `<英文类型>(<英文范围>): <中文摘要>` 标题规范与中文正文底线，不替代 `ssf-git` 的 change-id / Spec ID / 验证证据门禁。
 
-### 6.2 Superpowers
+### 7.2 Superpowers
 
 如果用户希望同时使用 Superpowers 原生 skills，可按 Superpowers 自身说明安装。SuperSpecFlow 不假设它一定存在；本包已经把必要纪律体现在 `ssf-think`、`ssf-build`、`ssf-review`、`ssf-karpathy` 等 skills 中。
 
-### 6.3 OpenSpec 目录
+### 7.3 OpenSpec 目录
 
 宿主项目第一次进入 `ssf-spec` 时，可以创建：
 
@@ -164,9 +234,9 @@ openspec/changes/<change-id>/
 
 如果宿主项目已有 OpenSpec 目录，沿用现有目录结构，不要移动或重写已有 change。
 
-## 7. 安装后烟测
+## 8. 安装后烟测
 
-### 7.1 软连检查
+### 8.1 软连检查
 
 在宿主项目中执行：
 
@@ -177,7 +247,7 @@ ls -l .claude/skills | grep ssf-
 
 期望：`.superspecflow/*.routing.md`、`.superspecflow/templates` 和 `.claude/skills/ssf-*` 指向 SuperSpecFlow 仓库。
 
-### 7.2 Intake Gate
+### 8.2 Intake Gate
 
 输入：
 
@@ -195,7 +265,7 @@ ls -l .claude/skills | grep ssf-
 
 期望：进入 Intake Gate，判定为高风险非平凡行为变更，然后进入 `ssf-think`，不得直接写代码。
 
-### 7.3 显式命令
+### 8.3 显式命令
 
 输入：
 
@@ -205,7 +275,7 @@ ls -l .claude/skills | grep ssf-
 
 期望：进入产品思考阶段，输出问题、用户路径、non-goals、success metrics，并准备 OpenSpec proposal 输入。
 
-### 7.4 Pack 自检
+### 8.4 Pack 自检
 
 在 SuperSpecFlow 仓库中运行：
 
@@ -215,7 +285,25 @@ ls -l .claude/skills | grep ssf-
 
 期望：检查通过，且不会出现旧冒号命令、`hw` 旧前缀、冒号文件名或覆盖宿主指令文件的安装说明。
 
-## 8. 升级流程
+### 8.5 方案 C 烟测
+
+```bash
+# 在临时项目里验证 opt-in 信号
+TMP=$(mktemp -d)
+cd "$TMP"
+bash <pack>/scripts/_ssf_init_apply.sh
+test -f .superspecflow/enabled && echo "OK: opt-in 信号已写入"
+
+# 验证 hook 脚本（输出符合 Claude Code SessionStart hook JSON 协议）
+bash <pack>/scripts/hooks/session-start-detect.sh
+# 期望输出（单行）: {"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"<ssf-status>enabled</ssf-status>"}}
+
+cd /tmp
+bash <pack>/scripts/hooks/session-start-detect.sh
+# 期望输出（单行）: {"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"<ssf-status>disabled</ssf-status>"}}
+```
+
+## 9. 升级流程
 
 升级 SuperSpecFlow 时：
 
@@ -225,7 +313,7 @@ ls -l .claude/skills | grep ssf-
 4. 运行宿主项目自己的测试和 SuperSpecFlow pack 自检。
 5. 不自动覆盖宿主项目已有 `AGENTS.md` / `CLAUDE.md`。
 
-## 9. 卸载流程
+## 10. 卸载流程
 
 项目级卸载：
 
