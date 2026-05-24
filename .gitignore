@@ -4,6 +4,11 @@
 # Claude Code 本地配置
 .claude/
 
+# 本仓库本地 workflow / 安装运行时产物
+.codex/
+.superspecflow/
+superpowers/
+
 # 编辑器/IDE
 .vscode/
 .idea/

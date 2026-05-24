@@ -40,6 +40,35 @@
 - WHEN 脚本完成全局同步
 - THEN 脚本调用项目软链安装流程初始化 `<project>`
 
+### Requirement: SSF-INIT-006 根指令文件保持薄入口
+
+系统必须让 SuperSpecFlow 仓库根目录的 `AGENTS.md` 和 `CLAUDE.md` 只作为薄入口，完整 Intake Gate、显式命令集合、阶段路由、Git 规范和完成门禁必须维护在 `routing/*.routing.md`。
+
+#### Scenario: 用户查看仓库根指令文件
+- GIVEN 用户打开 SuperSpecFlow 仓库根目录的 `AGENTS.md` 或 `CLAUDE.md`
+- WHEN 用户确认 agent 路由来源
+- THEN 文件引用对应的 `routing/*.routing.md`
+- AND 文件只保留本仓库本地约束
+- AND 文件不包含完整 Intake Gate 表或显式命令全集
+
+#### Scenario: 用户查看集中路由文件
+- GIVEN 用户打开 `routing/AGENTS.routing.md` 或 `routing/CLAUDE.routing.md`
+- WHEN 用户确认 SuperSpecFlow 完整路由契约
+- THEN 文件包含完整 Intake Gate、显式命令集合、阶段路由、Git 规范和完成门禁
+- AND 根指令文件薄化不会造成路由内容丢失
+- AND 两个 routing 文件内容保持一致，不因 agent 入口不同产生规则漂移
+
+### Requirement: SSF-INIT-007 区分源码契约与运行时产物
+
+系统必须区分 SuperSpecFlow 包源码、OpenSpec 变更契约和本地 workflow 运行时/安装产物，并在验证与提交门禁中阻止运行时产物进入 Git 跟踪列表。
+
+#### Scenario: 用户提交 SuperSpecFlow 仓库改动
+- GIVEN 用户准备提交 SuperSpecFlow 仓库改动
+- WHEN 用户运行 pack validation 或执行提交前检查
+- THEN `openspec/` 保持为可提交的 change contract
+- AND Git 跟踪列表不得包含 `superpowers/`、`docs/superpowers/`、`.superspecflow/`、`.claude/`、`.codex/` 或 `.DS_Store`
+- AND 文档明确宿主项目如果采用 OpenSpec 管理需求，应正常提交宿主项目自己的 `openspec/`
+
 ## MODIFIED Requirements
 
 无。
@@ -60,3 +89,6 @@
 - SSF-INIT-N1 系统不得保留旧初始化命令作为别名。
 - SSF-INIT-N2 系统不得在默认全局安装时自动创建任意项目 `.superspecflow/`。
 - SSF-INIT-N3 系统不得覆盖宿主项目 `AGENTS.md` 或 `CLAUDE.md`。
+- SSF-INIT-N4 系统不得把完整路由规则复制回仓库根 `AGENTS.md` 或 `CLAUDE.md`。
+- SSF-INIT-N5 系统不得把本地 workflow 运行时、安装副本或缓存产物提交到 SuperSpecFlow 仓库。
+- SSF-INIT-N6 系统不得把 SuperSpecFlow 仓库内的 `openspec/` 误判为运行时产物。
