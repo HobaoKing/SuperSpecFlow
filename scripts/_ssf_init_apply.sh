@@ -8,7 +8,11 @@ set -euo pipefail
 project="${SSF_INIT_PROJECT_DIR:-$PWD}"
 
 mkdir -p "$project/.superspecflow"
-: > "$project/.superspecflow/enabled" || true
+if [ -e "$project/.superspecflow/enabled" ] && [ ! -f "$project/.superspecflow/enabled" ]; then
+  echo "error: $project/.superspecflow/enabled exists but is not a regular file" >&2
+  exit 1
+fi
+: > "$project/.superspecflow/enabled"
 
 for sub in decisions retro qa reviews karpathy maps ship progress; do
   mkdir -p "$project/.superspecflow/$sub"
