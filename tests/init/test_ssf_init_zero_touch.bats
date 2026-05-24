@@ -32,6 +32,12 @@ teardown() {
   [ -d "$PROJECT/.superspecflow/progress" ]
 }
 
+@test "创建 verification/ 占位目录" {
+  cd "$PROJECT"
+  "$APPLY"
+  [ -d "$PROJECT/.superspecflow/verification" ]
+}
+
 @test "progress/ 内不写任何占位文件" {
   cd "$PROJECT"
   "$APPLY"

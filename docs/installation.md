@@ -80,7 +80,8 @@ bash <pack>/scripts/_ssf_init_apply.sh
 ├── maps/                   # spec-to-code-map.md
 ├── reviews/                # /ssf-review 报告
 ├── karpathy/               # /ssf-karpathy 报告
-└── progress/               # 占位，由后续 progress-tracking change 定义
+├── progress/               # 占位，由 progress-tracking change 定义
+└── verification/           # 占位，由 cross-agent-verification change 定义
 ```
 
 `/ssf-init` **不**修改宿主项目的 `CLAUDE.md` / `AGENTS.md`。

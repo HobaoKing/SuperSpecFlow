@@ -4,9 +4,13 @@ load '../lib/test_helper'
 
 teardown() {
   rm -rf "$REPO_ROOT/qa/test-fake-change"
+  rm -rf "$REPO_ROOT/progress/test-fake-change"
+  rm -rf "$REPO_ROOT/verification/test-fake-change"
   rmdir "$REPO_ROOT/qa" 2>/dev/null || true
+  rmdir "$REPO_ROOT/progress" "$REPO_ROOT/verification" 2>/dev/null || true
   rm -rf "$REPO_ROOT/.superspecflow/qa/test-fake-change"
-  rmdir "$REPO_ROOT/.superspecflow/qa" "$REPO_ROOT/.superspecflow" 2>/dev/null || true
+  rm -rf "$REPO_ROOT/.superspecflow/maps/progress-tracking"
+  rmdir "$REPO_ROOT/.superspecflow/qa" "$REPO_ROOT/.superspecflow/maps" "$REPO_ROOT/.superspecflow" 2>/dev/null || true
 }
 
 artifact_namespaces() {
@@ -45,8 +49,8 @@ extract_artifact_paths_section() {
       }
     done < <(artifact_namespaces)
 
-    printf '%s\n' "$section" | grep -q 'new path first'
-    printf '%s\n' "$section" | grep -q 'fallback'
+    printf '%s\n' "$section" | grep -qE '(new path first|新路径优先|new-path-first)'
+    printf '%s\n' "$section" | grep -qE '(fallback|兼容期|回退)'
     printf '%s\n' "$section" | grep -q 'openspec/'
     printf '%s\n' "$section" | grep -q 'engineering/<change-id>/'
     printf '%s\n' "$section" | grep -q 'progress-tracking'
@@ -120,13 +124,41 @@ extract_artifact_paths_section() {
   [ "$status" -eq 0 ]
 }
 
+@test "new root-level progress and verification runtime artifacts are rejected" {
+  mkdir -p "$REPO_ROOT/progress/test-fake-change" "$REPO_ROOT/verification/test-fake-change"
+  printf 'runtime fixture\n' > "$REPO_ROOT/progress/test-fake-change/state.json"
+  printf 'runtime fixture\n' > "$REPO_ROOT/verification/test-fake-change/signoff.md"
+
+  run bash "$REPO_ROOT/scripts/validate-pack.sh"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"progress/test-fake-change"* ]]
+  [[ "$output" == *"verification/test-fake-change"* ]]
+}
+
+@test "engineering source delivery and .superspecflow runtime can coexist" {
+  mkdir -p "$REPO_ROOT/.superspecflow/maps/progress-tracking"
+  printf 'host runtime fixture\n' > "$REPO_ROOT/.superspecflow/maps/progress-tracking/spec-to-code-map.md"
+
+  run bash "$REPO_ROOT/scripts/validate-pack.sh"
+  [ "$status" -eq 0 ]
+
+  [ -f "$REPO_ROOT/engineering/progress-tracking/spec-to-code-map.md" ]
+}
+
 @test "artifact migration spec-to-code map records requirement and MUST NOT coverage" {
   map="$REPO_ROOT/engineering/artifact-path-migration/spec-to-code-map.md"
 
+  grep -q 'SSF-ARTIFACT-007 因为有三个不同语境的 Scenario' "$map"
   grep -q 'SSF-ARTIFACT-001' "$map"
   grep -q 'SSF-ARTIFACT-007 Scenario 1' "$map"
   grep -q 'SSF-ARTIFACT-007 Scenario 2' "$map"
   grep -q 'SSF-ARTIFACT-007 Scenario 3' "$map"
+  grep -q 'agents/code-reviewer.md' "$map"
+  grep -q 'agents/implementation-engineer.md' "$map"
+  grep -q 'agents/product-strategist.md' "$map"
+  grep -q 'agents/qa-gatekeeper.md' "$map"
+  grep -q 'agents/release-manager.md' "$map"
+  grep -q 'agents/spec-architect.md' "$map"
   grep -q '## MUST NOT 覆盖' "$map"
 
   for must_not in N1 N2 N3 N4 N5 N6; do
