@@ -45,6 +45,7 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 8. 发布必须有 rollback / monitoring 意识。
 9. commit 标题的类型与范围使用英文标识符（conventional commits），摘要、正文、字段名、说明全部使用中文。
 10. 所有 PR 标题（中文摘要部分）和正文必须是中文。
+11. 所有项目文档（README、CLAUDE.md、AGENTS.md、OpenSpec proposal / design / tasks / specs、决策记录、回顾、Runbook 等）的正文语言风格统一使用中文。代码标识符、文件名、字段名、命令、URL、conventional commit 关键字、gherkin 关键字（GIVEN/WHEN/THEN/AND）等技术符号保留英文。如需例外，必须在该文档中显式说明原因。宿主项目可在本地指令文件中显式覆盖此默认。
 
 ## 仓库产物边界
 
