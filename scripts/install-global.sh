@@ -6,7 +6,6 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-ASSUME_YES=0
 SKIP_HOOK=0
 
 usage() {
@@ -14,25 +13,19 @@ usage() {
 Usage: install-global.sh [--yes] [--no-hook]
 
 Options:
-  --yes      Skip interactive confirmation prompts.
+  --yes      Non-interactive mode (current default; reserved for future interactive features).
   --no-hook  Skip Claude Code SessionStart hook setup.
 MSG
 }
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --yes) ASSUME_YES=1; shift ;;
+    --yes) shift ;;
     --no-hook) SKIP_HOOK=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown arg: $1" >&2; usage >&2; exit 1 ;;
   esac
 done
-
-confirm() {
-  if [ "$ASSUME_YES" -eq 1 ]; then return 0; fi
-  read -r -p "$1 [y/N] " ans
-  [ "$ans" = "y" ] || [ "$ans" = "Y" ]
-}
 
 ensure_include() {
   local target="$1"          # ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md
