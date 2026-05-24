@@ -248,6 +248,10 @@ templates/
   progress-timeline.md
   progress-verification.md
   progress-handoff.md
+  verification-request.md
+  verification-evidence.md
+  verification-reviewer-notes.md
+  verification-signoff.md
   git-hooks/commit-msg
   integration/
     AGENTS.snippet.md

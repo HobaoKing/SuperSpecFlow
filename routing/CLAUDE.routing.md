@@ -215,6 +215,14 @@ Progress tracking:
 - 测试缺口
 - Karpathy Diff Audit
 
+Cross-agent verification:
+
+- 如果用户要求另一个 agent 独立核验同一个 `<change-id>`，使用 `.superspecflow/verification/<change-id>/` 下的 `request.md`、`evidence.md`、`reviewer-notes.md` 和 `signoff.md`。
+- 主 agent 写 `request.md` 和 `evidence.md`；review agent 只基于 OpenSpec、diff、progress 和 evidence 写 `reviewer-notes.md` / `signoff.md`。
+- 没有可复查 evidence 时不得生成 `signoff.md`。
+- `signoff.md` 的结果只能是 `approve / changes-requested / blocked`，并必须列出已检查 Spec ID、证据引用和残余风险。
+- 第一版不引入自动 agent 通信、抽象共识协议、双签门禁或多方投票。
+
 ### QA
 
 当用户说以下内容时，自动进入 `ssf-qa` 或调用 `qa-gatekeeper`：

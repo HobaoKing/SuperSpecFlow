@@ -19,6 +19,8 @@
 - 要求 signoff 列出检查过的 Spec ID、验证命令或证据引用、残余风险。
 - 明确没有 evidence 时不得产出 signoff。
 - 说明本 change 读取 `progress-tracking` 的 `.superspecflow/progress/<change-id>/` 事实底座，但不实现 progress 文件协议。
+- 在 SuperSpecFlow 包源码中提供 `templates/verification-*` 作为 cross-agent verification handoff 文件模板。
+- 将 cross-agent verification handoff 规则接入 `ssf-review`、routing 和 pack validation。
 
 ## Non-goals
 
@@ -36,6 +38,14 @@
 
 - `.superspecflow/verification/<change-id>/`
 - `.superspecflow/progress/<change-id>/`，只读依赖
+- `templates/`
+- `skills/ssf-review/SKILL.md`
+- `routing/AGENTS.routing.md`
+- `routing/CLAUDE.routing.md`
+- `scripts/validate-pack.sh`
+- `tests/verification/`
+- `engineering/cross-agent-verification/`
+- `README.md`
 - OpenSpec change documents
 - Review / QA / Ship handoff guidance
 
@@ -46,6 +56,7 @@
 - review agent 的结论只引用 OpenSpec、diff、progress 和 evidence 中可复查的事实。
 - signoff 结果只使用 `approve`、`changes-requested` 或 `blocked`。
 - signoff 明确列出已检查 Spec ID、验证命令或证据引用、残余风险。
+- 包源码提供 verification handoff 模板，且 pack validation 能检查模板与 review / routing 规则是否存在。
 
 ## Risks
 
@@ -56,7 +67,7 @@
 
 ## Rollout Strategy
 
-先以规格形式定义文件接口和核验语义。后续实现时将该契约接入 review 流程，并在 progress-tracking 可用后读取 `.superspecflow/progress/<change-id>/` 作为事实底座。第一版不引入跨 agent 自动编排。
+第一版发布 OpenSpec 协议、verification handoff 模板，并把 evidence-based cross-agent verification 规则接入 `ssf-review`、routing 和 pack validation。后续 change 再扩展命令自动化或更强的 QA / Ship 门禁。第一版不引入跨 agent 自动编排。
 
 ## Open Questions
 
