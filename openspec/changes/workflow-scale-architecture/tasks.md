@@ -7,7 +7,7 @@
   - Acceptance: 父级规格只定义总架构、阶段顺序、产物协议和门禁关系，不实现 `browser-mcp-qa-adapter` 或 `parallel-worktree-spec-clusters` 的具体行为。
   - Estimate: 30 min
 
-- [ ] T2: 创建 browser MCP QA adapter child OpenSpec 骨架
+- [x] T2: 创建 browser MCP QA adapter child OpenSpec 骨架
   - Spec: SSF-WORKFLOW-001, SSF-WORKFLOW-002, SSF-WORKFLOW-003, SSF-WORKFLOW-004, SSF-WORKFLOW-005, SSF-WORKFLOW-006, SSF-WORKFLOW-007, SSF-WORKFLOW-N1, SSF-WORKFLOW-N2
   - Files: `openspec/changes/browser-mcp-qa-adapter/proposal.md`, `openspec/changes/browser-mcp-qa-adapter/design.md`, `openspec/changes/browser-mcp-qa-adapter/tasks.md`, `openspec/changes/browser-mcp-qa-adapter/specs/qa-browser.md`, `engineering/browser-mcp-qa-adapter/spec-readiness-review.md`
   - Test: `rtk bash scripts/validate-pack.sh`
