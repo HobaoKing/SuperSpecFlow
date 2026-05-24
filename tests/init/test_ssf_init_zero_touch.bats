@@ -64,3 +64,11 @@ teardown() {
   [ "$status" -eq 0 ]
   [ "$(cat "$PROJECT/.superspecflow/decisions/keep.md")" = "user-data" ]
 }
+
+@test "enabled 是目录而非常规文件时报错退出（不静默成功）" {
+  cd "$PROJECT"
+  mkdir -p "$PROJECT/.superspecflow/enabled"   # 故意制造损坏：enabled 是目录
+  run "$APPLY"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"not a regular file"* ]] || [[ "$stderr" == *"not a regular file"* ]]
+}
