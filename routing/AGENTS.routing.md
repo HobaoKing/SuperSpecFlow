@@ -74,13 +74,15 @@ SuperSpecFlow 仓库提交的是工作流包源码和可追踪变更契约，不
 | Spec-to-code maps | `.superspecflow/maps/<change-id>/` |
 | Review artifacts | `.superspecflow/reviews/<change-id>/` |
 | Karpathy audits | `.superspecflow/karpathy/<change-id>/` |
+| Cluster artifacts | `.superspecflow/clusters/<parent-change>/` |
 
 语境边界：
 
 - `openspec/` 是可提交 OpenSpec change contract，不属于运行时缓存，不迁移到 `.superspecflow/`。
 - SuperSpecFlow 本仓库的 `engineering/<change-id>/` 是包源码层工程交付物，不标为非法路径，不迁移到 `.superspecflow/`。
 - 宿主项目旧路径如 `engineering/<change-id>/`、`qa/<change-id>/`、`release/<change-id>/`、`archive/<change-id>/`、`retro/<change-id>/` 只作为兼容读取 fallback 或迁移提示；新写入必须使用 `.superspecflow/` 标准路径。
-- `.superspecflow/progress/<change-id>/` 由 `progress-tracking` 定义，`.superspecflow/verification/<change-id>/` 由 `cross-agent-verification` 定义，本 routing 只确认它们同属 `.superspecflow/` 命名空间，不重定义文件协议。
+- `.superspecflow/progress/<change-id>/` 由 `progress-tracking` 定义，`.superspecflow/verification/<change-id>/` 由 `cross-agent-verification` 定义，`.superspecflow/clusters/<parent-change>/` 由 `parallel-worktree-spec-clusters` 定义，本 routing 只确认它们同属 `.superspecflow/` 命名空间，不重定义文件协议。
+- `.superspecflow/qa/<change-id>/qa-execution-plan.md`、`browser-run-report.md` 和 `qa-evidence/` 由 `browser-mcp-qa-adapter` 定义，用于 evidence-backed browser/MCP QA。
 
 ## Strict Intake Gate
 
@@ -183,6 +185,13 @@ Progress tracking:
 - 如果本次工作会持续超过一个可验证 task，使用 `templates/progress-state.json`、`templates/progress-timeline.md`、`templates/progress-verification.md` 和 `templates/progress-handoff.md` 创建或维护 `.superspecflow/progress/<change-id>/`。
 - 声称 task、阶段或 change 完成前，必须在 `.superspecflow/progress/<change-id>/verification.md` 写入或引用 fresh verification，并让验证范围匹配完成声明范围。
 
+Spec cluster / worktree:
+
+- 如果 change 预计超过 8 个 tasks、超过 6 个 Spec IDs，或横跨两个以上相对独立子系统，进入 `ssf-spec` 或 `ssf-build` 前必须评估是否拆成 Spec cluster。
+- Parent change 的 cluster 产物写入 `.superspecflow/clusters/<parent-change>/cluster-plan.md`、`cluster-status.md` 和 `integration-gate.md`。
+- Worktree 只是执行隔离机制，不是发布边界；cluster 通过不得自动等同于 parent change 可发布。
+- 非 cluster 工作继续沿用普通分支规则；cluster 场景才叠加 `<cluster-id>` 段。
+
 ### Karpathy 编码纪律 / Diff Discipline
 
 任何写代码、修 bug、重构、review、提交前，都要遵守：
@@ -268,7 +277,19 @@ Cross-agent verification:
 - risk-matrix.md
 - regression-checklist.md
 - exploratory-test-notes.md
+- qa-execution-plan.md，适用于 browser/MCP QA
+- browser-run-report.md，适用于 browser/MCP QA
+- qa-evidence/，适用于 browser/MCP QA
 - qa-signoff.md
+
+Browser / MCP QA:
+
+- `browser-mcp-qa-adapter` 要求 `/ssf-qa` 从 acceptance matrix 中的 E2E / user journey 场景生成 `.superspecflow/qa/<change-id>/qa-execution-plan.md`。
+- 如果目标和浏览器/MCP 工具可用，agent 记录 `.superspecflow/qa/<change-id>/browser-run-report.md` 和 `qa-evidence/`。
+- 如果没有可运行目标，QA signoff 必须使用 `Blocked: No runnable target`。
+- 如果浏览器/MCP 工具不可用，QA signoff 必须使用 `Blocked: Tool unavailable`。
+- 不得在没有 browser run report、qa-evidence 或明确人工验证记录时声明 `Automated Browser Passed`。
+- `/ssf-qa <parent-change>` 在 Spec cluster 场景必须汇总 cluster QA evidence，并额外记录 parent integration 级回归或 blocked reason。
 
 ### Ship / Release
 
@@ -289,6 +310,11 @@ Cross-agent verification:
 - monitoring plan
 - PR description
 - ship / no-ship recommendation
+
+Spec cluster ship gate:
+
+- Parent change 有 cluster 时，`ssf-ship` 必须读取 `.superspecflow/clusters/<parent-change>/integration-gate.md`。
+- 缺少 integration gate、cluster QA evidence、review 结论或 commit evidence 时，不得推荐 ship。
 
 ### Git / Commit / PR
 

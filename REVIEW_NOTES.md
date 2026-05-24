@@ -78,6 +78,12 @@
 
 1. 为不同技术栈增加测试命令探测，例如 Next.js、Rails、Django、Go、Rust。
 2. 增加 CI gate 模板，把 `/ssf-qa` 和 `/ssf-ship` 的检查转成 GitHub Actions。
-3. 增加 MCP / 浏览器 QA 适配，让 `ssf-qa` 能自动跑真实用户路径。
+3. 增加 MCP / 浏览器 QA 适配，让 `ssf-qa` 能自动跑真实用户路径。已由 `workflow-scale-architecture` 拆出 `browser-mcp-qa-adapter` child OpenSpec。
 4. 增加安全专用 agent，用于 auth、payment、webhook、secret、PII 等高风险场景。
-5. 增加多 worktree 并行开发规则，让大 change 拆成多个 Spec cluster。
+5. 增加多 worktree 并行开发规则，让大 change 拆成多个 Spec cluster。已由 `workflow-scale-architecture` 拆出 `parallel-worktree-spec-clusters` child OpenSpec。
+
+## Workflow scale 已形成的路线
+
+- `workflow-scale-architecture`：父级架构 contract，规定先建立 QA evidence，再扩展多 worktree Spec cluster。
+- `browser-mcp-qa-adapter`：第一阶段 child change，定义 `qa-execution-plan.md`、`browser-run-report.md`、`qa-evidence/` 和 blocked signoff。
+- `parallel-worktree-spec-clusters`：第二阶段 child change，定义 `cluster-plan.md`、`cluster-status.md`、`integration-gate.md` 和 parent integration gate。

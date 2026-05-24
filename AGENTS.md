@@ -50,6 +50,15 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 5. 每个行为变更映射到 Spec ID。
 6. 提交和 PR 使用中文内容。
 
+### 0.2 Workflow Scale 路线
+
+`workflow-scale-architecture` 将下一阶段流程增强拆成两个 child changes：
+
+1. `browser-mcp-qa-adapter`：先让 `ssf-qa` 支持 evidence-backed browser/MCP QA。`ssf-qa` 应从 acceptance matrix 派生 `.superspecflow/qa/<change-id>/qa-execution-plan.md`，目标和工具可用时记录 `browser-run-report.md` 与 `qa-evidence/`；不可用时使用明确 blocked signoff，不得假装自动化路径通过。
+2. `parallel-worktree-spec-clusters`：再让大 change 拆成 parent change 和多个 Spec cluster。Cluster 可在独立 worktree 中执行，但 worktree 只是执行隔离机制，不是发布边界；parent change 必须通过 `.superspecflow/clusters/<parent-change>/integration-gate.md` 汇总证据后才能 ship。
+
+QA evidence 是 Review / Ship / Git / Archive 可引用的事实来源，但不替代 OpenSpec requirements 或 Spec ID。
+
 ## 1. 隐式路由规则
 
 ### 1.1 Product / Think
@@ -113,6 +122,7 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 6. 不实现 OpenSpec 之外的功能。
 7. 每完成一个 task 更新 tasks.md。
 8. 每个可验证任务完成后，建议进入 `ssf-git` 准备中文提交。
+9. 如果 change 预计超过 8 个 tasks、超过 6 个 Spec IDs，或横跨两个以上相对独立子系统，先评估是否拆成 Spec cluster。
 
 ### 1.4 Karpathy / Diff Discipline
 
@@ -172,7 +182,18 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 - risk-matrix.md
 - regression-checklist.md
 - exploratory-test-notes.md
+- qa-execution-plan.md，适用于 browser/MCP QA
+- browser-run-report.md，适用于 browser/MCP QA
+- qa-evidence/，适用于 browser/MCP QA
 - qa-signoff.md
+
+Browser / MCP QA 状态必须明确：
+
+- `Automated Browser Passed`
+- `Manual Verified`
+- `Blocked: No runnable target`
+- `Blocked: Tool unavailable`
+- `Failed`
 
 ### 1.7 Ship / Release
 

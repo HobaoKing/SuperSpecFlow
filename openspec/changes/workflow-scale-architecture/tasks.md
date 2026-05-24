@@ -21,14 +21,14 @@
   - Acceptance: 子级 OpenSpec 明确 parent / cluster 契约、worktree 命名、cluster plan、cluster status、integration gate 和 parent QA 汇总规则，但不实现 browser QA 内部执行逻辑。
   - Estimate: 45 min
 
-- [ ] T4: 同步顶层路线图和路由说明
+- [x] T4: 同步顶层路线图和路由说明
   - Spec: SSF-WORKFLOW-001, SSF-WORKFLOW-002, SSF-WORKFLOW-003, SSF-WORKFLOW-008, SSF-WORKFLOW-014
   - Files: `README.md`, `AGENTS.md`, `routing/AGENTS.routing.md`, `routing/CLAUDE.routing.md`, `REVIEW_NOTES.md`
   - Test: `rtk bash scripts/validate-pack.sh`
   - Acceptance: 顶层文档记录 `workflow-scale-architecture`、两个 child changes 的阶段顺序、QA evidence 优先原则和 parent integration gate 边界。
   - Estimate: 30 min
 
-- [ ] T5: 维护父级架构 spec-to-code map
+- [x] T5: 维护父级架构 spec-to-code map
   - Spec: SSF-WORKFLOW-001, SSF-WORKFLOW-002, SSF-WORKFLOW-003, SSF-WORKFLOW-004, SSF-WORKFLOW-005, SSF-WORKFLOW-006, SSF-WORKFLOW-007, SSF-WORKFLOW-008, SSF-WORKFLOW-009, SSF-WORKFLOW-010, SSF-WORKFLOW-011, SSF-WORKFLOW-012, SSF-WORKFLOW-013, SSF-WORKFLOW-014, SSF-WORKFLOW-N1, SSF-WORKFLOW-N2, SSF-WORKFLOW-N3, SSF-WORKFLOW-N4, SSF-WORKFLOW-N5, SSF-WORKFLOW-N6
   - Files: `engineering/workflow-scale-architecture/spec-to-code-map.md`
   - Test: `rtk bash scripts/validate-pack.sh`
