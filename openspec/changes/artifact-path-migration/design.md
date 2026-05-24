@@ -20,6 +20,15 @@
 
 `progress-tracking` owns `.superspecflow/progress/<change-id>/` and `cross-agent-verification` owns `.superspecflow/verification/<change-id>/`. This migration change must not redefine those file protocols; it only needs to keep them under the same `.superspecflow/` runtime namespace.
 
+## Repository Source vs Host Runtime
+
+路径契约在两个语境下分别成立，二者不互相迁移：
+
+- **SSF 本仓库语境**（包源码）：`engineering/<change-id>/` 是可提交的工程交付目录，承载 `spec-to-code-map.md`、`spec-readiness-review.md` 等工程映射与审查产物。命名空间允许使用 OpenSpec change-id（如 `engineering/progress-tracking/`），也允许使用工程主题名（如 `engineering/init-project-routing/`）。其它阶段（qa、release、archive、retro、decisions、maps、reviews、karpathy）目前没有在本仓库以根目录形式提交对应交付物；如果将来出现，应保留为 `engineering/<change-id>/` 下的子文件或在本 change 之外单独立规格。
+- **宿主项目语境**（运行时）：所有阶段产物按 `.superspecflow/<stage>/<change-id>/` 写入并按宿主项目策略决定是否提交。
+
+二者用途对应但目录分离：本仓库的 `engineering/<id>/spec-to-code-map.md` 与宿主项目的 `.superspecflow/maps/<change-id>/spec-to-code-map.md` 在各自语境内分别是权威来源；本 change 不要求将本仓库已落地的 `engineering/<id>/` 文件迁移到 `.superspecflow/`，也不把它们视为非法路径。
+
 ## Data Flow
 
 1. 用户或 agent 进入某个阶段并解析 `<change-id>`。

@@ -13,12 +13,14 @@
 - 推荐所有新运行产物写入 `.superspecflow/` 下的阶段化路径。
 - 保留旧路径读取兼容期，避免硬断已有用户和历史项目。
 - 明确 `openspec/` 不迁移，仍为可提交的 change contract。
+- 明确 SSF 本仓库的 `engineering/<change-id>/` 是可提交的工程交付目录，与宿主项目运行时 `.superspecflow/<stage>/<change-id>/` 属于两个语境，互不迁移。
 - 为后续修改 skills、agents、commands、templates 和 validation 提供可追踪任务。
 - 统一工程、评审、QA、发布、归档、复盘、决策、映射和 Karpathy 审计产物路径。
 
 ## Non-goals
 
 - 不迁移、重命名或隐藏 `openspec/`。
+- 不迁移、删除或重命名 SSF 本仓库已提交的 `engineering/<change-id>/`（包括 `init-project-routing`、`progress-tracking`、`cross-agent-verification` 等已落地工程交付物）。
 - 不在本 change 中实现代码、脚本、命令或模板修改。
 - 不删除旧路径中的历史产物。
 - 不强制一次性搬迁已有项目文件。
