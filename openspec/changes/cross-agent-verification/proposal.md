@@ -21,6 +21,7 @@
 - 说明本 change 读取 `progress-tracking` 的 `.superspecflow/progress/<change-id>/` 事实底座，但不实现 progress 文件协议。
 - 在 SuperSpecFlow 包源码中提供 `templates/verification-*` 作为 cross-agent verification handoff 文件模板。
 - 将 cross-agent verification handoff 规则接入 `ssf-review`、routing 和 pack validation。
+- 明确 SuperSpecFlow 本仓库不提交 `.superspecflow/verification/` 运行时实例，宿主项目是否提交由宿主项目策略决定。
 
 ## Non-goals
 
@@ -57,6 +58,7 @@
 - signoff 结果只使用 `approve`、`changes-requested` 或 `blocked`。
 - signoff 明确列出已检查 Spec ID、验证命令或证据引用、残余风险。
 - 包源码提供 verification handoff 模板，且 pack validation 能检查模板与 review / routing 规则是否存在。
+- SuperSpecFlow 本仓库的 Git 跟踪文件不包含 `.superspecflow/verification/` 运行时实例。
 
 ## Risks
 

@@ -401,7 +401,7 @@ check_progress_contract() {
 }
 
 check_cross_agent_verification_contract() {
-  local template routing_file
+  local template routing_file signoff_file review_section routing_section
 
   for template in \
     templates/verification-request.md \
@@ -415,6 +415,10 @@ check_cross_agent_verification_contract() {
 
   if ! grep -q '.superspecflow/verification/\[change-id\]/request.md' templates/verification-request.md; then
     fail "templates/verification-request.md 缺少 request.md 路径"
+  elif ! grep -q '本文件用于说明跨 agent 核验请求' templates/verification-request.md; then
+    fail "templates/verification-request.md 缺少使用说明"
+  elif ! grep -q '不得只写结论' templates/verification-evidence.md; then
+    fail "templates/verification-evidence.md 缺少可复查 evidence 说明"
   elif ! grep -q 'Evidence Reviewed' templates/verification-signoff.md; then
     fail "templates/verification-signoff.md 缺少 Evidence Reviewed 段落"
   elif ! grep -q 'approve | changes-requested | blocked' templates/verification-signoff.md; then
@@ -425,29 +429,56 @@ check_cross_agent_verification_contract() {
     pass "cross-agent verification templates 包含核心字段"
   fi
 
-  if ! grep -q '.superspecflow/verification/<change-id>/' skills/ssf-review/SKILL.md; then
+  review_section="$(awk '
+    /^## Step 6 .*Cross-Agent Verification Handoff/ { inside = 1 }
+    inside && /^## Step 7 / { exit }
+    inside { print }
+  ' skills/ssf-review/SKILL.md)"
+
+  if ! printf '%s\n' "$review_section" | grep -q '.superspecflow/verification/<change-id>/'; then
     fail "skills/ssf-review/SKILL.md 缺少 verification 路径规则"
-  elif ! grep -q '不得把聊天上下文' skills/ssf-review/SKILL.md; then
-    fail "skills/ssf-review/SKILL.md 缺少落盘事实核验规则"
-  elif ! grep -q 'approve / changes-requested / blocked' skills/ssf-review/SKILL.md; then
+  elif ! printf '%s\n' "$review_section" | grep -q 'OpenSpec'; then
+    fail "skills/ssf-review/SKILL.md 缺少 OpenSpec 核验输入"
+  elif ! printf '%s\n' "$review_section" | grep -q 'diff'; then
+    fail "skills/ssf-review/SKILL.md 缺少 diff 核验输入"
+  elif ! printf '%s\n' "$review_section" | grep -q 'evidence'; then
+    fail "skills/ssf-review/SKILL.md 缺少 evidence 核验输入"
+  elif ! printf '%s\n' "$review_section" | grep -q 'approve / changes-requested / blocked'; then
     fail "skills/ssf-review/SKILL.md 缺少 signoff 枚举"
   else
     pass "ssf-review 包含 cross-agent verification 规则"
   fi
 
   for routing_file in routing/AGENTS.routing.md routing/CLAUDE.routing.md; do
-    if ! grep -q '.superspecflow/verification/<change-id>/' "$routing_file"; then
+    routing_section="$(awk '
+      /^Cross-agent verification:$/ { inside = 1 }
+      inside && /^### / { exit }
+      inside { print }
+    ' "$routing_file")"
+
+    if ! printf '%s\n' "$routing_section" | grep -q 'Cross-agent verification'; then
+      fail "$routing_file 缺少 Cross-agent verification 章节"
+    elif ! printf '%s\n' "$routing_section" | grep -q '.superspecflow/verification/<change-id>/'; then
       fail "$routing_file 缺少 verification 路径规则"
-    elif ! grep -q 'OpenSpec、diff、progress 和 evidence' "$routing_file"; then
-      fail "$routing_file 缺少独立核验输入规则"
-    elif ! grep -q 'approve / changes-requested / blocked' "$routing_file"; then
+    elif ! printf '%s\n' "$routing_section" | grep -q 'OpenSpec'; then
+      fail "$routing_file 缺少 OpenSpec 核验输入"
+    elif ! printf '%s\n' "$routing_section" | grep -q 'evidence'; then
+      fail "$routing_file 缺少 evidence 核验输入"
+    elif ! printf '%s\n' "$routing_section" | grep -q 'approve / changes-requested / blocked'; then
       fail "$routing_file 缺少 signoff 枚举"
-    elif ! grep -q '不引入自动 agent 通信' "$routing_file"; then
-      fail "$routing_file 缺少轻量 handoff 边界"
     else
       pass "$routing_file 包含 cross-agent verification 规则"
     fi
   done
+
+  if [ -d .superspecflow/verification ]; then
+    while IFS= read -r signoff_file; do
+      [ -n "$signoff_file" ] || continue
+      if ! grep -Eq '^Result:[[:space:]]*(approve|changes-requested|blocked)[[:space:]]*$' "$signoff_file"; then
+        fail "非法 signoff result: $signoff_file"
+      fi
+    done < <(find .superspecflow/verification -type f -name signoff.md -print)
+  fi
 
   if ! grep -q 'templates/verification-' openspec/changes/cross-agent-verification/proposal.md; then
     fail "cross-agent-verification proposal 缺少 verification 模板目标"
@@ -455,8 +486,10 @@ check_cross_agent_verification_contract() {
     fail "cross-agent-verification proposal 缺少 ssf-review 影响范围"
   elif ! grep -q 'SSF-XAV-011' openspec/changes/cross-agent-verification/specs/verification.md; then
     fail "cross-agent-verification spec 缺少模板 requirement"
+  elif ! grep -q 'SSF-XAV-012' openspec/changes/cross-agent-verification/specs/verification.md; then
+    fail "cross-agent-verification spec 缺少运行时实例边界 requirement"
   else
-    pass "cross-agent verification OpenSpec 与实现范围同步"
+    pass "Cross-agent verification OpenSpec 与实现范围同步"
   fi
 }
 

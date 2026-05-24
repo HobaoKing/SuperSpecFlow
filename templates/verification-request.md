@@ -2,6 +2,8 @@
 
 Path: `.superspecflow/verification/[change-id]/request.md`
 
+本文件用于说明跨 agent 核验请求。必须写清核验范围、目标 Spec ID、OpenSpec 文件、diff 来源、progress 引用和 evidence 引用。
+
 ## Scope
 
 - Change ID:

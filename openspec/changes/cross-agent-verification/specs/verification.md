@@ -120,6 +120,22 @@
 - AND 系统提供 `templates/verification-signoff.md`
 - AND 模板本身作为包源码提交，不作为宿主项目运行时实例提交
 
+### Requirement: SSF-XAV-012 明确 verification 运行时实例提交边界
+
+系统必须明确 SuperSpecFlow 本仓库只提交 cross-agent verification 协议规格和包源码，不提交 `.superspecflow/verification/` 运行时实例。
+
+#### Scenario: 用户准备提交 SuperSpecFlow 仓库改动
+- GIVEN 用户在 SuperSpecFlow 本仓库中工作
+- WHEN 用户准备提交 `cross-agent-verification` change
+- THEN Git 改动只包含 OpenSpec 规格、模板、skills、routing、scripts、tests、README 和工程映射
+- AND 不包含 `.superspecflow/verification/` 运行时实例
+
+#### Scenario: 宿主项目采用 verification 协议
+- GIVEN 宿主项目使用 `.superspecflow/verification/` 记录跨 agent 核验
+- WHEN 宿主项目决定是否提交这些文件
+- THEN 是否提交由宿主项目策略决定
+- AND SuperSpecFlow 协议不强制宿主项目提交或忽略 `.superspecflow/verification/`
+
 ## MODIFIED Requirements
 
 无。

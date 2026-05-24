@@ -2,6 +2,8 @@
 
 Path: `.superspecflow/verification/[change-id]/reviewer-notes.md`
 
+本文件用于记录 review agent 的独立核验过程。只能引用 OpenSpec、diff、progress 和 evidence 中可复查的事实。
+
 ## Sources Read
 
 - OpenSpec:

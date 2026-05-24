@@ -22,8 +22,8 @@
   - Estimate: 15 min
 
 - [x] T4: 增加 cross-agent verification 契约验证
-  - Spec: SSF-XAV-001, SSF-XAV-006, SSF-XAV-007, SSF-XAV-010, SSF-XAV-011, SSF-XAV-N8
+  - Spec: SSF-XAV-001, SSF-XAV-006, SSF-XAV-007, SSF-XAV-010, SSF-XAV-011, SSF-XAV-012, SSF-XAV-N4, SSF-XAV-N8
   - Files: `tests/verification/test_cross_agent_verification_contract.bats`, `scripts/validate-pack.sh`, `README.md`, `engineering/cross-agent-verification/spec-to-code-map.md`
   - Test: `rtk bats tests/verification/test_cross_agent_verification_contract.bats`, `rtk bash scripts/validate-pack.sh`
-  - Acceptance: 自动化测试和 pack validation 能发现 verification 模板缺失、`ssf-review` 规则缺失、routing 规则缺失或 OpenSpec 未同步模板实现范围。
+  - Acceptance: 自动化测试和 pack validation 能发现 verification 模板缺失、`ssf-review` 规则缺失、routing 规则缺失、非法 signoff 枚举或 OpenSpec 未同步模板与运行时边界实现范围。
   - Estimate: 20 min
