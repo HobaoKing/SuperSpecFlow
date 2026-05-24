@@ -14,7 +14,7 @@
   - Acceptance: 子级 OpenSpec 明确 QA 执行计划、浏览器运行报告、QA evidence 路径、blocked 状态和 rollout 边界，但不包含 worktree cluster 行为。
   - Estimate: 45 min
 
-- [ ] T3: 创建 parallel worktree Spec clusters child OpenSpec 骨架
+- [x] T3: 创建 parallel worktree Spec clusters child OpenSpec 骨架
   - Spec: SSF-WORKFLOW-001, SSF-WORKFLOW-002, SSF-WORKFLOW-008, SSF-WORKFLOW-009, SSF-WORKFLOW-010, SSF-WORKFLOW-011, SSF-WORKFLOW-012, SSF-WORKFLOW-013, SSF-WORKFLOW-014, SSF-WORKFLOW-N3, SSF-WORKFLOW-N4, SSF-WORKFLOW-N5, SSF-WORKFLOW-N6
   - Files: `openspec/changes/parallel-worktree-spec-clusters/proposal.md`, `openspec/changes/parallel-worktree-spec-clusters/design.md`, `openspec/changes/parallel-worktree-spec-clusters/tasks.md`, `openspec/changes/parallel-worktree-spec-clusters/specs/spec-clusters.md`, `engineering/parallel-worktree-spec-clusters/spec-readiness-review.md`
   - Test: `rtk bash scripts/validate-pack.sh`
