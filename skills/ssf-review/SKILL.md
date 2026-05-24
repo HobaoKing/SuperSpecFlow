@@ -90,7 +90,39 @@ description: 阶段四（审）。用户输入 /ssf-review 或由 ssf-build 续�
 - 如果有 🔴：要求用户修复后再进入 QA。
 - 如果没有 🔴：进入 `ssf-qa`。
 
-## Step 6 — Karpathy Diff Audit
+## Step 6 — Cross-Agent Verification Handoff
+
+如果用户要求 Claude、Codex 或另一个 agent 独立核验同一个 `<change-id>`，使用轻量文件化 handoff：
+
+```text
+.superspecflow/verification/<change-id>/
+  request.md
+  evidence.md
+  reviewer-notes.md
+  signoff.md
+```
+
+模板来源：
+
+```text
+templates/verification-request.md
+templates/verification-evidence.md
+templates/verification-reviewer-notes.md
+templates/verification-signoff.md
+```
+
+规则：
+
+1. 主 agent 只负责写入 `request.md` 和 `evidence.md`。
+2. `request.md` 必须列出核验范围、目标 Spec ID、OpenSpec 文件、diff 来源、progress 引用和 evidence 引用。
+3. `evidence.md` 必须包含可复查的命令、方法、结果摘要、相关文件或产物引用；不得只写结论。
+4. review agent 只基于 OpenSpec、diff、progress 和 evidence 做核验，不得把聊天上下文、口头说明或未落盘声明作为核验依据。
+5. review agent 可以在 evidence 缺失时写 `reviewer-notes.md` 说明缺口，但不得生成 `signoff.md`。
+6. `signoff.md` 只能使用 `approve / changes-requested / blocked`，并必须列出已检查 Spec ID、证据引用、发现和残余风险。
+7. progress 不可用时仍可核验 OpenSpec、diff 和 evidence，但必须在 `reviewer-notes.md` 或 `signoff.md` 记录残余风险。
+8. 第一版不引入自动 agent 通信、抽象共识协议、双签门禁或多方投票。
+
+## Step 7 — Karpathy Diff Audit
 
 在 review 报告后增加：
 
@@ -117,7 +149,7 @@ description: 阶段四（审）。用户输入 /ssf-review 或由 ssf-build 续�
 
 任何无法映射到 Spec ID、任务或测试的行为改动，至少标为 🟡；如果影响正确性、安全或发布，标为 🔴。
 
-## Step 7 — Git Hygiene Review
+## Step 8 — Git Hygiene Review
 
 检查：
 

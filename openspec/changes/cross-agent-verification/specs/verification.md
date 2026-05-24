@@ -107,6 +107,19 @@
 - AND 不要求 agent 之间自动通信
 - AND 不要求多个 agent 投票或形成共识证明
 
+### Requirement: SSF-XAV-011 提供 verification handoff 文件模板
+
+系统必须在 SuperSpecFlow 包源码中提供 cross-agent verification handoff 文件模板，供主 agent 和 review agent 创建宿主项目运行时 verification 文件时引用。
+
+#### Scenario: Agent 需要创建 verification handoff 文件
+- GIVEN agent 需要为 `<change-id>` 创建 `.superspecflow/verification/<change-id>/`
+- WHEN agent 查找可复用模板
+- THEN 系统提供 `templates/verification-request.md`
+- AND 系统提供 `templates/verification-evidence.md`
+- AND 系统提供 `templates/verification-reviewer-notes.md`
+- AND 系统提供 `templates/verification-signoff.md`
+- AND 模板本身作为包源码提交，不作为宿主项目运行时实例提交
+
 ## MODIFIED Requirements
 
 无。
@@ -124,3 +137,4 @@
 - SSF-XAV-N5 cross-agent-verification 不得定义或实现 `.superspecflow/progress/<change-id>/` 的文件协议。
 - SSF-XAV-N6 系统不得要求两个 agent 自动通信。
 - SSF-XAV-N7 系统不得在第一版引入抽象共识协议、双签门禁或多方投票。
+- SSF-XAV-N8 SuperSpecFlow 本仓库不得提交 `.superspecflow/verification/` 运行时实例。
