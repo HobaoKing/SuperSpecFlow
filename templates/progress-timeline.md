@@ -1,6 +1,6 @@
 # Progress Timeline: [change-id]
 
-Append events in chronological order. Do not rewrite history unless correcting an explicit mistake.
+按时间顺序追加事件。除非修正明确错误，不要重写既有历史。
 
 ## [timestamp] - [agent] - task-started
 

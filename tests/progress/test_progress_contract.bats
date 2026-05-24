@@ -14,6 +14,7 @@ load '../lib/test_helper'
   grep -q '"change_id"' "$REPO_ROOT/templates/progress-state.json"
   grep -q '"last_verification"' "$REPO_ROOT/templates/progress-state.json"
   grep -q 'task-started' "$REPO_ROOT/templates/progress-timeline.md"
+  grep -q '按时间顺序追加事件' "$REPO_ROOT/templates/progress-timeline.md"
   grep -q 'Freshness' "$REPO_ROOT/templates/progress-verification.md"
   grep -q 'Read Next' "$REPO_ROOT/templates/progress-handoff.md"
 }
@@ -30,6 +31,14 @@ load '../lib/test_helper'
     grep -q '.superspecflow/progress/<change-id>/' "$routing"
     grep -q 'state.json' "$routing"
     grep -q 'handoff.md' "$routing"
-    grep -q '再读取 OpenSpec' "$routing"
+    grep -q 'OpenSpec' "$routing"
   done
+}
+
+@test "progress OpenSpec records implementation phase and template scope" {
+  grep -q 'templates/progress-' "$REPO_ROOT/openspec/changes/progress-tracking/proposal.md"
+  grep -q 'templates/' "$REPO_ROOT/openspec/changes/progress-tracking/proposal.md"
+  grep -q 'skills/ssf-build/SKILL.md' "$REPO_ROOT/openspec/changes/progress-tracking/proposal.md"
+  grep -q 'SSF-PROGRESS-N7' "$REPO_ROOT/openspec/changes/progress-tracking/specs/progress.md"
+  grep -q 'REMOVED Requirements' "$REPO_ROOT/openspec/changes/progress-tracking/specs/progress.md"
 }

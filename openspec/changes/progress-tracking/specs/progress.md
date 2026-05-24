@@ -140,7 +140,16 @@
 
 ## REMOVED Requirements
 
-无。
+### Requirement: SSF-PROGRESS-N7 移除草案阶段禁止实现文件改动约束
+
+原草案阶段约束为：第一版不得修改代码、README、routing、skills、commands、scripts、tests 或其他 change 目录。
+
+#### Scenario: progress-tracking 从草案进入实现
+- GIVEN `progress-tracking` 已从协议草案阶段进入实现阶段
+- WHEN 系统需要提供 progress 模板、接入 `ssf-build` / routing 规则并增加验证
+- THEN 该草案阶段约束不再适用
+- AND 实现阶段可以修改 `templates/`、`skills/`、`routing/`、`scripts/`、`tests/`、`README.md` 和工程映射文件
+- AND 仍不得实现自动调度器、UI 或跨 agent 签核机制
 
 ## MUST NOT
 
@@ -150,4 +159,3 @@
 - SSF-PROGRESS-N4 Agent 不得用窄范围验证声明宽范围完成状态。
 - SSF-PROGRESS-N5 SuperSpecFlow 本仓库不得提交 `.superspecflow/progress/` 运行时实例。
 - SSF-PROGRESS-N6 第一版不得实现自动调度、UI 或跨 agent 签核。
-- SSF-PROGRESS-N7 第一版不得实现自动调度器、UI 或跨 agent 签核机制。
