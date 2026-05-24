@@ -81,6 +81,32 @@
 - AND validation 允许旧路径仅出现在兼容读取、迁移说明或测试场景中
 - AND validation 检查 `openspec/` 未被运行产物规则误伤
 
+### Requirement: SSF-ARTIFACT-007 区分包源码与运行时双语境
+
+系统必须明确「SSF 本仓库的可提交工程交付物」与「宿主项目本地运行产物」是两套不同语境下的路径，二者目录不同但用途对应。
+
+#### Scenario: SSF 本仓库提交工程交付物
+- GIVEN 维护者在 SuperSpecFlow 本仓库内为某个 `<change-id>` 产生工程交付物
+- WHEN 维护者准备提交这些交付物
+- THEN 系统把 `engineering/<change-id>/` 视为本仓库可提交的工程交付目录
+- AND 该目录可以包含 `spec-to-code-map.md`、`spec-readiness-review.md` 以及其它工程产物
+- AND 该目录的命名空间允许使用 OpenSpec change-id，也允许使用工程主题名（例如 `init-project-routing`）
+
+#### Scenario: 宿主项目生成本地运行产物
+- GIVEN 宿主项目在执行某个 `<change-id>` 时生成工程、QA、release、archive、retro、decision、map、review 或 karpathy 产物
+- WHEN 系统计算默认写入路径
+- THEN 系统使用 `.superspecflow/<stage>/<change-id>/` 作为运行时命名空间
+- AND 宿主项目不把这些路径作为 SSF 本仓库的工程交付物提交
+- AND 是否在宿主项目自身 Git 中跟踪 `.superspecflow/` 由宿主项目策略决定
+
+#### Scenario: 同一 `<change-id>` 同时在本仓库和宿主项目存在
+- GIVEN SSF 本仓库已提交 `engineering/<change-id>/spec-to-code-map.md`
+- AND 宿主项目运行时也使用 `.superspecflow/maps/<change-id>/spec-to-code-map.md`
+- WHEN 系统读取 spec-to-code map
+- THEN 本仓库语境读取 `engineering/<change-id>/spec-to-code-map.md`
+- AND 宿主项目语境优先读取 `.superspecflow/maps/<change-id>/spec-to-code-map.md`，缺失时按 SSF-ARTIFACT-004 回退旧路径
+- AND 两套路径不互相覆盖、不互相迁移
+
 ## MODIFIED Requirements
 
 无。
@@ -96,3 +122,4 @@
 - SSF-ARTIFACT-N3 系统不得把旧根目录路径作为新产物的推荐写入位置。
 - SSF-ARTIFACT-N4 系统不得要求用户在兼容期内一次性删除或搬迁旧路径历史产物。
 - SSF-ARTIFACT-N5 系统不得在本 change 中重新定义 progress 或 cross-agent verification 的文件协议。
+- SSF-ARTIFACT-N6 本 change 不得要求 SSF 本仓库已提交的 `engineering/<change-id>/` 工程交付物迁移到 `.superspecflow/`，也不得把这些已提交文件判定为非法路径。
