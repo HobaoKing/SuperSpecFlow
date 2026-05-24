@@ -23,6 +23,8 @@ description: 阶段五（发）。用户输入 /ssf-ship 或由 ssf-qa 续接时
 - 高风险功能必须有 rollback 和 monitoring。
 - 如果 QA signoff 不存在，先回到 `ssf-qa`。
 - 不假设用户已运行测试；必须列出已知证据和未知项。
+- 发布运行时产物默认写入 `.superspecflow/release/<change-id>/`。
+- 读取历史发布产物时先读 `.superspecflow/release/<change-id>/`，缺失时 fallback 到兼容期旧路径；新写入不得推荐根目录 `release/<change-id>/`。
 
 ## Step 1 — Release Checklist
 

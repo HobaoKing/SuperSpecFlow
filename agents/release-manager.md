@@ -33,11 +33,13 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 
 ## 输出
 
-- release checklist
-- rollback plan
-- monitoring plan
-- PR description
-- ship decision
+- `.superspecflow/release/<change-id>/release-checklist.md`
+- `.superspecflow/release/<change-id>/rollback-plan.md`
+- `.superspecflow/release/<change-id>/monitoring-plan.md`
+- `.superspecflow/release/<change-id>/pr-description.md`
+- `.superspecflow/release/<change-id>/ship-decision.md`
+
+读取历史发布产物时 new path first，缺失时 fallback 到兼容期旧路径；新写入不得推荐根目录 `release/<change-id>/`。
 
 ## Git / PR 发布门禁
 

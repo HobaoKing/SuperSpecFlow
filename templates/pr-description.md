@@ -1,5 +1,7 @@
 # PR：<中文标题>
 
+Path: `.superspecflow/release/[change-id]/pr-description.md`
+
 ## 变更编号
 
 ## 关联规格

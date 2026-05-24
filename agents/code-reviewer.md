@@ -22,6 +22,8 @@ tools: Read, Grep, Glob, Bash
 
 ## 输出格式
 
+Review 运行时产物写入 `.superspecflow/reviews/<change-id>/review-report.md`，读取时 new path first、旧路径 fallback。
+
 ```markdown
 # Review Report: [change-id]
 

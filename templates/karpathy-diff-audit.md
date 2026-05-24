@@ -1,5 +1,7 @@
 # Karpathy Diff Audit: [change-id]
 
+Path: `.superspecflow/karpathy/[change-id]/karpathy-diff-audit.md`
+
 ## 假设是否已显式说明
 - Pass / Fail
 

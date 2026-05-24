@@ -35,6 +35,8 @@ description: 阶段四（审）。用户输入 /ssf-review 或由 ssf-build 续�
 
 ## Step 2 — Code Review Report
 
+宿主项目 review 产物默认写入 `.superspecflow/reviews/<change-id>/review-report.md`。读取历史 review 时先读 `.superspecflow/reviews/<change-id>/`，缺失时 fallback 到兼容期旧路径；新写入不得推荐根目录 `reviews/<change-id>/`。
+
 ```markdown
 # Review Report: [change-id]
 
@@ -76,6 +78,8 @@ description: 阶段四（审）。用户输入 /ssf-review 或由 ssf-build 续�
 不得直接说“你说得对，我马上改”。
 
 ## Step 4 — Spec / Code / Test Sync
+
+同步检查属于 review 产物，默认写入 `.superspecflow/reviews/<change-id>/sync-check.md`。
 
 ```markdown
 # Sync Check

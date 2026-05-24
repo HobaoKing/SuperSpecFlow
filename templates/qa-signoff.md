@@ -1,5 +1,7 @@
 # QA Signoff: [change-id]
 
+Path: `.superspecflow/qa/[change-id]/qa-signoff.md`
+
 ## Test Summary
 
 ## Passed

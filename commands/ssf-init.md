@@ -16,7 +16,7 @@ Steps:
 
    This creates:
    - `.superspecflow/enabled` (sentinel, empty file)
-   - `.superspecflow/{decisions,retro,qa,reviews,karpathy,maps,ship}/` (产物子目录)
+   - `.superspecflow/{engineering,qa,release,archive,retro,decisions,maps,reviews,karpathy}/` (标准运行产物子目录)
    - `.superspecflow/progress/` (占位，保持空，由后续 progress-tracking change 定义)
 
 4. **Do not** create `.superspecflow/CLAUDE.routing.md`, `.superspecflow/AGENTS.routing.md`, or `.superspecflow/templates`. These are reserved for **optional** project-level overrides; users add them only when they want to override the global default routing.

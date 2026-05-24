@@ -30,6 +30,8 @@ SuperSpecFlow 仓库自身只提交工作流包源码和 OpenSpec 变更契约�
 
 不要在 SuperSpecFlow 仓库提交本地 workflow 运行时、安装副本或缓存产物，例如 `superpowers/`、`.superspecflow/`、`.claude/`、`.codex/` 和 `.DS_Store`。这些产物可能由外部工具、本机安装或 agent 会话生成，应留在本地或重新生成。
 
+SuperSpecFlow 本仓库的 `engineering/<change-id>/` 是包源码层可提交工程交付目录，不属于宿主项目运行时产物。宿主项目运行时产物使用 `.superspecflow/<stage>/` 命名空间，读取时新路径优先、旧路径 fallback，新写入不再推荐根目录旧路径。
+
 宿主业务项目的规则不同：如果宿主项目采用 OpenSpec 管理需求，其项目内 `openspec/` 应正常提交；如果团队选择 repo 内 opt-in，`.superspecflow/` 中的 routing 接入文件是否提交由宿主项目约定决定，但不要提交本机缓存、日志、工具安装副本或外部 `superpowers/` 运行产物。
 
 ## 3. 推荐：方案 C 零侵入接入
@@ -69,13 +71,15 @@ bash <pack>/scripts/_ssf_init_apply.sh
 ```text
 .superspecflow/
 ├── enabled                 # sentinel，存在即 opt-in
-├── decisions/              # /ssf-decision 产物
+├── engineering/            # implementation plan、dev handoff
+├── qa/                     # acceptance、negative、risk、signoff
+├── release/                # release checklist、rollback、monitoring、PR 描述
+├── archive/                # archive summary、documentation coverage
 ├── retro/                  # /ssf-retro 产物
-├── qa/                     # QA signoff
+├── decisions/              # /ssf-decision 产物
+├── maps/                   # spec-to-code-map.md
 ├── reviews/                # /ssf-review 报告
 ├── karpathy/               # /ssf-karpathy 报告
-├── maps/                   # spec-to-code-map.md
-├── ship/                   # release notes、rollback plan
 └── progress/               # 占位，由后续 progress-tracking change 定义
 ```
 
@@ -147,7 +151,7 @@ bash <pack>/scripts/_ssf_init_apply.sh
 /ssf-init
 ```
 
-`/ssf-init` 是项目初始化动作：它创建 `.superspecflow/` 软链并提示添加 `@./.superspecflow/*.routing.md`。其他 `/ssf-*` 命令只是一次性调用，不会自动创建 `.superspecflow/`。
+`/ssf-init` 是项目初始化动作：它创建 `.superspecflow/enabled` sentinel 和标准运行产物子目录，不修改宿主项目指令文件。其他 `/ssf-*` 命令只是一次性调用，不会自动创建 `.superspecflow/`。
 
 ## 5. Claude Code 安装
 

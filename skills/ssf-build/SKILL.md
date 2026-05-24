@@ -29,12 +29,17 @@ description: 阶段三（建）。用户输入 /ssf-build 或由 ssf-spec 续接
 - 不做 OpenSpec 之外的功能。
 - 发现范围偏差，暂停，不自行扩展。
 - 每完成一个 task，更新 tasks.md。
-- 维护 `engineering/<change-id>/spec-to-code-map.md`。
+- 宿主项目运行时工程产物写入 `.superspecflow/engineering/<change-id>/`。
+- 宿主项目运行时 spec-to-code map 写入 `.superspecflow/maps/<change-id>/spec-to-code-map.md`。
+- 如果是在 SuperSpecFlow 本仓库实现包源码变更，工程交付物保留在 `engineering/<change-id>/spec-to-code-map.md`，该路径可提交且不得视为运行时产物。
+- 读取运行时工程产物时使用 new path first：先读 `.superspecflow/engineering/<change-id>/` 和 `.superspecflow/maps/<change-id>/`，缺失时 fallback 到兼容期旧路径。
 - 如果宿主项目存在或需要创建 progress 状态，维护 `.superspecflow/progress/<change-id>/state.json`、`timeline.md`、`verification.md` 和 `handoff.md`。
 - 中断、上下文压缩或换 agent 后恢复已有 change 时，先读取 `.superspecflow/progress/<change-id>/state.json` 和 `handoff.md`，再读取 OpenSpec。
 - 声称 task、阶段或 change 完成前，必须在 `.superspecflow/progress/<change-id>/verification.md` 写入或引用 fresh verification。
 
 ## Step 1 — Implementation Plan
+
+宿主项目默认输出到 `.superspecflow/engineering/<change-id>/implementation-plan.md`；SuperSpecFlow 本仓库包源码实现可把工程交付物写入 `engineering/<change-id>/`。
 
 先输出：
 
@@ -60,6 +65,8 @@ description: 阶段三（建）。用户输入 /ssf-build 或由 ssf-spec 续接
 ```
 
 ## Step 2 — Spec-to-Code Map
+
+宿主项目默认输出到 `.superspecflow/maps/<change-id>/spec-to-code-map.md`；SuperSpecFlow 本仓库包源码实现保留 `engineering/<change-id>/spec-to-code-map.md`。
 
 ```markdown
 # Spec to Code Map: [change-id]
@@ -145,6 +152,8 @@ Tests: [运行结果]
 ```
 
 ## Step 6 — Dev Handoff
+
+宿主项目默认输出到 `.superspecflow/engineering/<change-id>/dev-handoff.md`。
 
 任务完成后输出：
 

@@ -39,7 +39,8 @@ tools: Read, Write, Edit, Grep, Glob
 - openspec/changes/<change-id>/specs/*.md
 - openspec/changes/<change-id>/design.md
 - openspec/changes/<change-id>/tasks.md
-- engineering/<change-id>/spec-readiness-review.md
+- `.superspecflow/engineering/<change-id>/spec-readiness-review.md`（宿主项目运行时）
+- `engineering/<change-id>/spec-readiness-review.md`（仅 SuperSpecFlow 本仓库包源码工程交付物）
 
 ## Git 准备
 

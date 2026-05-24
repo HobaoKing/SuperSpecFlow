@@ -17,6 +17,10 @@ description: 阶段六（档）。用户输入 /ssf-archive 或由 ssf-ship 续�
 - 隐式：用户要求归档、更新文档、整理本次变更
 - 自动：`ssf-ship` 确认后续接
 
+## 产物路径
+
+宿主项目 archive 运行时产物默认写入 `.superspecflow/archive/<change-id>/`。Decision records 默认写入 `.superspecflow/decisions/`。读取历史归档产物时先读 `.superspecflow/archive/<change-id>/`，缺失时 fallback 到兼容期旧路径；新写入不得推荐根目录 `archive/<change-id>/`。
+
 ## Step 1 — Archive Summary
 
 ```markdown

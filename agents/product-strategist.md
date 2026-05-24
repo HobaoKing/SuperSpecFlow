@@ -36,7 +36,7 @@ tools: Read, Write, Edit, Grep, Glob
 ## 输出
 
 - Product Change Brief
-- Decision Record
+- Decision Record（宿主项目运行时写入 `.superspecflow/decisions/`）
 - User Journey
 - Non-goals
 - Success Metrics

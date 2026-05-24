@@ -52,9 +52,35 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 SuperSpecFlow 仓库提交的是工作流包源码和可追踪变更契约，不提交本地 workflow 运行时、安装副本或缓存产物。
 
 - `openspec/` 是本仓库 OpenSpec change contract，行为规则变更必须随对应 `openspec/changes/<change-id>/` 提交。
+- `engineering/<change-id>/` 是 SuperSpecFlow 本仓库的可提交工程交付目录，可保存 `spec-to-code-map.md`、`spec-readiness-review.md` 等本仓库工程交付物，不属于宿主项目运行时产物。
 - 宿主项目如果采用 OpenSpec 管理自身需求，其项目内 `openspec/` 也应作为业务变更契约提交。
 - `superpowers/`、`docs/superpowers/`、`.superspecflow/`、`.claude/`、`.codex/`、`.DS_Store` 属于本仓库本地运行时、安装或缓存产物，不得提交。
 - 提交前必须通过 `git status --short`、staged diff 和 `scripts/validate-pack.sh` 确认没有上述产物进入 Git 跟踪列表。
+
+## Artifact Paths
+
+宿主项目运行时产物统一写入 `.superspecflow/` 命名空间。读取时使用 new path first，然后 fallback 到兼容期旧路径；写入新产物时不得推荐根目录旧路径。
+
+标准运行时命名空间：
+
+| 产物 | 宿主项目运行时路径 |
+|---|---|
+| Engineering artifacts | `.superspecflow/engineering/<change-id>/` |
+| QA artifacts | `.superspecflow/qa/<change-id>/` |
+| Release artifacts | `.superspecflow/release/<change-id>/` |
+| Archive artifacts | `.superspecflow/archive/<change-id>/` |
+| Retro artifacts | `.superspecflow/retro/<change-id>/` |
+| Decision records | `.superspecflow/decisions/` |
+| Spec-to-code maps | `.superspecflow/maps/<change-id>/` |
+| Review artifacts | `.superspecflow/reviews/<change-id>/` |
+| Karpathy audits | `.superspecflow/karpathy/<change-id>/` |
+
+语境边界：
+
+- `openspec/` 是可提交 OpenSpec change contract，不属于运行时缓存，不迁移到 `.superspecflow/`。
+- SuperSpecFlow 本仓库的 `engineering/<change-id>/` 是包源码层工程交付物，不标为非法路径，不迁移到 `.superspecflow/`。
+- 宿主项目旧路径如 `engineering/<change-id>/`、`qa/<change-id>/`、`release/<change-id>/`、`archive/<change-id>/`、`retro/<change-id>/` 只作为兼容读取 fallback 或迁移提示；新写入必须使用 `.superspecflow/` 标准路径。
+- `.superspecflow/progress/<change-id>/` 由 `progress-tracking` 定义，`.superspecflow/verification/<change-id>/` 由 `cross-agent-verification` 定义，本 routing 只确认它们同属 `.superspecflow/` 命名空间，不重定义文件协议。
 
 ## Strict Intake Gate
 

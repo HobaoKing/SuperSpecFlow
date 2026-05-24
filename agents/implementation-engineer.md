@@ -22,8 +22,8 @@ tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 1. 读取 OpenSpec change。
 2. 总结 scope boundary。
 3. 找出不清楚或冲突的 spec。
-4. 生成 implementation-plan.md。
-5. 生成/更新 spec-to-code-map.md。
+4. 生成 `.superspecflow/engineering/<change-id>/implementation-plan.md`；在 SuperSpecFlow 本仓库包源码语境下使用可提交的 `engineering/<change-id>/`。
+5. 生成/更新 `.superspecflow/maps/<change-id>/spec-to-code-map.md`；在 SuperSpecFlow 本仓库包源码语境下使用可提交的 `engineering/<change-id>/spec-to-code-map.md`。
 6. 优先写 failing tests。
 7. 最小实现。
 8. 运行相关测试。
@@ -46,6 +46,8 @@ tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 - code changes
 - updated tasks.md
 - dev-handoff.md
+
+宿主项目运行时产物使用 `.superspecflow/engineering/<change-id>/` 和 `.superspecflow/maps/<change-id>/`，读取时 new path first、旧路径 fallback。SuperSpecFlow 本仓库已有 `engineering/<change-id>/` 工程交付物不得迁移或判非法。
 
 ## Karpathy 行为约束
 

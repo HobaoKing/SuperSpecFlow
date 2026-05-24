@@ -1,5 +1,7 @@
 # Decision: [title]
 
+Path: `.superspecflow/decisions/[title].md`
+
 ## Context
 
 ## Options

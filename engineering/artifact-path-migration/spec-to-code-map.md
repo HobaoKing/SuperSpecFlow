@@ -1,0 +1,25 @@
+# Spec to Code Map: artifact-path-migration
+
+| Spec ID | Requirement | Implementation Files | Tests | Status |
+|---|---|---|---|---|
+| SSF-ARTIFACT-001 | 使用统一运行产物命名空间 | `routing/AGENTS.routing.md`, `routing/CLAUDE.routing.md`, `skills/`, `commands/`, `agents/`, `templates/`, `scripts/_ssf_init_apply.sh` | `tests/artifacts/test_artifact_path_contract.bats`, `tests/init/test_ssf_init_zero_touch.bats`, `scripts/validate-pack.sh` | Implemented |
+| SSF-ARTIFACT-002 | 保留 `openspec/` 作为可提交需求契约 | `README.md`, `docs/installation.md`, `routing/AGENTS.routing.md`, `routing/CLAUDE.routing.md`, `scripts/validate-pack.sh` | `tests/artifacts/test_artifact_path_contract.bats`, `tests/smoke/test_artifact_policy.bats`, `scripts/validate-pack.sh` | Implemented |
+| SSF-ARTIFACT-003 | 定义标准运行产物路径 | `routing/AGENTS.routing.md`, `routing/CLAUDE.routing.md`, `README.md`, `docs/installation.md`, `skills/`, `commands/`, `templates/`, `scripts/_ssf_init_apply.sh` | `tests/artifacts/test_artifact_path_contract.bats`, `tests/init/test_ssf_init_zero_touch.bats`, `scripts/validate-pack.sh` | Implemented |
+| SSF-ARTIFACT-004 | 读取新路径优先并回退旧路径 | `routing/AGENTS.routing.md`, `routing/CLAUDE.routing.md`, `skills/ssf-build/SKILL.md`, `skills/ssf-review/SKILL.md`, `skills/ssf-qa/SKILL.md`, `skills/ssf-ship/SKILL.md`, `skills/ssf-archive/SKILL.md`, `skills/ssf-retro/SKILL.md`, `skills/ssf-karpathy/SKILL.md` | `tests/artifacts/test_artifact_path_contract.bats`, `scripts/validate-pack.sh` | Implemented |
+| SSF-ARTIFACT-005 | 新写入不再推荐旧路径 | `skills/`, `commands/`, `agents/`, `templates/`, `scripts/_ssf_init_apply.sh`, `scripts/validate-pack.sh` | `tests/artifacts/test_artifact_path_contract.bats`, `tests/init/test_ssf_init_zero_touch.bats`, `scripts/validate-pack.sh` | Implemented |
+| SSF-ARTIFACT-006 | 验证迁移覆盖面 | `scripts/validate-pack.sh`, `tests/artifacts/test_artifact_path_contract.bats` | `rtk bats tests/artifacts/test_artifact_path_contract.bats`, `rtk bash scripts/validate-pack.sh` | Implemented |
+| SSF-ARTIFACT-007 | 区分包源码与运行时双语境 | `README.md`, `docs/installation.md`, `routing/AGENTS.routing.md`, `routing/CLAUDE.routing.md`, `skills/ssf-build/SKILL.md`, `skills/ssf-spec/SKILL.md`, `agents/implementation-engineer.md`, `agents/spec-architect.md`, `engineering/artifact-path-migration/spec-to-code-map.md` | `tests/artifacts/test_artifact_path_contract.bats`, `scripts/validate-pack.sh` | Implemented |
+| SSF-ARTIFACT-007 Scenario 1 | SSF 本仓库提交工程交付物 | `engineering/artifact-path-migration/spec-to-code-map.md`, `skills/ssf-build/SKILL.md`, `agents/implementation-engineer.md`, `scripts/validate-pack.sh` | `tests/artifacts/test_artifact_path_contract.bats`, `rtk bash scripts/validate-pack.sh` | Implemented |
+| SSF-ARTIFACT-007 Scenario 2 | 宿主项目生成本地运行产物 | `routing/AGENTS.routing.md`, `routing/CLAUDE.routing.md`, `README.md`, `docs/installation.md`, `skills/`, `commands/`, `templates/`, `scripts/_ssf_init_apply.sh` | `tests/artifacts/test_artifact_path_contract.bats`, `tests/init/test_ssf_init_zero_touch.bats` | Implemented |
+| SSF-ARTIFACT-007 Scenario 3 | 同一 change-id 在本仓库和宿主项目同时存在 | `skills/ssf-build/SKILL.md`, `agents/implementation-engineer.md`, `scripts/validate-pack.sh` | `tests/artifacts/test_artifact_path_contract.bats`, `rtk bash scripts/validate-pack.sh` | Implemented |
+
+## MUST NOT 覆盖
+
+| MUST NOT | 反向保护 | 测试 |
+|---|---|---|
+| SSF-ARTIFACT-N1 不得迁移、隐藏或禁止提交 `openspec/` | `README.md`、routing 和 validation 明确 `openspec/` 是可提交 change contract；`.gitignore` 不忽略 `openspec/` | `tests/artifacts/test_artifact_path_contract.bats`, `tests/smoke/test_artifact_policy.bats`, `scripts/validate-pack.sh` |
+| SSF-ARTIFACT-N2 新旧路径同时存在时不得优先读取旧路径 | routing 和相关 skills 明确 new path first、fallback only | `tests/artifacts/test_artifact_path_contract.bats`, `scripts/validate-pack.sh` |
+| SSF-ARTIFACT-N3 不得把旧根目录路径作为新产物推荐写入位置 | skills、commands、templates 和 `/ssf-init` 默认路径全部指向 `.superspecflow/`；validation 拒绝根目录 `qa/` 等新运行时产物 | `tests/artifacts/test_artifact_path_contract.bats`, `tests/init/test_ssf_init_zero_touch.bats`, `scripts/validate-pack.sh` |
+| SSF-ARTIFACT-N4 不得要求兼容期一次性删除或搬迁旧路径历史产物 | routing 和 skills 只规定 fallback 兼容读取，不删除旧路径；validation 只拒绝新根目录运行时写入，不删除已有文件 | `tests/artifacts/test_artifact_path_contract.bats`, `scripts/validate-pack.sh` |
+| SSF-ARTIFACT-N5 不得重新定义 progress 或 cross-agent verification 文件协议 | routing 只声明 `.superspecflow/progress/<change-id>/` 属于 `progress-tracking`，`.superspecflow/verification/<change-id>/` 属于 `cross-agent-verification`；未修改对应模板协议 | `tests/progress/test_progress_contract.bats`, `tests/verification/test_cross_agent_verification_contract.bats`, `scripts/validate-pack.sh` |
+| SSF-ARTIFACT-N6 不得迁移或判非法 SSF 本仓库已提交 `engineering/<change-id>/` | routing、skills 和 validation 明确 `engineering/<change-id>/` 是本仓库可提交工程交付目录；根目录 runtime 拒绝规则排除 `engineering/` | `tests/artifacts/test_artifact_path_contract.bats`, `scripts/validate-pack.sh` |
