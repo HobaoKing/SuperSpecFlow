@@ -72,6 +72,15 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 | Review / QA / Ship / Git | 进入对应阶段 |
 | 高风险变更 | 强制 Spec、QA、Ship、Git/PR 门禁 |
 
+## Workflow Scale 路线
+
+`workflow-scale-architecture` 定义了两阶段增强路线：
+
+1. `browser-mcp-qa-adapter`：先让 `/ssf-qa` 从文档 QA 扩展为 evidence-backed QA。它会把 acceptance matrix 中的 E2E / user journey 场景转成 `.superspecflow/qa/<change-id>/qa-execution-plan.md`，并在目标和工具可用时记录 `browser-run-report.md` 与 `qa-evidence/`。没有可运行目标或浏览器/MCP 工具不可用时，必须写 blocked signoff，不得声明自动化浏览器路径通过。
+2. `parallel-worktree-spec-clusters`：再让大 change 拆成 parent change 和多个 Spec cluster。每个 cluster 可以在独立 worktree 中执行 build/review/QA/Git；parent change 通过 `.superspecflow/clusters/<parent-change>/integration-gate.md` 汇总 cluster QA evidence、review、commit 和跨 cluster 回归后才能进入 ship。
+
+QA evidence 是后续 Review / Ship / Git / Archive 可引用的事实来源，但不替代 OpenSpec requirements 或 Spec ID。Worktree 只是执行隔离机制，不是发布边界。
+
 ## 快速接入
 
 SuperSpecFlow 同时支持 Claude Code 和 Codex CLI。默认会把全局 routing include 同时写入两个宿主；只装其中一个用 `--claude-only` 或 `--codex-only` 收窄。
@@ -309,7 +318,7 @@ SuperSpecFlow 应先判断这是非平凡行为变更，然后进入产品思考
 | 工程执行 | `implementation-plan.md`、`spec-to-code-map.md`、`dev-handoff.md`、`sync-check.md` |
 | Karpathy 纪律 | `karpathy-preflight.md`、`karpathy-diff-audit.md` |
 | Review | `review-report.md`、`git-hygiene-review.md` |
-| QA | `acceptance-matrix.md`、`negative-test-matrix.md`、`risk-matrix.md`、`regression-checklist.md`、`exploratory-test-notes.md`、`qa-signoff.md` |
+| QA | `acceptance-matrix.md`、`negative-test-matrix.md`、`risk-matrix.md`、`regression-checklist.md`、`exploratory-test-notes.md`、`qa-signoff.md`、`qa-execution-plan.md`、`browser-run-report.md` |
 | Release | `release-checklist.md`、`rollback-plan.md`、`monitoring-plan.md`、`ship-decision.md`、`migration-plan.md`、`pr-description.md` |
 | Git / PR | `git-checklist.md`、`git-status-audit.md`、`commit-message.md`、`commit-gate.md`、`git-pr-gate.md`、`git-pr-archive.md`、`git-hooks/commit-msg` |
 | Archive / Retro | `archive-summary.md`、`documentation-coverage.md`、`retro.md` |
@@ -350,8 +359,9 @@ SuperSpecFlow 仓库提交工作流包源码和 OpenSpec 变更契约：`routing
 | Spec-to-code maps | `.superspecflow/maps/<change-id>/` |
 | Review artifacts | `.superspecflow/reviews/<change-id>/` |
 | Karpathy audits | `.superspecflow/karpathy/<change-id>/` |
+| Cluster artifacts | `.superspecflow/clusters/<parent-change>/` |
 
-读取历史产物时采用新路径优先、旧路径 fallback；新写入不再推荐根目录旧路径。`.superspecflow/progress/` 和 `.superspecflow/verification/` 分别由 `progress-tracking` 与 `cross-agent-verification` 定义文件协议。
+读取历史产物时采用新路径优先、旧路径 fallback；新写入不再推荐根目录旧路径。`.superspecflow/progress/`、`.superspecflow/verification/` 和 `.superspecflow/clusters/` 分别由 `progress-tracking`、`cross-agent-verification` 和 `parallel-worktree-spec-clusters` 定义文件协议。
 
 ## Git 提交规范
 
