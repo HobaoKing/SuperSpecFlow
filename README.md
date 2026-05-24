@@ -1,24 +1,245 @@
 # SuperSpecFlow
 
-SuperSpecFlow 是一套面向 Claude Code / Codex CLI 的 AI 软件研发工作流，把 `想 → 规 → 建 → 审 → 测 → 发 → 档 → 复盘` 做成可以隐式和显式调用的研发体系。
+SuperSpecFlow 是一套面向 Claude Code / Codex CLI 的 AI 软件研发工作流包。它的目标不是让 AI 更快地堆代码，而是让 AI 在已有项目里像一个可审计的小型研发团队一样工作：先判断请求类型，再澄清目标，再形成可追踪规格，再小步实现、审查、验收、发布、归档和复盘。
 
-新版重点补强：
+项目初衷有三点：
 
-- **OpenSpec 风格的 SpecOps**：需求、变更、验收、归档可追踪。
-- **Superpowers 风格的 AgentOps**：先理解、再计划、TDD、小步实现、处理 review 先验证。
-- **gstack 风格的 ReviewOps**：产品、设计、工程、QA、安全、发布多角色门禁。
-- **Karpathy 风格的 DiffOps**：编码前显式假设、简单优先、外科手术式修改、目标驱动验证。
-- **GitOps**：分支、暂存、commit（英文类型 + 中文正文）、PR、merge、rollback 与 change-id / Spec ID 对齐。
+1. **防止一句话需求直接变成失控改动**：自然语言请求先经过 Intake Gate，区分纯问答、轻量任务、非平凡行为变更、高风险变更和 Git/QA/发布动作。
+2. **让每个行为变更都能追踪**：非平凡变更必须落到 OpenSpec change-id / Spec ID，并在实现、测试、commit、PR、回滚说明之间保持映射。
+3. **把优秀研发纪律变成 agent 可执行规则**：融合 OpenSpec、Superpowers、gstack、Karpathy 风格的 diff discipline，以及 GitOps 的分支、暂存、提交和 PR 门禁。
 
-目标不是让 AI 更会“写代码”，而是让 AI 像小型研发组织一样工作，并且每个决策、实现、测试、提交都能追踪。
+最终效果是：用户可以用自然语言发起工作，也可以显式调用 `/ssf-*` 命令；agent 不会默认接管所有项目，而是在项目 opt-in 后按 SuperSpecFlow 的门禁执行。
 
-## 仓库提交边界
+## 适合谁
 
-SuperSpecFlow 仓库提交工作流包源码和 OpenSpec 变更契约：`routing/`、`skills/`、`commands/`、`agents/`、`templates/`、`scripts/`、用户文档和 `openspec/`。其中 `openspec/` 是本仓库行为规则变更的 change contract，不能被当作运行时产物忽略。
+- 想在真实项目里使用 AI coding agent，但需要可控流程、可追踪提交和发布门禁的团队。
+- 同时使用 Claude Code 和 Codex CLI，希望两端共享一套研发规则的人。
+- 想把需求、实现、测试、评审、QA、发布和复盘串成一个闭环的个人或小团队。
 
-不要提交本地 workflow 运行时、安装副本或缓存产物，例如 `superpowers/`、`.superspecflow/`、`.claude/`、`.codex/` 和 `.DS_Store`。宿主业务项目如果采用 OpenSpec 管理需求，其项目内 `openspec/` 应正常提交；`.superspecflow/` 是否提交由宿主项目接入策略决定。
+不适合的场景：
 
-SuperSpecFlow 本仓库的 `engineering/<change-id>/` 是包源码层可提交工程交付目录，用于保存本仓库 change 的 `spec-to-code-map.md`、`spec-readiness-review.md` 等文件。宿主项目运行时产物使用 `.superspecflow/` 命名空间，二者不互相迁移：
+- 只想要一次性代码补全，不关心规格、测试、提交和回滚。
+- 希望 agent 自动覆盖宿主项目已有 `AGENTS.md` / `CLAUDE.md` 的项目。SuperSpecFlow 的原则是宿主项目规则优先，自己只提供流程门禁。
+
+## 工作模型
+
+完整流程是：
+
+```text
+Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → Retro
+```
+
+对应五层约束：
+
+| 风格 | 在本项目中的作用 |
+|---|---|
+| OpenSpec | 用 change-id、Spec ID、proposal、specs、tasks 和 archive 记录变更合同 |
+| Superpowers | 强制先理解、再计划、TDD、小步实现、验证后再宣称完成 |
+| gstack | 用产品、规格、工程、QA、发布、Git 等角色做门禁审查 |
+| Karpathy | 编码前暴露假设，简单优先，外科手术式修改，目标驱动验证 |
+| GitOps | 分支、暂存、commit、PR、rollback 与 change-id / Spec ID 对齐 |
+
+这些来源不是作为外部运行时依赖被整体搬进项目，而是被拆成阶段能力：
+
+- **OpenSpec** 提供变更合同：change-id、Spec ID、proposal、design、specs、tasks、scenarios、MUST NOT、archive。
+- **Superpowers** 提供执行纪律：先理解、再计划、优先 TDD、小步实现、验证后再宣称完成、接收 review 前先核验事实。
+- **gstack** 提供角色门禁：产品、设计、规格、工程、代码审查、QA、发布、Git 管理等角色视角。
+- **Karpathy** 提供编码行为约束：暴露假设、寻找更简单方案、避免投机抽象、保持 surgical diff、把目标变成可验证结果。
+
+各阶段使用的能力如下：
+
+| 阶段 | OpenSpec 能力 | Superpowers 能力 | gstack 能力 | Karpathy 能力 |
+|---|---|---|---|---|
+| Intake | 判断请求是否需要 change-id / Spec ID | 先分类、再行动，轻量任务不强行升级完整流程 | 判断是否需要产品、工程、QA、发布或 Git 角色介入 | 选择最小流程，避免把小问题过度流程化 |
+| Think | 产出可进入 proposal 的问题、目标、non-goals 和成功指标 | 先理解用户目的和约束，再提出方案 | CEO / Designer / Product 视角挑战价值、路径和范围 | 暴露假设，压缩 MVP，寻找更简单方案 |
+| Spec | 生成 proposal、design、specs、tasks、scenarios、MUST NOT 和 Spec Readiness Review | 把需求转成可执行、可验证的任务顺序 | Spec Architect 视角检查需求是否完整、可测、可归档 | 防止范围膨胀，把每条要求收敛成可验证目标 |
+| Build | 读取 OpenSpec change，只实现映射到 Spec ID 的任务，更新 tasks 和 spec-to-code map | implementation plan、优先 failing tests、小步实现、fresh verification、progress recovery | Implementation Engineer 视角执行实现和交接 | Karpathy preflight、surgical changes、不做无关重构、不写投机抽象 |
+| Review | 检查 spec / code / test 是否同步，确认行为改动都有 Spec ID | 接收 review 反馈前先验证事实，支持 cross-agent verification | Engineering Manager / Code Reviewer / Security Reviewer 视角找阻塞问题 | Karpathy Diff Audit，检查错误假设、过度设计、无关改动和不可验证目标 |
+| QA | 从 requirements、scenarios、MUST NOT 生成 acceptance、negative、risk 和 regression 矩阵 | 用证据驱动验收，不只看 happy path | QA Gatekeeper 视角给出 ship / monitoring / no-ship 建议 | 关注边界条件、残余风险和未验证假设 |
+| Ship | 检查 OpenSpec tasks、QA signoff、rollback、monitoring 和 release blockers | 完成前必须有新鲜验证证据，不确定项必须标注 | Release Manager 视角做 go / no-go 判断 | 确认可发布范围足够小，阻止含混风险被包装成完成态 |
+| Git / PR | commit 和 PR 关联 change-id、Spec ID、验证方式和回滚说明 | 小步、可验证、可恢复的提交纪律 | Git Steward 视角检查分支、暂存、PR、merge、rollback | 审查 staged diff 是否 surgical，拒绝无关文件和顺手重构 |
+| Archive | 归档 change、决策、文档覆盖和最终产物索引 | 把上下文落盘，避免历史只留在聊天记录 | 文档和发布收尾视角检查可追踪性 | 记录实际范围，避免归档时扩大解释 |
+| Retro | 对照 OpenSpec contract 回看流程缺口 | 把执行经验转成下一轮可操作改进 | 从产品、规格、工程、QA、发布各角色复盘质量 | 复盘是否存在错误假设、过度设计、非最小改动或验证不足 |
+
+自然语言不会被简单关键词直接升级成完整流程。SuperSpecFlow 先做 Intake Gate：
+
+| 请求类型 | 处理方式 |
+|---|---|
+| 纯问答 / 解释 | 直接回答，不启动完整流程 |
+| 轻量任务 | 说明目标、影响范围、验证方式，小范围完成 |
+| 非平凡行为变更 | 进入 Think / Spec，形成 change-id 和 Spec ID |
+| 已有规格实现 | 进入 Build，按 OpenSpec tasks 执行 |
+| Review / QA / Ship / Git | 进入对应阶段 |
+| 高风险变更 | 强制 Spec、QA、Ship、Git/PR 门禁 |
+
+## 快速接入
+
+推荐方式是零侵入接入：全局安装能力，每个宿主项目自行 opt-in。
+
+```bash
+./scripts/install-global.sh
+```
+
+然后进入要启用的宿主项目，执行：
+
+```text
+/ssf-init
+```
+
+`/ssf-init` 只创建 `.superspecflow/enabled` sentinel 和标准运行产物目录，不修改宿主项目的 `AGENTS.md` 或 `CLAUDE.md`。
+
+详细安装、兼容路径和卸载方式见 [docs/installation.md](docs/installation.md)。Claude Code / Codex 差异见 [docs/compatibility.md](docs/compatibility.md)。
+
+## 使用方式
+
+### 自然语言
+
+项目 opt-in 后，可以直接说：
+
+```text
+我要做一个会员续费提醒功能
+```
+
+SuperSpecFlow 应先判断这是非平凡行为变更，然后进入产品思考和规格阶段，而不是直接改代码。
+
+也可以说：
+
+```text
+帮我提交这次改动
+```
+
+这会进入 Git 工作流审计，检查分支、diff、Spec ID、验证证据和中文提交规范。
+
+### 显式命令
+
+显式命令可用于直接进入某个阶段：
+
+```text
+/ssf-think 会员续费提醒
+/ssf-spec add-membership-renewal-reminder
+/ssf-build all
+/ssf-review
+/ssf-qa add-membership-renewal-reminder
+/ssf-ship add-membership-renewal-reminder
+/ssf-git
+/ssf-branch add-membership-renewal-reminder 会员续费提醒
+/ssf-commit add-membership-renewal-reminder
+/ssf-pr add-membership-renewal-reminder
+/ssf-archive add-membership-renewal-reminder
+/ssf-retro add-membership-renewal-reminder
+/ssf-decision 会员续费提醒入口位置
+/ssf-map add-membership-renewal-reminder
+/ssf-karpathy 检查当前实现是否过度设计
+/ssf-init
+```
+
+## 命令文件速查
+
+`commands/` 是显式 slash command 的入口文件。每个文件只负责把用户输入路由到对应 skill 或产物格式。
+
+| 文件 | 命令 | 作用 |
+|---|---|---|
+| `commands/ssf-think.md` | `/ssf-think` | 产品思考阶段，澄清价值、用户路径、MVP、non-goals 和决策记录 |
+| `commands/ssf-spec.md` | `/ssf-spec` | 生成 OpenSpec change contract，包括 proposal、specs、design、tasks 和 readiness review |
+| `commands/ssf-build.md` | `/ssf-build` | 读取 OpenSpec 后实现，生成 implementation plan、spec-to-code map、测试和 dev handoff |
+| `commands/ssf-review.md` | `/ssf-review` | 做工程审查，输出阻塞项、建议项、记录项以及 spec/code/test 同步检查 |
+| `commands/ssf-qa.md` | `/ssf-qa` | 生成 QA gate，包括 acceptance、negative、risk、regression、exploratory notes 和 signoff |
+| `commands/ssf-ship.md` | `/ssf-ship` | 做发布门禁，检查 QA、rollback、monitoring、PR 描述和 ship decision |
+| `commands/ssf-git.md` | `/ssf-git` | 审计分支、工作区、暂存、runtime 产物和下一步 Git 建议 |
+| `commands/ssf-branch.md` | `/ssf-branch` | 基于 change-id 和主题创建或建议 `ssf/<change-id>-<slug>` 分支 |
+| `commands/ssf-commit.md` | `/ssf-commit` | 准备中文 commit，检查 staged diff、Spec ID、验证方式和无关文件 |
+| `commands/ssf-pr.md` | `/ssf-pr` | 准备中文 PR 标题和正文，包含测试、风险、回滚、QA 和发布信息 |
+| `commands/ssf-archive.md` | `/ssf-archive` | 归档 change、同步文档、更新 decision ledger 和文档覆盖检查 |
+| `commands/ssf-retro.md` | `/ssf-retro` | 复盘产品、规格、开发、QA、发布质量，并输出流程改进 |
+| `commands/ssf-decision.md` | `/ssf-decision` | 记录产品或工程决策，写入 `.superspecflow/decisions/` |
+| `commands/ssf-map.md` | `/ssf-map` | 创建或更新 Spec-to-Code Map |
+| `commands/ssf-karpathy.md` | `/ssf-karpathy` | 检查假设、歧义、简单方案、过度设计、无关改动和可验证目标 |
+| `commands/ssf-init.md` | `/ssf-init` | 为宿主项目创建 `.superspecflow/enabled` 和标准运行产物目录 |
+
+## 能力与角色文件
+
+`skills/` 定义阶段能力，`agents/` 定义角色视角。命令通常先进入 skill，复杂审查或产物生成再由角色规则约束。
+
+### Skills
+
+| 文件 | 作用 |
+|---|---|
+| `skills/ssf-think/SKILL.md` | 阶段一，产品和设计思考，输出 Product Change Brief、Decision Record 和 design 输入 |
+| `skills/ssf-spec/SKILL.md` | 阶段二，生成 OpenSpec 风格 proposal、specs、design、tasks 和 readiness review |
+| `skills/ssf-build/SKILL.md` | 阶段三，按 OpenSpec tasks、TDD 和最小实现纪律完成开发 |
+| `skills/ssf-review/SKILL.md` | 阶段四，工程审查与 review 接收纪律，检查阻塞项和同步关系 |
+| `skills/ssf-qa/SKILL.md` | 阶段四点五，生成验收、负向、风险、回归和 QA signoff |
+| `skills/ssf-ship/SKILL.md` | 阶段五，发布门禁、rollback、monitoring、PR 描述和 ship/no-ship |
+| `skills/ssf-git/SKILL.md` | Git 工作流门禁，约束分支、暂存、中文 commit、中文 PR 和回滚 |
+| `skills/ssf-karpathy/SKILL.md` | 编码行为约束，防止错误假设、过度设计、无关改动和不可验证目标 |
+| `skills/ssf-archive/SKILL.md` | 阶段六，归档 OpenSpec change、同步文档、更新 decision ledger |
+| `skills/ssf-retro/SKILL.md` | 复盘阶段，总结流程质量和可执行改进 |
+
+### Agents
+
+| 文件 | 作用 |
+|---|---|
+| `agents/product-strategist.md` | 产品策略角色，挑战价值、压缩范围、定义用户路径、non-goals 和成功指标 |
+| `agents/spec-architect.md` | 规格架构角色，把产品意图转成可实现、可测试、可归档的 OpenSpec contract |
+| `agents/implementation-engineer.md` | 工程实现角色，按 Spec ID、TDD、小步实现和 spec-to-code map 执行 |
+| `agents/code-reviewer.md` | 代码审查角色，检查正确性、安全、数据、性能、测试缺口和过度抽象 |
+| `agents/qa-gatekeeper.md` | QA 角色，把规格转成验收矩阵、负向测试、风险矩阵和 signoff |
+| `agents/release-manager.md` | 发布角色，检查 release blockers、rollback、monitoring 和 go/no-go |
+| `agents/git-steward.md` | Git 管理角色，保证分支、提交、PR、回滚与 change-id、Spec ID、验证证据一致 |
+
+## 路由与入口文件
+
+| 文件 | 作用 |
+|---|---|
+| `AGENTS.md` | Codex / generic agents 的项目入口，引用本仓库规则并声明 SuperSpecFlow routing |
+| `CLAUDE.md` | Claude Code 的项目入口，语义与 `AGENTS.md` 对齐 |
+| `routing/AGENTS.routing.md` | Codex / generic agents 的完整默认路由规则 |
+| `routing/CLAUDE.routing.md` | Claude Code 的完整默认路由规则 |
+| `routing/AGENTS.global.md` | Codex 全局薄壳，检测宿主项目是否 opt-in，再决定是否读取默认路由 |
+| `routing/CLAUDE.global.md` | Claude Code 全局薄壳，结合 SessionStart hook 或 sentinel 检测 opt-in |
+| `templates/integration/AGENTS.snippet.md` | 不支持 `@` include 时，给宿主 `AGENTS.md` 使用的极薄入口文本 |
+| `templates/integration/CLAUDE.snippet.md` | 不支持 `@` include 时，给宿主 `CLAUDE.md` 使用的极薄入口文本 |
+
+## 模板文件速查
+
+`templates/` 是各阶段产物的骨架，不是运行时缓存。常用模板按用途分组如下：
+
+| 类别 | 文件 |
+|---|---|
+| Intake / 产品 | `intake-gate.md`、`product-change-brief.md`、`user-journey.md`、`decision-record.md` |
+| OpenSpec | `proposal.md`、`spec.md`、`technical-design.md`、`tasks.md`、`spec-readiness-review.md` |
+| 工程执行 | `implementation-plan.md`、`spec-to-code-map.md`、`dev-handoff.md`、`sync-check.md` |
+| Karpathy 纪律 | `karpathy-preflight.md`、`karpathy-diff-audit.md` |
+| Review | `review-report.md`、`git-hygiene-review.md` |
+| QA | `acceptance-matrix.md`、`negative-test-matrix.md`、`risk-matrix.md`、`regression-checklist.md`、`exploratory-test-notes.md`、`qa-signoff.md` |
+| Release | `release-checklist.md`、`rollback-plan.md`、`monitoring-plan.md`、`ship-decision.md`、`migration-plan.md`、`pr-description.md` |
+| Git / PR | `git-checklist.md`、`git-status-audit.md`、`commit-message.md`、`commit-gate.md`、`git-pr-gate.md`、`git-pr-archive.md`、`git-hooks/commit-msg` |
+| Archive / Retro | `archive-summary.md`、`documentation-coverage.md`、`retro.md` |
+| Progress / Verification | `progress-state.json`、`progress-timeline.md`、`progress-verification.md`、`progress-handoff.md`、`verification-request.md`、`verification-evidence.md`、`verification-reviewer-notes.md`、`verification-signoff.md` |
+
+## 目录结构
+
+| 路径 | 说明 |
+|---|---|
+| `commands/` | 显式命令入口，一条命令一个 Markdown 文件 |
+| `skills/` | 阶段能力定义，供 Claude Code / Codex 读取执行 |
+| `agents/` | 角色规则，用于产品、规格、工程、审查、QA、发布和 Git 门禁 |
+| `routing/` | 全局薄壳和默认完整路由 |
+| `templates/` | 各阶段产物模板和集成入口片段 |
+| `scripts/` | 安装、初始化、验证和 hook 脚本 |
+| `docs/` | 安装、兼容性、分支策略等用户文档 |
+| `openspec/changes/` | 本仓库自身行为规则变更的 OpenSpec contract |
+| `engineering/<change-id>/` | 本仓库包源码层工程交付物，例如 spec-to-code map |
+| `tests/` | bats 测试，覆盖安装、初始化、artifact path、progress、verification 等契约 |
+| `examples/` | 示例变更流程，展示从 OpenSpec 到 QA、release、archive、retro 的产物 |
+
+## 版本控制边界
+
+SuperSpecFlow 仓库提交工作流包源码和 OpenSpec 变更契约：`routing/`、`skills/`、`commands/`、`agents/`、`templates/`、`scripts/`、用户文档、测试、示例和 `openspec/`。其中 `openspec/` 是本仓库行为规则变更的 change contract，不能被当作运行时产物忽略。
+
+不要提交本地 workflow 运行时、安装副本或缓存产物，例如 `superpowers/`、`.superspecflow/`、`.claude/`、`.codex/` 和 `.DS_Store`。
+
+宿主项目运行时产物统一写入 `.superspecflow/`：
 
 | 产物 | 宿主项目运行时路径 |
 |---|---|
@@ -34,98 +255,9 @@ SuperSpecFlow 本仓库的 `engineering/<change-id>/` 是包源码层可提交�
 
 读取历史产物时采用新路径优先、旧路径 fallback；新写入不再推荐根目录旧路径。`.superspecflow/progress/` 和 `.superspecflow/verification/` 分别由 `progress-tracking` 与 `cross-agent-verification` 定义文件协议。
 
-## 接入
-
-推荐方案：方案 C 零侵入接入，宿主项目 `CLAUDE.md` / `AGENTS.md` 零改动。
-
-```bash
-# 一次性全局安装
-./scripts/install-global.sh
-
-# 进入要 opt-in 的项目，执行
-/ssf-init
-```
-
-详见 [docs/installation.md §3](docs/installation.md)。
-
-兼容方案：[docs/installation.md §4](docs/installation.md)（项目软连接入，老用户路径）。
-
-可选：安装 commit message hook（校验 `<英文类型>(<英文范围>): <中文摘要>` 标题与中文正文底线）：
-
-```bash
-cp templates/git-hooks/commit-msg .git/hooks/commit-msg
-chmod +x .git/hooks/commit-msg
-```
-
-## 使用方式
-
-### 隐式调用
-
-你可以直接说：
-
-```text
-我要做一个会员续费提醒功能
-```
-
-系统应自动进入产品思考阶段：
-
-```text
-ssf-think → ssf-spec → ssf-build → ssf-review → ssf-qa → ssf-ship → ssf-archive → ssf-retro
-```
-
-如果你说：
-
-```text
-帮我提交这次改动
-```
-
-系统应自动进入 `ssf-git`，检查分支、diff、Spec ID、测试证据，并生成符合规范的 commit（英文类型 + 英文范围 + 中文摘要，中文正文）。
-
-### 显式调用
-
-```text
-/ssf-think 会员续费提醒
-/ssf-spec add-membership-renewal-reminder
-/ssf-build all
-/ssf-review
-/ssf-qa add-membership-renewal-reminder
-/ssf-ship add-membership-renewal-reminder
-/ssf-archive add-membership-renewal-reminder
-/ssf-retro add-membership-renewal-reminder
-/ssf-decision 会员续费提醒入口放置位置
-/ssf-map add-membership-renewal-reminder
-/ssf-init
-```
-
-`/ssf-init` 是项目初始化动作，用于创建 `.superspecflow/enabled` sentinel 和标准运行产物子目录，不修改宿主项目指令文件。其他 `/ssf-*` 命令只执行对应的一次性流程，不会自动启用项目级自然语言路由。
-
-Git 和 Karpathy 相关命令：
-
-```text
-/ssf-karpathy 检查当前实现是否过度设计
-/ssf-git
-/ssf-branch add-membership-renewal-reminder 会员续费提醒
-/ssf-commit add-membership-renewal-reminder
-/ssf-pr add-membership-renewal-reminder
-```
-
-## 核心原则
-
-1. 非平凡功能先想清楚，不直接写代码。
-2. 行为变更必须有 OpenSpec change-id。
-3. 没有 Spec ID 的行为变更不实现。
-4. 每条 requirement 至少映射一个测试。
-5. 每条 MUST NOT 至少映射一个负向测试。
-6. 高风险变更必须走 QA gate 和 release gate。
-7. 写代码前要显式说明假设、歧义和更简单方案。
-8. 修改必须外科手术式，只改必要内容，不做顺手重构。
-9. 每个可发布变更必须有 Git 分支、符合规范的 commit（英文类型 + 英文范围 + 中文摘要 + 中文正文）、PR、回滚与监控说明。
-
 ## Git 提交规范
 
-commit 标题的类型与范围使用英文标识符（conventional commits），摘要、正文必须使用中文。
-
-推荐格式：
+commit 标题的类型与范围使用英文标识符，摘要和正文使用中文。
 
 ```text
 <英文类型>(<英文范围>): <中文摘要>
@@ -143,30 +275,11 @@ commit 标题的类型与范围使用英文标识符（conventional commits）�
 - <风险和回滚方式>
 ```
 
-字段约束：
+允许的英文类型：`feat / fix / docs / style / refactor / perf / test / build / ci / chore / revert / spec`。
 
-- `英文类型`：`feat / fix / docs / style / refactor / perf / test / build / ci / chore / revert / spec`。
-- `英文范围`：`<根模块>` 或 `<根模块>:<业务子模块>`。根模块取自仓库根目录划分（`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`openspec`、`examples`、`meta`），业务子模块使用小写英文 kebab-case。
+英文范围使用 `<根模块>` 或 `<根模块>:<业务子模块>` 形式。根模块取自仓库根目录划分，例如 `skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`openspec`、`examples`、`meta`。
 
-示例：
-
-```text
-feat(skills:members): 增加续费提醒入口
-
-变更编号：add-membership-renewal-reminder
-关联规格：MEMBERSHIP-001
-
-变更内容：
-- 在会员中心增加续费提醒入口。
-
-验证方式：
-- 已运行 pnpm test membership。
-
-风险与回滚：
-- 可回滚该提交移除入口。
-```
-
-禁止：
+禁止模糊提交标题，例如：
 
 ```text
 WIP
@@ -176,111 +289,23 @@ misc
 changes
 ```
 
-## 包结构
+## 维护与验证
 
-```text
-AGENTS.md
-CLAUDE.md
-NOTICE.md
-routing/
-  AGENTS.routing.md
-  CLAUDE.routing.md
-agents/
-  product-strategist.md
-  spec-architect.md
-  implementation-engineer.md
-  code-reviewer.md
-  qa-gatekeeper.md
-  release-manager.md
-  git-steward.md
-commands/
-  ssf-think.md
-  ssf-spec.md
-  ssf-build.md
-  ssf-review.md
-  ssf-qa.md
-  ssf-ship.md
-  ssf-archive.md
-  ssf-retro.md
-  ssf-decision.md
-  ssf-map.md
-  ssf-karpathy.md
-  ssf-init.md
-  ssf-git.md
-  ssf-branch.md
-  ssf-commit.md
-  ssf-pr.md
-skills/
-  ssf-think/
-  ssf-spec/
-  ssf-build/
-  ssf-review/
-  ssf-qa/
-  ssf-ship/
-  ssf-archive/
-  ssf-retro/
-  ssf-karpathy/
-  ssf-git/
-templates/
-  product-change-brief.md
-  user-journey.md
-  intake-gate.md
-  proposal.md
-  spec.md
-  technical-design.md
-  tasks.md
-  spec-readiness-review.md
-  implementation-plan.md
-  spec-to-code-map.md
-  karpathy-preflight.md
-  karpathy-diff-audit.md
-  review-report.md
-  sync-check.md
-  git-hygiene-review.md
-  acceptance-matrix.md
-  negative-test-matrix.md
-  risk-matrix.md
-  regression-checklist.md
-  exploratory-test-notes.md
-  qa-signoff.md
-  release-checklist.md
-  rollback-plan.md
-  monitoring-plan.md
-  ship-decision.md
-  migration-plan.md
-  dev-handoff.md
-  git-pr-gate.md
-  archive-summary.md
-  decision-record.md
-  documentation-coverage.md
-  git-pr-archive.md
-  retro.md
-  commit-message.md
-  commit-gate.md
-  git-status-audit.md
-  git-checklist.md
-  pr-description.md
-  progress-state.json
-  progress-timeline.md
-  progress-verification.md
-  progress-handoff.md
-  verification-request.md
-  verification-evidence.md
-  verification-reviewer-notes.md
-  verification-signoff.md
-  git-hooks/commit-msg
-  integration/
-    AGENTS.snippet.md
-    CLAUDE.snippet.md
-docs/
-  installation.md
-  compatibility.md
-examples/
-  add-membership-renewal-reminder/
-scripts/
-  install-project-symlinks.sh
-  validate-pack.sh
+发布或同步前运行：
+
+```bash
+./scripts/validate-pack.sh
 ```
+
+该脚本会检查命令集合、skill frontmatter、旧前缀残留、冒号文件名、已跟踪运行时产物、artifact path contract，以及 README / routing 与 `commands/` 的命令集合一致性。
+
+测试目录使用 bats：
+
+```bash
+bats tests
+```
+
+如果本机没有 bats，可以至少运行 `./scripts/validate-pack.sh` 做包结构和文档契约验证。
 
 ## 设计来源
 
