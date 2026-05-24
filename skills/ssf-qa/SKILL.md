@@ -24,6 +24,8 @@ description: 阶段四点五（测）。用户输入 /ssf-qa 或由 ssf-review �
 - 每个 P0 风险必须是 release blocker，除非用户显式豁免。
 - 不只测 happy path。
 - 高风险功能必须包含回归和监控建议。
+- QA 运行时产物默认写入 `.superspecflow/qa/<change-id>/`。
+- 读取历史 QA 产物时先读 `.superspecflow/qa/<change-id>/`，缺失时 fallback 到兼容期旧路径；新写入不得推荐根目录 `qa/<change-id>/`。
 
 ## Step 1 — Acceptance Matrix
 

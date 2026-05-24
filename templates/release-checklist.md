@@ -1,5 +1,7 @@
 # Release Checklist: [change-id]
 
+Path: `.superspecflow/release/[change-id]/release-checklist.md`
+
 - [ ] OpenSpec tasks completed
 - [ ] spec-to-code-map updated
 - [ ] Review has no blockers

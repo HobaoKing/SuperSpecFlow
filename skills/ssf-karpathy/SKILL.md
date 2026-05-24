@@ -24,6 +24,8 @@ description: Karpathy 风格的 AI 编码行为约束。用于写代码、review
 
 ## Gate 1 — Think Before Coding
 
+宿主项目 Karpathy 产物默认写入 `.superspecflow/karpathy/<change-id>/`，例如 `karpathy-preflight.md` 和 `karpathy-diff-audit.md`。读取历史审计时先读 `.superspecflow/karpathy/<change-id>/`，缺失时 fallback 到兼容期旧路径；新写入不得推荐根目录 `karpathy/<change-id>/`。
+
 编码前必须明确：
 
 ```markdown

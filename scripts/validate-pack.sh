@@ -493,6 +493,145 @@ check_cross_agent_verification_contract() {
   fi
 }
 
+artifact_namespaces() {
+  cat <<'EOF'
+.superspecflow/engineering/<change-id>/
+.superspecflow/qa/<change-id>/
+.superspecflow/release/<change-id>/
+.superspecflow/archive/<change-id>/
+.superspecflow/retro/<change-id>/
+.superspecflow/decisions/
+.superspecflow/maps/<change-id>/
+.superspecflow/reviews/<change-id>/
+.superspecflow/karpathy/<change-id>/
+EOF
+}
+
+extract_artifact_paths_section() {
+  local file="$1"
+
+  awk '
+    /^## Artifact Paths$/ { inside = 1 }
+    inside && /^## / && $0 != "## Artifact Paths" { exit }
+    inside { print }
+  ' "$file"
+}
+
+section_contains_artifact_contract() {
+  local section="$1"
+  local namespace
+
+  if ! printf '%s\n' "$section" | grep -q 'new path first'; then
+    return 1
+  fi
+  if ! printf '%s\n' "$section" | grep -q 'fallback'; then
+    return 1
+  fi
+  if ! printf '%s\n' "$section" | grep -q 'openspec/'; then
+    return 1
+  fi
+  if ! printf '%s\n' "$section" | grep -q 'engineering/<change-id>/'; then
+    return 1
+  fi
+  if ! printf '%s\n' "$section" | grep -q 'progress-tracking'; then
+    return 1
+  fi
+  if ! printf '%s\n' "$section" | grep -q 'cross-agent-verification'; then
+    return 1
+  fi
+
+  while IFS= read -r namespace; do
+    [ -n "$namespace" ] || continue
+    if ! printf '%s\n' "$section" | grep -Fq "$namespace"; then
+      return 1
+    fi
+  done < <(artifact_namespaces)
+}
+
+check_required_path() {
+  local file="$1"
+  local path="$2"
+  local description="$3"
+
+  if grep -Fq "$path" "$file"; then
+    pass "$description"
+  else
+    fail "$description 缺少 $path"
+  fi
+}
+
+check_no_root_runtime_dirs() {
+  local out_file
+  out_file="$(tmp_file)"
+
+  find qa release archive retro decisions maps reviews karpathy \
+    -mindepth 1 -print >"$out_file" 2>/dev/null || true
+
+  if [ -s "$out_file" ]; then
+    cat "$out_file" >&2
+    fail "发现根目录旧运行时产物；新写入必须使用 .superspecflow/<stage>/<change-id>/"
+  else
+    pass "未发现根目录旧运行时产物新写入"
+  fi
+  rm -f "$out_file"
+}
+
+check_artifact_path_contract() {
+  local routing_file section
+
+  for routing_file in routing/AGENTS.routing.md routing/CLAUDE.routing.md; do
+    section="$(extract_artifact_paths_section "$routing_file")"
+    if [ -z "$section" ]; then
+      fail "$routing_file 缺少 Artifact Paths 章节"
+    elif section_contains_artifact_contract "$section"; then
+      pass "$routing_file Artifact Paths 章节包含运行时路径契约"
+    else
+      fail "$routing_file Artifact Paths 章节缺少命名空间、openspec 或 fallback 契约"
+    fi
+  done
+
+  check_required_path skills/ssf-build/SKILL.md '.superspecflow/engineering/<change-id>/' "ssf-build 包含 engineering runtime 路径"
+  check_required_path skills/ssf-build/SKILL.md '.superspecflow/maps/<change-id>/' "ssf-build 包含 maps runtime 路径"
+  check_required_path skills/ssf-build/SKILL.md 'engineering/<change-id>/spec-to-code-map.md' "ssf-build 保留本仓库工程交付路径"
+  check_required_path skills/ssf-qa/SKILL.md '.superspecflow/qa/<change-id>/' "ssf-qa 包含 QA runtime 路径"
+  check_required_path skills/ssf-ship/SKILL.md '.superspecflow/release/<change-id>/' "ssf-ship 包含 release runtime 路径"
+  check_required_path skills/ssf-archive/SKILL.md '.superspecflow/archive/<change-id>/' "ssf-archive 包含 archive runtime 路径"
+  check_required_path skills/ssf-archive/SKILL.md '.superspecflow/decisions/' "ssf-archive 包含 decisions runtime 路径"
+  check_required_path skills/ssf-retro/SKILL.md '.superspecflow/retro/<change-id>/' "ssf-retro 包含 retro runtime 路径"
+  check_required_path skills/ssf-review/SKILL.md '.superspecflow/reviews/<change-id>/' "ssf-review 包含 reviews runtime 路径"
+  check_required_path skills/ssf-karpathy/SKILL.md '.superspecflow/karpathy/<change-id>/' "ssf-karpathy 包含 karpathy runtime 路径"
+
+  check_required_path commands/ssf-build.md '.superspecflow/engineering/<change-id>/' "ssf-build command 包含 engineering runtime 路径"
+  check_required_path commands/ssf-map.md '.superspecflow/maps/<change-id>/spec-to-code-map.md' "ssf-map command 包含 maps runtime 路径"
+  check_required_path commands/ssf-qa.md '.superspecflow/qa/<change-id>/' "ssf-qa command 包含 QA runtime 路径"
+  check_required_path commands/ssf-review.md '.superspecflow/reviews/<change-id>/' "ssf-review command 包含 reviews runtime 路径"
+  check_required_path commands/ssf-ship.md '.superspecflow/release/<change-id>/' "ssf-ship command 包含 release runtime 路径"
+  check_required_path commands/ssf-archive.md '.superspecflow/archive/<change-id>/' "ssf-archive command 包含 archive runtime 路径"
+  check_required_path commands/ssf-retro.md '.superspecflow/retro/<change-id>/' "ssf-retro command 包含 retro runtime 路径"
+  check_required_path commands/ssf-decision.md '.superspecflow/decisions/' "ssf-decision command 包含 decisions runtime 路径"
+  check_required_path commands/ssf-karpathy.md '.superspecflow/karpathy/<change-id>/' "ssf-karpathy command 包含 karpathy runtime 路径"
+
+  check_required_path templates/implementation-plan.md 'Path: `.superspecflow/engineering/[change-id]/implementation-plan.md`' "implementation-plan template 包含 runtime 路径"
+  check_required_path templates/spec-to-code-map.md 'Path: `.superspecflow/maps/[change-id]/spec-to-code-map.md`' "spec-to-code-map template 包含 runtime 路径"
+  check_required_path templates/acceptance-matrix.md 'Path: `.superspecflow/qa/[change-id]/acceptance-matrix.md`' "acceptance-matrix template 包含 runtime 路径"
+  check_required_path templates/review-report.md 'Path: `.superspecflow/reviews/[change-id]/review-report.md`' "review-report template 包含 runtime 路径"
+  check_required_path templates/karpathy-diff-audit.md 'Path: `.superspecflow/karpathy/[change-id]/karpathy-diff-audit.md`' "karpathy-diff-audit template 包含 runtime 路径"
+
+  if git check-ignore -q .superspecflow/test-ignore; then
+    pass ".superspecflow/ 已被 gitignore 忽略"
+  else
+    fail ".superspecflow/ 未被 gitignore 忽略"
+  fi
+
+  if git check-ignore -q openspec; then
+    fail "openspec/ 被 gitignore 忽略，违反可提交契约"
+  else
+    pass "openspec/ 未被 gitignore 忽略"
+  fi
+
+  check_no_root_runtime_dirs
+}
+
 check_no_legacy_command_prefix
 check_no_hw_prefix
 check_no_colon_filenames
@@ -506,6 +645,7 @@ check_command_docs_consistency
 check_zero_touch_artifacts
 check_progress_contract
 check_cross_agent_verification_contract
+check_artifact_path_contract
 
 if [ "$FAILED" -ne 0 ]; then
   exit 1

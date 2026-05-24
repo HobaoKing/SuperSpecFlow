@@ -1,5 +1,7 @@
 # Implementation Plan: [change-id]
 
+Path: `.superspecflow/engineering/[change-id]/implementation-plan.md`
+
 ## Scope Boundary
 - In scope:
 - Out of scope:

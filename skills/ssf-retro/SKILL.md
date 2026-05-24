@@ -13,6 +13,10 @@ description: 复盘。用户输入 /ssf-retro 时触发。复盘本轮 SuperSpec
 
 `/ssf-retro [change-id]`
 
+## 产物路径
+
+宿主项目 retro 运行时产物默认写入 `.superspecflow/retro/<change-id>/retro.md`。读取历史 retro 产物时先读 `.superspecflow/retro/<change-id>/`，缺失时 fallback 到兼容期旧路径；新写入不得推荐根目录 `retro/<change-id>/`。
+
 ## Step 1 — Cycle Review
 
 ```markdown

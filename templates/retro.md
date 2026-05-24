@@ -1,5 +1,7 @@
 # Retro: [change-id]
 
+Path: `.superspecflow/retro/[change-id]/retro.md`
+
 ## What Went Well
 
 ## What Got Stuck

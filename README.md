@@ -18,6 +18,22 @@ SuperSpecFlow 仓库提交工作流包源码和 OpenSpec 变更契约：`routing
 
 不要提交本地 workflow 运行时、安装副本或缓存产物，例如 `superpowers/`、`.superspecflow/`、`.claude/`、`.codex/` 和 `.DS_Store`。宿主业务项目如果采用 OpenSpec 管理需求，其项目内 `openspec/` 应正常提交；`.superspecflow/` 是否提交由宿主项目接入策略决定。
 
+SuperSpecFlow 本仓库的 `engineering/<change-id>/` 是包源码层可提交工程交付目录，用于保存本仓库 change 的 `spec-to-code-map.md`、`spec-readiness-review.md` 等文件。宿主项目运行时产物使用 `.superspecflow/` 命名空间，二者不互相迁移：
+
+| 产物 | 宿主项目运行时路径 |
+|---|---|
+| Engineering artifacts | `.superspecflow/engineering/<change-id>/` |
+| QA artifacts | `.superspecflow/qa/<change-id>/` |
+| Release artifacts | `.superspecflow/release/<change-id>/` |
+| Archive artifacts | `.superspecflow/archive/<change-id>/` |
+| Retro artifacts | `.superspecflow/retro/<change-id>/` |
+| Decision records | `.superspecflow/decisions/` |
+| Spec-to-code maps | `.superspecflow/maps/<change-id>/` |
+| Review artifacts | `.superspecflow/reviews/<change-id>/` |
+| Karpathy audits | `.superspecflow/karpathy/<change-id>/` |
+
+读取历史产物时采用新路径优先、旧路径 fallback；新写入不再推荐根目录旧路径。`.superspecflow/progress/` 和 `.superspecflow/verification/` 分别由 `progress-tracking` 与 `cross-agent-verification` 定义文件协议。
+
 ## 接入
 
 推荐方案：方案 C 零侵入接入，宿主项目 `CLAUDE.md` / `AGENTS.md` 零改动。
@@ -81,7 +97,7 @@ ssf-think → ssf-spec → ssf-build → ssf-review → ssf-qa → ssf-ship → 
 /ssf-init
 ```
 
-`/ssf-init` 是项目初始化动作，用于创建 `.superspecflow/` 软链并提示加入 `@./.superspecflow/*.routing.md`。其他 `/ssf-*` 命令只执行对应的一次性流程，不会自动启用项目级自然语言路由。
+`/ssf-init` 是项目初始化动作，用于创建 `.superspecflow/enabled` sentinel 和标准运行产物子目录，不修改宿主项目指令文件。其他 `/ssf-*` 命令只执行对应的一次性流程，不会自动启用项目级自然语言路由。
 
 Git 和 Karpathy 相关命令：
 

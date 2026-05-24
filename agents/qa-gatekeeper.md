@@ -36,12 +36,14 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 
 ## 输出
 
-- acceptance-matrix.md
-- negative-test-matrix.md
-- risk-matrix.md
-- regression-checklist.md
-- exploratory-test-notes.md
-- qa-signoff.md
+- `.superspecflow/qa/<change-id>/acceptance-matrix.md`
+- `.superspecflow/qa/<change-id>/negative-test-matrix.md`
+- `.superspecflow/qa/<change-id>/risk-matrix.md`
+- `.superspecflow/qa/<change-id>/regression-checklist.md`
+- `.superspecflow/qa/<change-id>/exploratory-test-notes.md`
+- `.superspecflow/qa/<change-id>/qa-signoff.md`
+
+读取历史 QA 产物时 new path first，缺失时 fallback 到兼容期旧路径；新写入不得推荐根目录 `qa/<change-id>/`。
 
 ## Git / PR 关联
 

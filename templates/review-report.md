@@ -1,5 +1,7 @@
 # Review Report: [change-id]
 
+Path: `.superspecflow/reviews/[change-id]/review-report.md`
+
 ## 必须修
 
 | 问题 | 文件 / 行号 | Spec ID | 风险 | 建议修法 |

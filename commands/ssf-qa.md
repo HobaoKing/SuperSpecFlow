@@ -2,7 +2,7 @@ Use the `ssf-qa` skill.
 
 Change id: $ARGUMENTS
 
-Create QA gate:
+Create QA gate under `.superspecflow/qa/<change-id>/`:
 1. Acceptance Matrix.
 2. Negative Test Matrix.
 3. Risk Matrix.

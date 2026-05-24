@@ -2,7 +2,7 @@ Use the `ssf-karpathy` skill.
 
 Target: $ARGUMENTS
 
-Run Karpathy-style coding discipline check:
+Run Karpathy-style coding discipline check under `.superspecflow/karpathy/<change-id>/` when a change-id is available:
 1. State assumptions and ambiguities.
 2. Identify simpler options.
 3. Check for speculative abstraction.

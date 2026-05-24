@@ -14,7 +14,7 @@ if [ -e "$project/.superspecflow/enabled" ] && [ ! -f "$project/.superspecflow/e
 fi
 : > "$project/.superspecflow/enabled"
 
-for sub in decisions retro qa reviews karpathy maps ship progress; do
+for sub in engineering qa release archive retro decisions maps reviews karpathy progress; do
   mkdir -p "$project/.superspecflow/$sub"
 done
 

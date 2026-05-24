@@ -106,4 +106,4 @@ Codex 中可以直接自然语言触发：
 ./scripts/validate-pack.sh
 ```
 
-该脚本检查命名、skill frontmatter、旧前缀残留、冒号文件名、已跟踪运行时产物，以及 README / routing 与 `commands/` 的命令集合一致性。
+该脚本检查命名、skill frontmatter、旧前缀残留、冒号文件名、已跟踪运行时产物、artifact path contract，以及 README / routing 与 `commands/` 的命令集合一致性。

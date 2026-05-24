@@ -26,13 +26,16 @@ openspec/changes/<change-id>/
   tasks.md
   specs/
     <domain>.md
-engineering/<change-id>/
+.superspecflow/engineering/<change-id>/
   spec-readiness-review.md
+.superspecflow/maps/<change-id>/
   spec-to-code-map.md
-qa/<change-id>/
+.superspecflow/qa/<change-id>/
   acceptance-matrix.md
   risk-matrix.md
 ```
+
+`openspec/` 是可提交的 change contract。宿主项目运行时产物写入 `.superspecflow/`；如果是在 SuperSpecFlow 本仓库实现包源码变更，则本仓库工程交付物保留在 `engineering/<change-id>/`，不迁移、不标为非法路径。
 
 ## 关键规则
 
