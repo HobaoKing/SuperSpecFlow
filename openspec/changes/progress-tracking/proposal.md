@@ -17,6 +17,8 @@ SuperSpecFlow 目前有 OpenSpec change contract，但缺少运行时进度协�
 - 明确 agent 在开始、恢复、验证完成声明和交接时的读写规则。
 - 明确上下文中断、上下文压缩或更换 agent 后的恢复顺序。
 - 明确 SuperSpecFlow 本仓库不提交运行时进度实例。
+- 在 SuperSpecFlow 包源码中提供 `templates/progress-*` 作为 progress runtime 文件模板。
+- 将 progress 恢复顺序和 fresh verification 规则接入 `ssf-build`、routing 和 pack validation。
 - 为 `cross-agent-verification` 提供可引用的进度事实来源。
 
 ## Non-goals
@@ -25,7 +27,7 @@ SuperSpecFlow 目前有 OpenSpec change contract，但缺少运行时进度协�
 - 不引入 UI、仪表盘或可视化进度页面。
 - 不定义跨 agent 签核、审批或投票机制。
 - 不改变 OpenSpec proposal / design / tasks / specs 的结构。
-- 不实现代码、脚本、测试或命令行为变更。
+- 不实现自动调度器、后台守护进程、UI 或跨 agent 签核机制。
 
 ## User Impact
 
@@ -36,6 +38,14 @@ SuperSpecFlow 目前有 OpenSpec change contract，但缺少运行时进度协�
 ## Affected Areas
 
 - `openspec/changes/progress-tracking/`
+- `templates/`
+- `skills/ssf-build/SKILL.md`
+- `routing/AGENTS.routing.md`
+- `routing/CLAUDE.routing.md`
+- `scripts/validate-pack.sh`
+- `tests/progress/`
+- `engineering/progress-tracking/`
+- `README.md`
 - 后续 `cross-agent-verification` change 的事实输入
 - 后续 agent routing / command / skill 行为说明
 
@@ -45,6 +55,7 @@ SuperSpecFlow 目前有 OpenSpec change contract，但缺少运行时进度协�
 - 规格明确恢复流程：先读 `state.json` 和 `handoff.md`，再读 OpenSpec。
 - 规格明确完成声明前必须有 fresh verification 写入或引用。
 - 规格明确本仓库不得提交 `.superspecflow/progress/` 运行时实例。
+- 包源码提供 progress runtime 模板，且 pack validation 能检查模板与 routing / skill 规则是否存在。
 - 后续 change 可以引用本协议作为 cross-agent verification 的事实底座。
 
 ## Risks
@@ -55,7 +66,7 @@ SuperSpecFlow 目前有 OpenSpec change contract，但缺少运行时进度协�
 
 ## Rollout Strategy
 
-第一版只发布 OpenSpec 协议。后续 change 再把该协议接入 routing、commands、skills、验证门禁或跨 agent 检查流程。
+第一版发布 OpenSpec 协议、progress runtime 模板，并把恢复顺序与 fresh verification 规则接入 `ssf-build`、routing 和 pack validation。后续 change 再扩展命令自动化、路径迁移或跨 agent 检查流程。
 
 ## Open Questions
 

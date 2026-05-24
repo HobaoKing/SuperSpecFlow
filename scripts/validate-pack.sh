@@ -357,6 +357,8 @@ check_progress_contract() {
 
   if ! grep -q 'task-started' templates/progress-timeline.md; then
     fail "templates/progress-timeline.md 缺少 task-started 事件示例"
+  elif ! grep -q '按时间顺序追加事件' templates/progress-timeline.md; then
+    fail "templates/progress-timeline.md 缺少中文说明"
   elif ! grep -q 'Freshness' templates/progress-verification.md; then
     fail "templates/progress-verification.md 缺少 Freshness 字段"
   elif ! grep -q 'Read Next' templates/progress-handoff.md; then
@@ -376,12 +378,26 @@ check_progress_contract() {
   for routing_file in routing/AGENTS.routing.md routing/CLAUDE.routing.md; do
     if ! grep -q '.superspecflow/progress/<change-id>/' "$routing_file"; then
       fail "$routing_file 缺少 progress 路径规则"
-    elif ! grep -q '再读取 OpenSpec' "$routing_file"; then
-      fail "$routing_file 缺少 progress 恢复顺序"
+    elif ! grep -q 'state.json' "$routing_file"; then
+      fail "$routing_file 缺少 state.json 恢复规则"
+    elif ! grep -q 'handoff.md' "$routing_file"; then
+      fail "$routing_file 缺少 handoff.md 恢复规则"
+    elif ! grep -q 'OpenSpec' "$routing_file"; then
+      fail "$routing_file 缺少 OpenSpec 恢复来源"
     else
       pass "$routing_file 包含 progress 恢复规则"
     fi
   done
+
+  if ! grep -q 'templates/progress-' openspec/changes/progress-tracking/proposal.md; then
+    fail "progress-tracking proposal 缺少 progress 模板目标"
+  elif ! grep -q 'skills/ssf-build/SKILL.md' openspec/changes/progress-tracking/proposal.md; then
+    fail "progress-tracking proposal 缺少 ssf-build 影响范围"
+  elif ! grep -q 'SSF-PROGRESS-N7' openspec/changes/progress-tracking/specs/progress.md; then
+    fail "progress-tracking spec 缺少 N7 removed 记录"
+  else
+    pass "progress OpenSpec 与实现阶段范围同步"
+  fi
 }
 
 check_no_legacy_command_prefix
