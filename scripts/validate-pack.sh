@@ -521,10 +521,10 @@ section_contains_artifact_contract() {
   local section="$1"
   local namespace
 
-  if ! printf '%s\n' "$section" | grep -q 'new path first'; then
+  if ! printf '%s\n' "$section" | grep -qE '(new path first|新路径优先|new-path-first)'; then
     return 1
   fi
-  if ! printf '%s\n' "$section" | grep -q 'fallback'; then
+  if ! printf '%s\n' "$section" | grep -qE '(fallback|兼容期|回退)'; then
     return 1
   fi
   if ! printf '%s\n' "$section" | grep -q 'openspec/'; then
@@ -564,7 +564,7 @@ check_no_root_runtime_dirs() {
   local out_file
   out_file="$(tmp_file)"
 
-  find qa release archive retro decisions maps reviews karpathy \
+  find qa release archive retro decisions maps reviews karpathy progress verification \
     -mindepth 1 -print >"$out_file" 2>/dev/null || true
 
   if [ -s "$out_file" ]; then
@@ -577,7 +577,7 @@ check_no_root_runtime_dirs() {
 }
 
 check_artifact_path_contract() {
-  local routing_file section
+  local routing_file section tpl path_lines
 
   for routing_file in routing/AGENTS.routing.md routing/CLAUDE.routing.md; do
     section="$(extract_artifact_paths_section "$routing_file")"
@@ -616,6 +616,18 @@ check_artifact_path_contract() {
   check_required_path templates/acceptance-matrix.md 'Path: `.superspecflow/qa/[change-id]/acceptance-matrix.md`' "acceptance-matrix template 包含 runtime 路径"
   check_required_path templates/review-report.md 'Path: `.superspecflow/reviews/[change-id]/review-report.md`' "review-report template 包含 runtime 路径"
   check_required_path templates/karpathy-diff-audit.md 'Path: `.superspecflow/karpathy/[change-id]/karpathy-diff-audit.md`' "karpathy-diff-audit template 包含 runtime 路径"
+
+  for tpl in templates/*.md; do
+    path_lines="$(grep -E '^Path: `' "$tpl" || true)"
+    [ -n "$path_lines" ] || continue
+
+    if printf '%s\n' "$path_lines" | grep -Eqv '^Path: `\.superspecflow/([a-z]+/\[change-id\]/[a-z-]+\.md|decisions/\[title\]\.md)`$'; then
+      printf '%s\n' "$path_lines" >&2
+      fail "$tpl runtime 路径声明格式不符合 .superspecflow 命名空间"
+    else
+      pass "$tpl 包含 runtime 路径声明"
+    fi
+  done
 
   if git check-ignore -q .superspecflow/test-ignore; then
     pass ".superspecflow/ 已被 gitignore 忽略"
