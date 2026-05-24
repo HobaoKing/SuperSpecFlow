@@ -334,6 +334,56 @@ check_integration_snippets_thin() {
   done
 }
 
+check_progress_contract() {
+  local template routing_file
+
+  for template in \
+    templates/progress-state.json \
+    templates/progress-timeline.md \
+    templates/progress-verification.md \
+    templates/progress-handoff.md; do
+    if [ ! -f "$template" ]; then
+      fail "$template 不存在"
+    fi
+  done
+
+  if ! grep -q '"change_id"' templates/progress-state.json; then
+    fail "templates/progress-state.json 缺少 change_id 字段"
+  elif ! grep -q '"last_verification"' templates/progress-state.json; then
+    fail "templates/progress-state.json 缺少 last_verification 字段"
+  else
+    pass "progress state template 包含核心字段"
+  fi
+
+  if ! grep -q 'task-started' templates/progress-timeline.md; then
+    fail "templates/progress-timeline.md 缺少 task-started 事件示例"
+  elif ! grep -q 'Freshness' templates/progress-verification.md; then
+    fail "templates/progress-verification.md 缺少 Freshness 字段"
+  elif ! grep -q 'Read Next' templates/progress-handoff.md; then
+    fail "templates/progress-handoff.md 缺少 Read Next 段落"
+  else
+    pass "progress markdown templates 包含恢复与验证字段"
+  fi
+
+  if ! grep -q '.superspecflow/progress/<change-id>/' skills/ssf-build/SKILL.md; then
+    fail "skills/ssf-build/SKILL.md 缺少 progress 路径规则"
+  elif ! grep -q 'fresh verification' skills/ssf-build/SKILL.md; then
+    fail "skills/ssf-build/SKILL.md 缺少 fresh verification 规则"
+  else
+    pass "ssf-build 包含 progress tracking 规则"
+  fi
+
+  for routing_file in routing/AGENTS.routing.md routing/CLAUDE.routing.md; do
+    if ! grep -q '.superspecflow/progress/<change-id>/' "$routing_file"; then
+      fail "$routing_file 缺少 progress 路径规则"
+    elif ! grep -q '再读取 OpenSpec' "$routing_file"; then
+      fail "$routing_file 缺少 progress 恢复顺序"
+    else
+      pass "$routing_file 包含 progress 恢复规则"
+    fi
+  done
+}
+
 check_no_legacy_command_prefix
 check_no_hw_prefix
 check_no_colon_filenames
@@ -345,6 +395,7 @@ check_routing_files
 check_integration_snippets_thin
 check_command_docs_consistency
 check_zero_touch_artifacts
+check_progress_contract
 
 if [ "$FAILED" -ne 0 ]; then
   exit 1

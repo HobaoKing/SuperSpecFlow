@@ -244,6 +244,10 @@ templates/
   git-status-audit.md
   git-checklist.md
   pr-description.md
+  progress-state.json
+  progress-timeline.md
+  progress-verification.md
+  progress-handoff.md
   git-hooks/commit-msg
   integration/
     AGENTS.snippet.md
