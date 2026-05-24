@@ -41,28 +41,134 @@ description: 阶段三（建）。用户输入 /ssf-build 或由 ssf-spec 续接
 
 宿主项目默认输出到 `.superspecflow/engineering/<change-id>/implementation-plan.md`；SuperSpecFlow 本仓库包源码实现可把工程交付物写入 `engineering/<change-id>/`。
 
-先输出：
+implementation-plan.md 必须按以下 6 个子节生成。代码示例和命令使用宿主项目的语言、测试框架和包管理工具，不预设 Python/JS/TS 等。
+
+### 1.1 Plan Header
 
 ```markdown
 # Implementation Plan: [change-id]
 
-## Scope Boundary
-- In scope:
-- Out of scope:
+**Goal:** [一句话目标]
 
-## Task Order
-1. ...
+**Architecture:** [2-3 句架构方向]
 
-## Test Strategy
-- Unit:
-- Integration:
-- E2E:
-- Negative:
+**Spec Contract:** `openspec/changes/<change-id>/specs/`
 
-## Files Expected to Change
+**Tech Stack:** [关键技术、库、版本]
 
-## Risks / Pause Conditions
+---
 ```
+
+### 1.2 Scope Check
+
+```markdown
+## Scope Check
+
+- In scope:
+  - ...
+- Out of scope:
+  - ...
+```
+
+如果范围涉及多个相互独立的子系统，停下来建议拆 sub-plans（参考 superpowers:writing-plans 的 Scope Check），不要硬塞进一份 plan。
+
+### 1.3 File Structure
+
+```markdown
+## File Structure
+
+- Create: `path/to/new-file.ext` — [单一职责，一句话]
+- Modify: `path/to/existing.ext` — [本次变更职责]
+- Test: `tests/path/file.test.ext` — [测试覆盖范围]
+```
+
+先锁定文件边界再拆任务。每个文件应有单一职责；变更聚集的文件归到同一个 task。
+
+### 1.4 Bite-Sized Tasks
+
+每个 task 必须包含 5 个 bite-sized 步骤（每步 2-5 分钟）。代码块给出可直接 copy-paste 的完整内容，禁止「添加验证逻辑」这类抽象描述。
+
+```markdown
+### Task N: [Component Name]
+
+**Spec:** [SPEC-ID]
+
+**Files:**
+- Create: `path/to/file.ext`
+- Modify: `path/to/existing.ext:行号范围`
+- Test: `tests/path/file.test.ext`
+
+- [ ] **Step 1: 写失败测试**
+
+  [完整测试代码，宿主项目语言，可直接 copy-paste]
+
+- [ ] **Step 2: 跑测试确认失败**
+
+  Run: `<宿主项目测试命令，含具体路径和断言点>`
+  Expected: FAIL with "<具体错误信息>"
+
+- [ ] **Step 3: 写最小实现**
+
+  [完整实现代码，宿主项目语言，可直接 copy-paste]
+
+- [ ] **Step 4: 跑测试确认通过**
+
+  Run: `<同 Step 2>`
+  Expected: PASS
+
+- [ ] **Step 5: 提交**
+
+  ```bash
+  git add tests/path/file.test.ext path/to/file.ext
+  git commit -m "$(cat <<'EOF'
+  <英文类型>(<英文范围>): <中文摘要>
+
+  变更编号：<change-id>
+  关联规格：[SPEC-ID]
+
+  变更内容：
+  - <中文说明本 task 实现内容>
+
+  验证方式：
+  - <Step 2 / Step 4 的测试命令>
+
+  风险与回滚：
+  - <风险一句话>；回滚方式
+  EOF
+  )"
+  ```
+```
+
+强制约束：
+
+- 每个 task 必须有且只有一个 `**Spec:**` 字段引用 SPEC-ID
+- Step 1 和 Step 3 的代码块必须完整可执行，禁止 `...` 省略或抽象描述
+- Step 2 和 Step 4 的测试命令必须含具体路径和断言点，禁止「运行测试」这类抽象表述
+- Step 5 commit 消息必须符合项目中文规范（英文类型/范围 + 中文摘要、正文、字段名）
+
+### 1.5 Plan Review Loop
+
+implementation-plan.md 完整写出后，使用 Agent tool 起 general-purpose 子代理评审：
+
+- Reviewer prompt：`~/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/writing-plans/plan-document-reviewer-prompt.md`
+- 传给子代理：
+  - Plan 路径
+  - Spec contract 路径（`openspec/changes/<change-id>/specs/`）
+- 循环：
+  - ✅ Approved → 进入 1.6
+  - ❌ Issues Found → 修复后重新 dispatch，最多 3 轮
+  - 超过 3 轮 → 交人工裁决
+
+注意：reviewer prompt 是英文，针对 superpowers 单一 plan 结构。读中文 plan 和 OpenSpec SPEC-ID 时反馈仍有参考价值，但可能漏检项目特定约束。连续两轮出现明显不适配（例如要求把 SPEC-ID 删掉、不识别中文 commit 模板）时，记录 follow-up，跳过本步并恢复人工审阅。
+
+### 1.6 Execution Handoff
+
+plan 评审通过后，二选一进入 Step 4 执行任务：
+
+- **Subagent-Driven（推荐）**：每个 task 由新鲜 subagent 执行（参考 superpowers:subagent-driven-development），上下文干净、迭代快、可二阶段评审
+- **Inline**：在本会话内 batch 执行（参考 superpowers:executing-plans），含 checkpoint 评审
+
+明确告诉用户选哪种、为什么，然后进入 Step 4。
 
 ## Step 2 — Spec-to-Code Map
 

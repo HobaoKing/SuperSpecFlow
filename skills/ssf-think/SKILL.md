@@ -159,6 +159,21 @@ description: 阶段一（想）。用户输入 /ssf-think 或描述新想法/新
 design.md 确认吗？确认后进入 /ssf-spec。
 ```
 
+## Step 6.5 — Design Document Review Loop
+
+用户确认 design.md 之后、进入 ssf-spec 之前，使用 Agent tool 起 general-purpose 子代理对 design.md 做独立评审：
+
+- Reviewer prompt：`~/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/brainstorming/spec-document-reviewer-prompt.md`
+- 传给子代理：
+  - 待审：本阶段产出的 `design.md`
+  - 上游：Product Change Brief 和 Decision Record
+- 循环：
+  - ✅ Approved → 进入 Step 7 自动续接
+  - ❌ Issues Found → 修复后与用户对齐，再重新 dispatch，最多 3 轮
+  - 超过 3 轮 → 交人工裁决
+
+注意：reviewer prompt 是英文，针对单一 design.md 结构（跟本阶段产物吻合度较高）。如反复给出与项目中文化或 gstack 三重审判无关的反馈，记录 follow-up。
+
 ## Step 7 — 自动续接
 
 用户回复「确认 / OK / 好 / 继续」后，进入 `ssf-spec`。

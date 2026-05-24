@@ -182,6 +182,21 @@ openspec/changes/<change-id>/
 
 如果 Recommendation 不是 `Ready to implement`，不要自动进入 build。
 
+## Step 5.5 — Spec Document Review Loop
+
+Spec Readiness Review 通过后，使用 Agent tool 起 general-purpose 子代理对 spec 产物做独立评审：
+
+- Reviewer prompt：`~/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/brainstorming/spec-document-reviewer-prompt.md`
+- 传给子代理：
+  - 待审：`openspec/changes/<change-id>/proposal.md`、`openspec/changes/<change-id>/specs/*.md`、`openspec/changes/<change-id>/design.md`
+  - 上游：ssf-think 输出的 `design.md`（产品决策）
+- 循环：
+  - ✅ Approved → 进入 Step 6 自动续接
+  - ❌ Issues Found → 修复后重新 dispatch，最多 3 轮
+  - 超过 3 轮 → 交人工裁决
+
+注意：reviewer prompt 是英文 + 针对 superpowers 单一 design.md 结构。读 SuperSpecFlow 多文件结构（proposal/specs/design/tasks）和中文 SPEC-ID 时可能给出偏向通用结构的反馈。如果连续两轮出现明显不适配（例如要求把多文件合并、不识别 MUST NOT 语义），记录 follow-up，跳过本步并恢复纯人工 Spec Readiness Review。
+
 ## Step 6 — 自动续接
 
 用户确认且 readiness 为 Ready 后，进入 `ssf-build`。
