@@ -81,6 +81,20 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 
 QA evidence 是后续 Review / Ship / Git / Archive 可引用的事实来源，但不替代 OpenSpec requirements 或 Spec ID。Worktree 只是执行隔离机制，不是发布边界。
 
+## 版本策略
+
+SuperSpecFlow 使用 SemVer。当前包版本记录在 `VERSION`，发布记录写入 `CHANGELOG.md`。
+
+- Patch，例如 `1.1.1`：缺陷修复、门禁补强、文档或测试修正。
+- Minor，例如 `1.2.0`：新增兼容命令、模板、流程或安装能力。
+- Major，例如 `2.0.0`：破坏现有命令语义、产物路径或安装接入方式。
+
+查看当前版本：
+
+```bash
+./update.sh --version
+```
+
 ## 快速接入
 
 SuperSpecFlow 同时支持 Claude Code 和 Codex CLI。默认会把全局 routing include 同时写入两个宿主；只装其中一个用 `--claude-only` 或 `--codex-only` 收窄。

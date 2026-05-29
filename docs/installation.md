@@ -234,6 +234,12 @@ cp -R routing templates <project>/.superspecflow/
 
 全局安装默认只提供能力文件和 global wrapper，不接管所有项目的自然语言。项目只有在存在 `.superspecflow/enabled` 或显式 routing include 时，才启用 SuperSpecFlow Intake Gate。
 
+查看当前工具包版本：
+
+```bash
+./update.sh --version
+```
+
 如果全局安装时也要初始化某个项目的自然语言路由，显式打开开关：
 
 ```bash

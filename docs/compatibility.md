@@ -85,6 +85,12 @@ Codex 中可以直接自然语言触发：
 ./update.sh
 ```
 
+查看当前工具包版本：
+
+```bash
+./update.sh --version
+```
+
 运行后需要重启会话，让 agent 重新加载项目指令和 skills。
 
 ## Compatibility Notes

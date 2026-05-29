@@ -152,6 +152,32 @@ check_no_host_instruction_overwrite() {
   rm -f "$out_file"
 }
 
+check_version_contract() {
+  if [ ! -f VERSION ]; then
+    fail "VERSION 文件不存在"
+  elif ! grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' VERSION; then
+    fail "VERSION 不符合 SemVer patch 格式"
+  else
+    pass "VERSION 使用 SemVer 格式"
+  fi
+
+  if [ ! -f CHANGELOG.md ]; then
+    fail "CHANGELOG.md 文件不存在"
+  elif ! grep -q "## \[$(cat VERSION)\]" CHANGELOG.md; then
+    fail "CHANGELOG.md 缺少当前 VERSION 条目"
+  else
+    pass "CHANGELOG.md 包含当前版本条目"
+  fi
+
+  if grep -q -- '--version' update.sh &&
+     grep -q 'VERSION_FILE' update.sh &&
+     grep -q 'SuperSpecFlow %s' update.sh; then
+    pass "update.sh 支持 --version"
+  else
+    fail "update.sh 缺少 --version 版本输出"
+  fi
+}
+
 check_skill_frontmatter() {
   local skill header
 
@@ -810,6 +836,7 @@ check_no_hw_prefix
 check_no_colon_filenames
 check_no_tracked_runtime_artifacts
 check_no_host_instruction_overwrite
+check_version_contract
 check_skill_frontmatter
 check_command_file_names
 check_routing_files
