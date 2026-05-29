@@ -31,8 +31,11 @@
 ## 目录
 
 - `openspec/changes/add-membership-renewal-reminder/`：OpenSpec 风格变更合同。
-- `engineering/add-membership-renewal-reminder/`：实现计划、spec-to-code-map、handoff。
-- `qa/add-membership-renewal-reminder/`：验收、负向、风险、回归和 QA signoff。
-- `release/add-membership-renewal-reminder/`：发布清单、回滚、监控、PR、ship decision。
-- `archive/add-membership-renewal-reminder/`：归档摘要、决策记录、Git / PR 记录。
-- `retro/`：复盘。
+- `.superspecflow/engineering/add-membership-renewal-reminder/`：宿主项目中的实现计划和 handoff 运行时路径。
+- `.superspecflow/maps/add-membership-renewal-reminder/spec-to-code-map.md`：宿主项目中的 spec-to-code map 运行时路径。
+- `.superspecflow/qa/add-membership-renewal-reminder/`：宿主项目中的验收、负向、风险、回归和 QA signoff 运行时路径。
+- `.superspecflow/release/add-membership-renewal-reminder/`：宿主项目中的发布清单、回滚、监控、PR、ship decision 运行时路径。
+- `.superspecflow/archive/add-membership-renewal-reminder/`：宿主项目中的归档摘要、决策记录、Git / PR 记录运行时路径。
+- `.superspecflow/retro/add-membership-renewal-reminder/`：宿主项目中的复盘运行时路径。
+
+本示例目录下保留的 `engineering/`、`qa/`、`release/`、`archive/` 和 `retro/` 是历史示例产物，用于展示完整流程内容；新宿主项目写入运行时产物时应使用 `.superspecflow/` 标准路径。

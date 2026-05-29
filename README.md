@@ -97,7 +97,16 @@ SuperSpecFlow 使用 SemVer。当前包版本记录在 `VERSION`，发布记录�
 
 ## 快速接入
 
-SuperSpecFlow 同时支持 Claude Code 和 Codex CLI。默认会把全局 routing include 同时写入两个宿主；只装其中一个用 `--claude-only` 或 `--codex-only` 收窄。
+SuperSpecFlow 同时支持 Claude Code 和 Codex CLI。默认会同时准备两个宿主的 global wrapper；只装其中一个用 `--claude-only` 或 `--codex-only` 收窄。
+
+全局安装脚本会生成 wrapper 和同步能力文件；如果 `~/.claude/CLAUDE.md` 或 `~/.codex/AGENTS.md` 不存在，脚本会创建并写入 include 行。如果这些全局指令文件已存在，脚本只打印应手动追加的 include 行，不擅自改写用户已有规则。
+
+安装前确认：
+
+- 本机需要 `git` 和 `bash`；使用一句话命令时还需要 `curl`。
+- 发布或同步前建议安装 `bats` 以运行完整测试；没有 `bats` 时仍可运行 `./scripts/validate-pack.sh`。
+- `rg` 是可选加速工具；缺失时验证脚本会退化到 `grep`。
+- `bootstrap.sh` 会把 `~/.superspecflow/` 更新到官方 `master`，已存在 checkout 时会执行 `fetch + reset --hard origin/master`。不要在该安装目录保存未提交的个人改动。
 
 ### 方式 1：让 AI 帮你装（推荐）
 
@@ -115,7 +124,7 @@ SuperSpecFlow 同时支持 Claude Code 和 Codex CLI。默认会把全局 routin
    - 只有 ~/.codex/ 存在 → 运行 ~/.superspecflow/scripts/install-global.sh --codex-only
    - 两个都存在 → 运行 ~/.superspecflow/scripts/install-global.sh --both
    - 两个都不存在 → 停下来问我应该装哪一个，不要擅自创建目录
-3. 校验：grep "SuperSpecFlow" 对应的 ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md，确认 include 行已写入；如果脚本提示要我手动追加，把那一行原文展示给我。
+3. 校验：grep "SuperSpecFlow" 对应的 ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md，确认 include 行已写入；如果全局指令文件已存在且脚本提示要手动追加，把那一行原文展示给我。
 4. 简要报告每一步结果。
 ```
 
@@ -150,6 +159,14 @@ git clone https://github.com/HobaoKing/SuperSpecFlow.git ~/.superspecflow
 ```
 
 `/ssf-init` 只创建 `.superspecflow/enabled` sentinel 和标准运行产物目录，不修改宿主项目的 `AGENTS.md` 或 `CLAUDE.md`。
+
+### 平台差异速查
+
+| 宿主 | 全局安装同步内容 | 说明 |
+|---|---|---|
+| Claude Code | `~/.claude/skills/`、`~/.claude/agents/`、`~/.claude/commands/`、`~/.claude/superspecflow/CLAUDE.global.md` | 支持显式 `/ssf-*` 命令文件；可选 SessionStart hook 用于更快检测项目 opt-in。 |
+| Codex CLI | `~/.codex/skills/`、`~/.codex/superspecflow/AGENTS.global.md` | 主要依赖 `AGENTS.md` routing 和 skills；显式 slash command 是否注册取决于当前 Codex 运行环境。 |
+| 两端共同点 | global wrapper + 项目 `.superspecflow/enabled` sentinel | 全局安装只提供能力；项目 opt-in 后才接管自然语言 Intake Gate。 |
 
 详细安装、兼容路径和卸载方式见 [docs/installation.md](docs/installation.md)。Claude Code / Codex 差异见 [docs/compatibility.md](docs/compatibility.md)。
 
@@ -355,6 +372,17 @@ SuperSpecFlow 应先判断这是非平凡行为变更，然后进入产品思考
 | `tests/` | bats 测试，覆盖安装、初始化、artifact path、progress、verification 等契约 |
 | `examples/` | 示例变更流程，展示从 OpenSpec 到 QA、release、archive、retro 的产物 |
 
+## 文档地图
+
+| 文档 | 用途 |
+|---|---|
+| [docs/installation.md](docs/installation.md) | 详细安装、项目 opt-in、兼容接入和卸载说明 |
+| [docs/compatibility.md](docs/compatibility.md) | Claude Code / Codex CLI 差异、命令可用性和包验证说明 |
+| [docs/branching-strategy.md](docs/branching-strategy.md) | Git Flow、`ssf/<change-id>-<slug>` 分支命名和发布分支规则 |
+| [CHANGELOG.md](CHANGELOG.md) | 当前版本的新增、变更和移除记录 |
+| [examples/add-membership-renewal-reminder/README.md](examples/add-membership-renewal-reminder/README.md) | 端到端示例 change 的 OpenSpec、工程、QA、发布、归档和复盘产物 |
+| [NOTICE.md](NOTICE.md) | 设计来源和第三方工作流致谢 |
+
 ## 版本控制边界
 
 SuperSpecFlow 仓库提交工作流包源码和 OpenSpec 变更契约：`routing/`、`skills/`、`commands/`、`agents/`、`templates/`、`scripts/`、用户文档、测试、示例和 `openspec/`。其中 `openspec/` 是本仓库行为规则变更的 change contract，不能被当作运行时产物忽略。
@@ -375,6 +403,8 @@ SuperSpecFlow 仓库提交工作流包源码和 OpenSpec 变更契约：`routing
 | Review artifacts | `.superspecflow/reviews/<change-id>/` |
 | Karpathy audits | `.superspecflow/karpathy/<change-id>/` |
 | Cluster artifacts | `.superspecflow/clusters/<parent-change>/` |
+
+`/ssf-init` 会创建常用运行时目录：`engineering/`、`qa/`、`release/`、`archive/`、`retro/`、`decisions/`、`maps/`、`reviews/`、`karpathy/`、`progress/` 和 `verification/`。`.superspecflow/clusters/` 由 Spec cluster 流程按需创建，不是普通项目 opt-in 的必备目录。
 
 读取历史产物时采用新路径优先、旧路径 fallback；新写入不再推荐根目录旧路径。`.superspecflow/progress/`、`.superspecflow/verification/` 和 `.superspecflow/clusters/` 分别由 `progress-tracking`、`cross-agent-verification` 和 `parallel-worktree-spec-clusters` 定义文件协议。
 
@@ -440,3 +470,7 @@ SuperSpecFlow 融合并适配了：
 - multica-ai/andrej-karpathy-skills：Think Before Coding、Simplicity First、Surgical Changes、Goal-Driven Execution。
 
 `ssf-karpathy` 是适配到本工作流的行为层，不是原仓库逐字复制。
+
+## License
+
+SuperSpecFlow 使用 MIT License，完整文本见 [LICENSE](LICENSE)。设计来源和致谢见 [NOTICE.md](NOTICE.md)。
