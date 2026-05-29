@@ -81,6 +81,8 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 
 QA evidence 是后续 Review / Ship / Git / Archive 可引用的事实来源，但不替代 OpenSpec requirements 或 Spec ID。Worktree 只是执行隔离机制，不是发布边界。
 
+`visual-ui-qa-adapter` 在 browser/MCP QA 之后补充视觉验收协议。它让 `/ssf-qa` 可以为 `platform: web | mini-program` 的 UI 还原、截图对比和视觉回归场景生成 `.superspecflow/qa/<change-id>/visual-execution-plan.md`，并记录 `.superspecflow/qa/<change-id>/visual-comparison-report.md` 与 `qa-evidence/visual/`。第一版只定义协议和门禁，不内置图片 diff 算法，不绑定具体小程序 runner。
+
 ## 版本策略
 
 SuperSpecFlow 使用 SemVer。当前包版本记录在 `VERSION`，发布记录写入 `CHANGELOG.md`。
@@ -349,7 +351,7 @@ SuperSpecFlow 应先判断这是非平凡行为变更，然后进入产品思考
 | 工程执行 | `implementation-plan.md`、`spec-to-code-map.md`、`dev-handoff.md`、`sync-check.md` |
 | Karpathy 纪律 | `karpathy-preflight.md`、`karpathy-diff-audit.md` |
 | Review | `review-report.md`、`git-hygiene-review.md` |
-| QA | `acceptance-matrix.md`、`negative-test-matrix.md`、`risk-matrix.md`、`regression-checklist.md`、`exploratory-test-notes.md`、`qa-signoff.md`、`qa-execution-plan.md`、`browser-run-report.md` |
+| QA | `acceptance-matrix.md`、`negative-test-matrix.md`、`risk-matrix.md`、`regression-checklist.md`、`exploratory-test-notes.md`、`qa-signoff.md`、`qa-execution-plan.md`、`browser-run-report.md`、`visual-execution-plan.md`、`visual-comparison-report.md` |
 | Release | `release-checklist.md`、`rollback-plan.md`、`monitoring-plan.md`、`ship-decision.md`、`migration-plan.md`、`pr-description.md` |
 | Git / PR | `git-checklist.md`、`git-status-audit.md`、`commit-message.md`、`commit-gate.md`、`git-pr-gate.md`、`git-pr-archive.md`、`git-hooks/commit-msg` |
 | Archive / Retro | `archive-summary.md`、`documentation-coverage.md`、`retro.md` |

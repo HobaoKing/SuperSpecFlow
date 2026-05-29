@@ -28,7 +28,10 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 8. 检查 target 和 Browser/MCP 工具是否可用。
 9. 可执行时运行或建议测试，并记录 `browser-run-report.md` 与 `qa-evidence/`。
 10. 不可执行时写明 blocked 状态。
-11. 输出 qa-signoff.md。
+11. 对 UI 还原、视觉回归、截图对比或设计对齐场景，生成 `visual-execution-plan.md`。
+12. 记录 `platform: web | mini-program`、route/page、viewport/device、DPR、theme、locale、environment、data preconditions、screenshot source、baseline policy 和 optional reference image/design source。
+13. 检查 baseline、actual screenshot、diff output 或人工验收记录，并写入 `visual-comparison-report.md` 与 `qa-evidence/visual/`。
+14. 输出 qa-signoff.md。
 
 ## 硬规则
 
@@ -40,6 +43,13 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 - 没有可运行 target 时使用 `Blocked: No runnable target`。
 - Browser/MCP 工具不可用时使用 `Blocked: Tool unavailable`。
 - `qa-evidence/` 不得包含 secret、token、凭据、生产客户数据或敏感日志。
+- Visual QA 只有在存在 baseline、actual screenshot、visual-comparison-report.md、qa-evidence/visual/ 和阈值内 diff result 时，才可标记 `Visual Passed`。
+- 没有自动 diff 但人工验收记录完整时使用 `Manual Visual Verified`，并记录 manual reviewer、comparison notes、accepted differences 和 residual risk。
+- 视觉不匹配时使用 `Visual Failed`；缺少 baseline 时使用 `Blocked: Missing baseline`；缺少 actual screenshot 时使用 `Blocked: Missing actual screenshot`；声明 automated diff 但工具或输出不可用时使用 `Blocked: Diff tool unavailable`。
+- 不得把 `visual-execution-plan.md` 当作 acceptance matrix 的替代品，不得用聊天描述替代落盘 visual evidence。
+- 不得把 actual screenshot 自动提升为 baseline；baseline 建立或更新必须记录 reviewer 或 approval gate、原因、timestamp 和关联 Spec ID。
+- 小程序端第一版只定义协议，不绑定具体 runner、微信开发者工具、小程序 CLI、模拟器或具体图片 diff 算法。
+- `qa-evidence/visual/` 不得包含 secret、token、凭据、生产客户数据、未脱敏个人信息或敏感日志。
 
 ## 输出
 
@@ -51,6 +61,9 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 - `.superspecflow/qa/<change-id>/qa-execution-plan.md`
 - `.superspecflow/qa/<change-id>/browser-run-report.md`
 - `.superspecflow/qa/<change-id>/qa-evidence/`
+- `.superspecflow/qa/<change-id>/visual-execution-plan.md`
+- `.superspecflow/qa/<change-id>/visual-comparison-report.md`
+- `.superspecflow/qa/<change-id>/qa-evidence/visual/`
 - `.superspecflow/qa/<change-id>/qa-signoff.md`
 
 读取历史 QA 产物时 new path first，缺失时 fallback 到兼容期旧路径；新写入不得推荐根目录 `qa/<change-id>/`。

@@ -83,6 +83,7 @@ SuperSpecFlow 仓库提交的是工作流包源码和可追踪变更契约，不
 - 宿主项目旧路径如 `engineering/<change-id>/`、`qa/<change-id>/`、`release/<change-id>/`、`archive/<change-id>/`、`retro/<change-id>/` 只作为兼容读取 fallback 或迁移提示；新写入必须使用 `.superspecflow/` 标准路径。
 - `.superspecflow/progress/<change-id>/` 由 `progress-tracking` 定义，`.superspecflow/verification/<change-id>/` 由 `cross-agent-verification` 定义，`.superspecflow/clusters/<parent-change>/` 由 `parallel-worktree-spec-clusters` 定义，本 routing 只确认它们同属 `.superspecflow/` 命名空间，不重定义文件协议。
 - `.superspecflow/qa/<change-id>/qa-execution-plan.md`、`browser-run-report.md` 和 `qa-evidence/` 由 `browser-mcp-qa-adapter` 定义，用于 evidence-backed browser/MCP QA。
+- `.superspecflow/qa/<change-id>/visual-execution-plan.md`、`visual-comparison-report.md` 和 `qa-evidence/visual/` 由 `visual-ui-qa-adapter` 定义，用于 `platform: web | mini-program` 的 UI 还原、截图对比和视觉回归 QA。
 
 ## Strict Intake Gate
 
@@ -280,6 +281,9 @@ Cross-agent verification:
 - qa-execution-plan.md，适用于 browser/MCP QA
 - browser-run-report.md，适用于 browser/MCP QA
 - qa-evidence/，适用于 browser/MCP QA
+- visual-execution-plan.md，适用于 Web / 小程序视觉 QA
+- visual-comparison-report.md，适用于 Web / 小程序视觉 QA
+- qa-evidence/visual/，适用于视觉 QA
 - qa-signoff.md
 
 Browser / MCP QA:
@@ -290,6 +294,16 @@ Browser / MCP QA:
 - 如果浏览器/MCP 工具不可用，QA signoff 必须使用 `Blocked: Tool unavailable`。
 - 不得在没有 browser run report、qa-evidence 或明确人工验证记录时声明 `Automated Browser Passed`。
 - `/ssf-qa <parent-change>` 在 Spec cluster 场景必须汇总 cluster QA evidence，并额外记录 parent integration 级回归或 blocked reason。
+
+Visual UI QA:
+
+- `visual-ui-qa-adapter` 要求 `/ssf-qa` 从 acceptance matrix 中的 UI 还原、视觉回归、截图对比或设计对齐场景生成 `.superspecflow/qa/<change-id>/visual-execution-plan.md`。
+- Visual QA 使用 `platform: web | mini-program`，记录 route/page、viewport/device、DPR、theme、locale、environment、data preconditions、screenshot source 和 optional reference image/design source。
+- Agent 记录 `.superspecflow/qa/<change-id>/visual-comparison-report.md` 和 `qa-evidence/visual/`，并区分 baseline、actual screenshot、diff output 和人工验收记录。
+- 视觉 QA 状态必须使用 `Visual Passed`、`Manual Visual Verified`、`Visual Failed`、`Blocked: Missing baseline`、`Blocked: Missing actual screenshot` 或 `Blocked: Diff tool unavailable`。
+- 不得在缺少 baseline、actual screenshot、visual comparison report 或落盘 evidence 时声明 `Visual Passed`。
+- 不得把 `visual-execution-plan.md` 当作 acceptance matrix 的替代品，不得把聊天描述替代落盘 visual evidence。
+- 小程序端第一版只定义协议，不绑定具体 runner、微信开发者工具、小程序 CLI、模拟器或具体图片 diff 算法。
 
 ### Ship / Release
 

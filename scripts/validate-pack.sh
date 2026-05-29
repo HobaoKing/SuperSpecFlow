@@ -358,6 +358,53 @@ check_browser_mcp_qa_contract() {
   fi
 }
 
+check_visual_ui_qa_contract() {
+  for f in templates/visual-execution-plan.md templates/visual-comparison-report.md; do
+    if [ ! -f "$f" ]; then
+      fail "$f 不存在"
+    fi
+  done
+
+  if ! grep -q '.superspecflow/qa/\[change-id\]/visual-execution-plan.md' templates/visual-execution-plan.md; then
+    fail "visual-execution-plan template 缺少 runtime 路径"
+  elif ! grep -q '.superspecflow/qa/\[change-id\]/visual-comparison-report.md' templates/visual-comparison-report.md; then
+    fail "visual-comparison-report template 缺少 runtime 路径"
+  elif ! grep -q '.superspecflow/qa/\[change-id\]/qa-evidence/visual/' templates/visual-comparison-report.md; then
+    fail "visual-comparison-report template 缺少 visual evidence 路径"
+  elif ! grep -q 'Platform: web | mini-program' templates/visual-execution-plan.md; then
+    fail "visual-execution-plan template 缺少 Web/小程序 platform 枚举"
+  elif ! grep -q 'Optional Reference' templates/visual-execution-plan.md; then
+    fail "visual-execution-plan template 缺少 optional reference 字段"
+  elif ! grep -q 'Visual Passed' templates/qa-signoff.md ||
+       ! grep -q 'Manual Visual Verified' templates/qa-signoff.md ||
+       ! grep -q 'Blocked: Missing baseline' templates/qa-signoff.md ||
+       ! grep -q 'Blocked: Missing actual screenshot' templates/qa-signoff.md ||
+       ! grep -q 'Blocked: Diff tool unavailable' templates/qa-signoff.md; then
+    fail "qa-signoff template 缺少 visual QA 状态枚举"
+  elif ! grep -q 'visual-execution-plan.md' skills/ssf-qa/SKILL.md ||
+       ! grep -q 'visual-comparison-report.md' skills/ssf-qa/SKILL.md ||
+       ! grep -q 'platform: web | mini-program' skills/ssf-qa/SKILL.md ||
+       ! grep -q 'actual screenshot 自动提升为 baseline' skills/ssf-qa/SKILL.md; then
+    fail "ssf-qa 缺少 visual UI QA 门禁规则"
+  elif ! grep -q 'visual-execution-plan.md' commands/ssf-qa.md ||
+       ! grep -q 'visual-comparison-report.md' commands/ssf-qa.md; then
+    fail "ssf-qa command 缺少 visual QA 输出"
+  elif ! grep -q 'visual-execution-plan.md' agents/qa-gatekeeper.md ||
+       ! grep -q 'visual-comparison-report.md' agents/qa-gatekeeper.md ||
+       ! grep -q 'Manual Visual Verified' agents/qa-gatekeeper.md ||
+       ! grep -q 'qa-evidence/visual' agents/qa-gatekeeper.md; then
+    fail "qa-gatekeeper agent 缺少 visual UI QA 门禁规则"
+  elif ! grep -q 'visual-execution-plan.md' routing/AGENTS.routing.md ||
+       ! grep -q 'visual-comparison-report.md' routing/CLAUDE.routing.md ||
+       ! grep -q 'qa-evidence/visual' README.md; then
+    fail "routing 或 README 缺少 visual UI QA 协议说明"
+  elif grep -q 'WeChat DevTools' skills/ssf-qa/SKILL.md agents/qa-gatekeeper.md templates/visual-execution-plan.md templates/visual-comparison-report.md; then
+    fail "visual UI QA 第一版不得绑定具体小程序 runner"
+  else
+    pass "Visual UI QA contract 已接入模板、skill、command、agent 和 routing"
+  fi
+}
+
 check_spec_cluster_contract() {
   for f in templates/cluster-plan.md templates/cluster-status.md templates/integration-gate.md; do
     if [ ! -f "$f" ]; then
@@ -848,6 +895,7 @@ check_recursive_test_runner
 check_progress_contract
 check_cross_agent_verification_contract
 check_browser_mcp_qa_contract
+check_visual_ui_qa_contract
 check_spec_cluster_contract
 check_git_gate_contract
 check_init_project_routing_zero_touch_spec
