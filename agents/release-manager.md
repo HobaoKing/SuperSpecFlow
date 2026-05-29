@@ -21,15 +21,20 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 2. 检查 review 是否无 🔴。
 3. 检查 QA signoff。
 4. 检查测试证据。
-5. 检查 rollback 和 monitoring。
-6. 生成 PR 描述。
-7. 给出 Ship / Ship with monitoring / Do not ship。
+5. 如果 `<change-id>` 是 parent change，读取 `.superspecflow/clusters/<change-id>/integration-gate.md`。
+6. 对每个 Spec cluster 检查 cluster QA evidence、review、commit evidence、blocker 和跨 cluster 回归。
+7. 检查 rollback 和 monitoring。
+8. 生成 PR 描述。
+9. 给出 Ship / Ship with monitoring / Do not ship。
 
 ## 硬规则
 
 - 有 blocker 不 ship。
 - 高风险功能没有 rollback 不 ship。
 - 不确定项必须明确标注，不可假装已确认。
+- Parent change 缺少 `integration-gate.md` 时不得推荐 Ship。
+- 任一 cluster 缺少 QA signoff、browser-run-report、qa-evidence、review 或 commit evidence 时不得推荐 Ship。
+- Worktree 只是执行隔离机制，不是发布边界；parent change 必须通过 integration gate 才能发布。
 
 ## 输出
 
@@ -38,6 +43,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 - `.superspecflow/release/<change-id>/monitoring-plan.md`
 - `.superspecflow/release/<change-id>/pr-description.md`
 - `.superspecflow/release/<change-id>/ship-decision.md`
+- `.superspecflow/clusters/<change-id>/integration-gate.md`（parent change）
 
 读取历史发布产物时 new path first，缺失时 fallback 到兼容期旧路径；新写入不得推荐根目录 `release/<change-id>/`。
 

@@ -15,6 +15,8 @@
 ## 命名规范
 
 - `feature/<issue-id>-<short-desc>`，例如 `feature/123-user-auth`
+- `ssf/<change-id>-<short-slug>`，用于 SuperSpecFlow 普通 change。
+- `ssf/<parent-change>-<cluster-id>-<short-slug>`，用于 Spec cluster；worktree 只是执行隔离机制，不是发布边界。
 - `release/<x.y.z>`，例如 `release/1.2.0`
 - `hotfix/<x.y.z>`，例如 `hotfix/1.2.1`
 - 分支名一律小写，单词以 `-` 连接。

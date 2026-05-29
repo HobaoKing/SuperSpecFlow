@@ -11,3 +11,4 @@ Implement from OpenSpec only:
 6. Run tests.
 7. Update tasks.md.
 8. Produce `.superspecflow/engineering/<change-id>/dev-handoff.md`.
+9. For Spec cluster work, read `.superspecflow/clusters/<parent-change>/cluster-plan.md` and update `cluster-status.md`.

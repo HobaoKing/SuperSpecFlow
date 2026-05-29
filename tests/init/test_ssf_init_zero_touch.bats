@@ -78,3 +78,25 @@ teardown() {
   [ "$status" -ne 0 ]
   [[ "$output" == *"not a regular file"* ]] || [[ "$stderr" == *"not a regular file"* ]]
 }
+
+@test "指定不存在项目路径时报错且不创建目录" {
+  missing="$PROJECT/missing-project"
+  run env SSF_INIT_PROJECT_DIR="$missing" "$APPLY"
+  [ "$status" -ne 0 ]
+  [ ! -e "$missing" ]
+  [[ "$output" == *"project directory does not exist"* ]] || [[ "$stderr" == *"project directory does not exist"* ]]
+}
+
+@test "init-project-routing spec describes zero-touch sentinel rather than routing symlinks" {
+  SPEC="$REPO_ROOT/openspec/changes/init-project-routing/specs/routing.md"
+  grep -q '.superspecflow/enabled' "$SPEC"
+  ! grep -q '创建 `.superspecflow/AGENTS.routing.md`' "$SPEC"
+  ! grep -q '创建项目软链' "$SPEC"
+}
+
+@test "init-project-routing spec-to-code map covers all current requirements and MUST NOTs" {
+  MAP="$REPO_ROOT/engineering/init-project-routing/spec-to-code-map.md"
+  for id in SSF-INIT-001 SSF-INIT-002 SSF-INIT-003 SSF-INIT-004 SSF-INIT-005 SSF-INIT-006 SSF-INIT-007 SSF-INIT-N1 SSF-INIT-N2 SSF-INIT-N3 SSF-INIT-N4 SSF-INIT-N5 SSF-INIT-N6; do
+    grep -q "$id" "$MAP" || { echo "missing $id"; return 1; }
+  done
+}

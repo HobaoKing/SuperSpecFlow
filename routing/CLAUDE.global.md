@@ -1,6 +1,6 @@
 # SuperSpecFlow Global Routing for Claude Code
 
-本文件是 SuperSpecFlow 的全局薄壳入口，被用户家目录 `~/.claude/CLAUDE.md` 通过 `@<repo>/routing/CLAUDE.global.md` 引用。它只做四件事：项目 opt-in 自检测、显式命令始终可用声明、项目级覆盖判定、条件读取主体 routing。
+本文件是 SuperSpecFlow 的全局薄壳源文件；安装脚本会把它渲染为 `~/.claude/superspecflow/CLAUDE.global.md`，再由用户家目录 `~/.claude/CLAUDE.md` 引用。它只做四件事：项目 opt-in 自检测、显式命令始终可用声明、项目级覆盖判定、条件读取主体 routing。
 
 ## 1. 项目 opt-in 自检测（必须在响应任何非问答类请求前完成）
 

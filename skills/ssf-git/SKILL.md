@@ -66,6 +66,14 @@ spec/<change-id>-<短描述>
 process/<change-id>-<短描述>
 ```
 
+Spec cluster 分支命名：
+
+```text
+ssf/<parent-change>-<cluster-id>-<short-slug>
+```
+
+为 cluster 推荐或创建 worktree 前必须检查未提交改动。worktree 只是执行隔离机制，不是发布边界；清理 worktree 前必须获得用户明确批准。
+
 ## Step 1 — Git 状态审计
 
 提交或 PR 前先运行并总结：
@@ -222,7 +230,7 @@ feat(skills:members): 增加续费提醒入口
 - [ ] commit 摘要为中文
 - [ ] commit 正文为中文
 - [ ] commit 正文包含 change-id、Spec ID、验证方式、风险与回滚
-- [ ] 没有 `superpowers/`、`.superspecflow/`、`.claude/`、`.codex/`、`.DS_Store` 等运行时、安装或缓存产物
+- [ ] 没有 `superpowers/`、`docs/superpowers/`、`.superspecflow/`、`.claude/`、`.codex/`、`.DS_Store` 等运行时、安装或缓存产物
 - [ ] 没有 secret、日志、缓存、临时文件、无关格式化
 ```
 
@@ -291,10 +299,10 @@ PR 前必须检查：
 ```bash
 git status --short
 git log --oneline --decorate -n 5
-git diff --stat origin/main...HEAD
+git diff --stat origin/develop...HEAD
 ```
 
-如果目标分支不是 `main`，将 `origin/main` 替换为实际 base。
+如果目标分支不是 `develop`，将 `origin/develop` 替换为实际 base。
 
 ## Step 8 — 合并 / 回滚
 

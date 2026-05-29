@@ -25,6 +25,8 @@ description: 阶段五（发）。用户输入 /ssf-ship 或由 ssf-qa 续接时
 - 不假设用户已运行测试；必须列出已知证据和未知项。
 - 发布运行时产物默认写入 `.superspecflow/release/<change-id>/`。
 - 读取历史发布产物时先读 `.superspecflow/release/<change-id>/`，缺失时 fallback 到兼容期旧路径；新写入不得推荐根目录 `release/<change-id>/`。
+- Parent change 有 Spec cluster 时，必须读取 `.superspecflow/clusters/<parent-change>/integration-gate.md`。
+- 缺少 integration gate、cluster QA evidence、review 结论或 commit evidence 时，不得推荐 Ship。
 
 ## Step 1 — Release Checklist
 
@@ -116,11 +118,21 @@ Recommendation: Ship / Ship with monitoring / Do not ship
 ## Optional Follow-ups
 ```
 
-## Step 6 — 自动续接
+## Step 6 — Spec Cluster Integration Gate
 
-如果 recommendation 不是 `Do not ship`，用户确认后进入 `ssf-archive`。
+如果 `<change-id>` 是 parent change 且存在 `.superspecflow/clusters/<change-id>/`：
 
-## Step 7 — Git / PR Gate
+1. 读取 `integration-gate.md`。
+2. 检查每个 cluster 的 Spec IDs、QA evidence、review 结论、commit evidence、blocker 和跨 cluster 回归。
+3. 缺少 integration gate 或任一 cluster evidence 时，Recommendation 必须是 `Do not ship` 或 `Ship blocked by cluster integration gate`。
+4. Worktree 只作为执行隔离机制，不得作为发布边界。
+
+## Step 7 — 自动续接
+
+只有 recommendation 为 `Ship` 或 `Ship with monitoring` 时，用户确认后才进入 `ssf-archive`。
+如果 recommendation 为 `Do not ship`、`Ship blocked by cluster integration gate`、`Ship blocked by Git hygiene` 或任何 blocked 状态，停下并列出 blockers，不得自动归档。
+
+## Step 8 — Git / PR Gate
 
 发布前必须检查 Git 和 PR：
 
@@ -141,9 +153,9 @@ Recommendation: Ship / Ship with monitoring / Do not ship
 ```bash
 git status --short
 git log --oneline --decorate -n 10
-git diff --stat origin/main...HEAD
+git diff --stat origin/develop...HEAD
 ```
 
-如果目标分支不是 `main`，替换为实际 base 分支。
+如果目标分支不是 `develop`，替换为实际 base 分支。
 
 如果 Git / PR Gate 不通过，Recommendation 必须是 `Do not ship` 或 `Ship blocked by Git hygiene`。

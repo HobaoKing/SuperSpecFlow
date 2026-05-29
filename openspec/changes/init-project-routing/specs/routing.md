@@ -11,14 +11,16 @@
 - WHEN 用户查找项目初始化入口
 - THEN 系统只展示 `/ssf-init`
 
-### Requirement: SSF-INIT-002 初始化命令创建项目软链
+### Requirement: SSF-INIT-002 初始化命令创建 zero-touch opt-in sentinel
 
-系统必须将 `/ssf-init` 定义为创建或更新当前项目 `.superspecflow/` 软链的项目初始化动作。
+系统必须将 `/ssf-init` 定义为创建或更新当前项目 `.superspecflow/enabled` sentinel 和标准运行产物目录的项目初始化动作。
 
 #### Scenario: 用户执行项目初始化
 - GIVEN 用户在目标项目中调用 `/ssf-init`
 - WHEN agent 按命令说明执行初始化
-- THEN agent 创建 `.superspecflow/AGENTS.routing.md`、`.superspecflow/CLAUDE.routing.md` 和 `.superspecflow/templates` 软链
+- THEN agent 创建 `.superspecflow/enabled`
+- AND agent 创建 `.superspecflow/engineering/`、`qa/`、`release/`、`archive/`、`retro/`、`decisions/`、`maps/`、`reviews/`、`karpathy/`、`progress/` 和 `verification/`
+- AND 不生成 `.superspecflow/AGENTS.routing.md`、`.superspecflow/CLAUDE.routing.md` 或 `.superspecflow/templates`
 - AND 不覆盖宿主项目 `AGENTS.md` 或 `CLAUDE.md`
 
 ### Requirement: SSF-INIT-003 全局安装默认不启用自然语言路由
@@ -28,7 +30,7 @@
 #### Scenario: 用户执行默认全局安装
 - GIVEN 用户执行 `./update.sh`
 - WHEN 脚本完成同步
-- THEN 脚本只同步全局 skills、commands 和 agents
+- THEN 脚本委托 `scripts/install-global.sh` 同步全局能力和 global wrapper
 - AND 提示自然语言路由未启用
 
 ### Requirement: SSF-INIT-004 全局安装提供显式自然语言开关
@@ -38,7 +40,7 @@
 #### Scenario: 用户打开全局安装自然语言开关
 - GIVEN 用户执行 `./update.sh --enable-natural-language <project>`
 - WHEN 脚本完成全局同步
-- THEN 脚本调用项目软链安装流程初始化 `<project>`
+- THEN 脚本调用 zero-touch 初始化流程，为 `<project>` 创建 `.superspecflow/enabled`
 
 ### Requirement: SSF-INIT-006 根指令文件保持薄入口
 

@@ -116,7 +116,7 @@ check_no_tracked_runtime_artifacts() {
   local out_file
   out_file="$(tmp_file)"
 
-  if git ls-files | grep -E '^(superpowers|\.superspecflow|\.claude|\.codex)/|(^|/)\.DS_Store$' >"$out_file"; then
+  if git ls-files | grep -E '^(superpowers|docs/superpowers|\.superspecflow|\.claude|\.codex)/|(^|/)\.DS_Store$' >"$out_file"; then
     cat "$out_file" >&2
     fail "发现已被 Git 跟踪的 workflow 运行时或安装产物"
   else
@@ -246,6 +246,167 @@ check_zero_touch_artifacts() {
   else
     pass "commands/ssf-init.md zero-touch semantics OK"
   fi
+}
+
+check_install_global_contract() {
+  if grep -q 'sync_claude_capabilities' scripts/install-global.sh &&
+     grep -q 'sync_codex_capabilities' scripts/install-global.sh &&
+     grep -q 'render_wrapper' scripts/install-global.sh &&
+     grep -q 'copy_file_safe' scripts/install-global.sh &&
+     grep -q 'copy_dir_safe' scripts/install-global.sh &&
+     grep -q 'install-manifest.tsv' scripts/install-global.sh &&
+     grep -q '.claude/superspecflow/CLAUDE.global.md' scripts/install-global.sh &&
+     grep -q '.codex/superspecflow/AGENTS.global.md' scripts/install-global.sh; then
+    pass "install-global 安全同步能力文件并生成 global wrapper"
+  else
+    fail "install-global 缺少安全能力同步或 global wrapper 生成逻辑"
+  fi
+
+  if grep -q '.claude/superspecflow/CLAUDE.global.md' scripts/uninstall-global.sh &&
+     grep -q '.codex/superspecflow/AGENTS.global.md' scripts/uninstall-global.sh &&
+     grep -q 'remove_manifested_capabilities' scripts/uninstall-global.sh &&
+     ! grep -q 'commands"/ssf-\*' scripts/uninstall-global.sh &&
+     ! grep -q 'skills"/ssf-\*' scripts/uninstall-global.sh; then
+    pass "uninstall-global 只清理 manifest 拥有的 wrapper 和能力文件"
+  else
+    fail "uninstall-global 缺少 manifest 清理逻辑或仍使用通配删除能力文件"
+  fi
+
+  if grep -q 'install-global.sh' update.sh &&
+     grep -q '_ssf_init_apply.sh' update.sh &&
+     ! grep -q 'install-project-symlinks.sh' update.sh; then
+    pass "update.sh 委托 canonical install-global 并使用 zero-touch opt-in"
+  else
+    fail "update.sh 未委托 install-global 或仍使用软链初始化"
+  fi
+}
+
+check_recursive_test_runner() {
+  if [ ! -x scripts/test.sh ]; then
+    fail "scripts/test.sh missing or not executable"
+  elif ! grep -q "find tests -type f -name '\\*.bats'" scripts/test.sh; then
+    fail "scripts/test.sh 未递归收集 bats 测试"
+  else
+    pass "scripts/test.sh 递归收集 bats 测试"
+  fi
+
+  if grep -q 'bats tests' README.md; then
+    fail "README.md 仍推荐 bats tests（会只跑 0 个测试）"
+  elif grep -q './scripts/test.sh' README.md; then
+    pass "README.md 推荐递归测试入口"
+  else
+    fail "README.md 缺少 scripts/test.sh 测试入口"
+  fi
+}
+
+check_browser_mcp_qa_contract() {
+  for f in templates/qa-execution-plan.md templates/browser-run-report.md; do
+    if [ ! -f "$f" ]; then
+      fail "$f 不存在"
+    fi
+  done
+
+  if ! grep -q '.superspecflow/qa/\[change-id\]/qa-execution-plan.md' templates/qa-execution-plan.md; then
+    fail "qa-execution-plan template 缺少 runtime 路径"
+  elif ! grep -q '.superspecflow/qa/\[change-id\]/browser-run-report.md' templates/browser-run-report.md; then
+    fail "browser-run-report template 缺少 runtime 路径"
+  elif ! grep -q 'qa-evidence' templates/browser-run-report.md; then
+    fail "browser-run-report template 缺少 qa-evidence 引用"
+  elif ! grep -q 'Automated Browser Passed' templates/qa-signoff.md; then
+    fail "qa-signoff template 缺少 browser QA 状态枚举"
+  elif grep -q 'Status: Pending' templates/qa-signoff.md; then
+    fail "qa-signoff template 不得使用 Pending 作为最终 Browser/MCP 状态"
+  elif ! grep -q 'Blocked: No runnable target' skills/ssf-qa/SKILL.md; then
+    fail "ssf-qa 缺少 no runnable target blocked 规则"
+  elif ! grep -q 'Blocked: Tool unavailable' skills/ssf-qa/SKILL.md; then
+    fail "ssf-qa 缺少 tool unavailable blocked 规则"
+  elif ! grep -q 'qa-execution-plan.md' commands/ssf-qa.md; then
+    fail "ssf-qa command 缺少 execution plan"
+  elif ! grep -q 'qa-execution-plan.md' agents/qa-gatekeeper.md ||
+       ! grep -q 'browser-run-report.md' agents/qa-gatekeeper.md ||
+       ! grep -q 'Blocked: No runnable target' agents/qa-gatekeeper.md ||
+       ! grep -q 'Blocked: Tool unavailable' agents/qa-gatekeeper.md; then
+    fail "qa-gatekeeper agent 缺少 Browser/MCP QA 门禁规则"
+  else
+    pass "browser/MCP QA contract 已接入模板、skill、command 和 agent"
+  fi
+}
+
+check_spec_cluster_contract() {
+  for f in templates/cluster-plan.md templates/cluster-status.md templates/integration-gate.md; do
+    if [ ! -f "$f" ]; then
+      fail "$f 不存在"
+    fi
+  done
+
+  if ! grep -q '.superspecflow/clusters/\[parent-change\]/cluster-plan.md' templates/cluster-plan.md; then
+    fail "cluster-plan template 缺少 runtime 路径"
+  elif ! grep -q 'Spec cluster' skills/ssf-spec/SKILL.md; then
+    fail "ssf-spec 缺少 Spec cluster 拆分规则"
+  elif ! grep -q 'cluster-plan.md' skills/ssf-build/SKILL.md; then
+    fail "ssf-build 缺少 cluster plan 读取规则"
+  elif ! grep -q 'worktree' skills/ssf-git/SKILL.md; then
+    fail "ssf-git 缺少 worktree 边界"
+  elif ! grep -q 'integration-gate.md' skills/ssf-ship/SKILL.md; then
+    fail "ssf-ship 缺少 integration gate"
+  elif ! grep -q 'integration-gate.md' commands/ssf-ship.md; then
+    fail "ssf-ship command 缺少 integration gate"
+  elif ! grep -q 'integration-gate.md' agents/release-manager.md ||
+       ! grep -q 'cluster QA' agents/release-manager.md ||
+       ! grep -q 'commit evidence' agents/release-manager.md ||
+       ! grep -q '不得推荐 Ship' agents/release-manager.md; then
+    fail "release-manager agent 缺少 parent cluster ship gate"
+  elif ! grep -q '只有 recommendation 为 `Ship` 或 `Ship with monitoring`' skills/ssf-ship/SKILL.md ||
+       ! grep -q 'Ship blocked by cluster integration gate' skills/ssf-ship/SKILL.md ||
+       ! grep -q 'Ship blocked by Git hygiene' skills/ssf-ship/SKILL.md; then
+    fail "ssf-ship 自动续接规则未阻断 blocked recommendation"
+  else
+    pass "Spec cluster contract 已接入模板、skills、commands 和 agents"
+  fi
+}
+
+check_git_gate_contract() {
+  if grep -q 'git commit -m' skills/ssf-build/SKILL.md; then
+    fail "ssf-build implementation plan 不得直接 git commit"
+  elif ! grep -q '/ssf-commit \[change-id\]' skills/ssf-build/SKILL.md; then
+    fail "ssf-build 缺少 /ssf-commit handoff"
+  elif ! grep -q 'spec(openspec:members): 建立续费提醒变更合同' skills/ssf-spec/SKILL.md; then
+    fail "ssf-spec commit 示例未使用合法 conventional type"
+  elif ! grep -q 'openspec' AGENTS.md || ! grep -q 'openspec' CLAUDE.md; then
+    fail "根指令文件缺少 openspec commit scope"
+  else
+    pass "Git gate 与 commit 示例一致"
+  fi
+
+  for f in templates/git-hooks/commit-msg templates/commit-gate.md templates/git-checklist.md skills/ssf-git/SKILL.md commands/ssf-commit.md; do
+    if ! grep -q 'docs/superpowers' "$f"; then
+      fail "$f 缺少 docs/superpowers 运行时产物拦截"
+    fi
+  done
+}
+
+check_init_project_routing_zero_touch_spec() {
+  local spec="openspec/changes/init-project-routing/specs/routing.md"
+  local map="engineering/init-project-routing/spec-to-code-map.md"
+  local id
+
+  if ! grep -q '.superspecflow/enabled' "$spec"; then
+    fail "init-project-routing spec 未描述 zero-touch sentinel"
+  elif grep -q '创建 `.superspecflow/AGENTS.routing.md`' "$spec"; then
+    fail "init-project-routing spec 仍要求 /ssf-init 创建 routing 软链"
+  elif grep -q '创建项目软链' "$spec"; then
+    fail "init-project-routing spec 仍使用软链初始化标题"
+  elif grep -Eq '@<pack>/routing/(CLAUDE|AGENTS)\.global\.md' commands/ssf-init.md scripts/_ssf_init_apply.sh; then
+    fail "/ssf-init project-only guidance 不得指向带 <repo> 占位符的 global routing 源文件"
+  else
+    pass "init-project-routing spec 已同步 zero-touch sentinel"
+  fi
+
+  for id in SSF-INIT-001 SSF-INIT-002 SSF-INIT-003 SSF-INIT-004 SSF-INIT-005 SSF-INIT-006 SSF-INIT-007 SSF-INIT-N1 SSF-INIT-N2 SSF-INIT-N3 SSF-INIT-N4 SSF-INIT-N5 SSF-INIT-N6; do
+    if ! grep -q "$id" "$map"; then
+      fail "init-project-routing spec-to-code map 缺少 $id"
+    fi
+  done
 }
 
 check_command_file_names() {
@@ -621,7 +782,7 @@ check_artifact_path_contract() {
     path_lines="$(grep -E '^Path: `' "$tpl" || true)"
     [ -n "$path_lines" ] || continue
 
-    if printf '%s\n' "$path_lines" | grep -Eqv '^Path: `\.superspecflow/([a-z]+/\[change-id\]/[a-z-]+\.md|decisions/\[title\]\.md)`$'; then
+    if printf '%s\n' "$path_lines" | grep -Eqv '^Path: `\.superspecflow/([a-z]+/\[change-id\]/[a-z-]+\.md|decisions/\[title\]\.md|clusters/\[parent-change\]/[a-z-]+\.md)`$'; then
       printf '%s\n' "$path_lines" >&2
       fail "$tpl runtime 路径声明格式不符合 .superspecflow 命名空间"
     else
@@ -655,8 +816,14 @@ check_routing_files
 check_integration_snippets_thin
 check_command_docs_consistency
 check_zero_touch_artifacts
+check_install_global_contract
+check_recursive_test_runner
 check_progress_contract
 check_cross_agent_verification_contract
+check_browser_mcp_qa_contract
+check_spec_cluster_contract
+check_git_gate_contract
+check_init_project_routing_zero_touch_spec
 check_artifact_path_contract
 
 if [ "$FAILED" -ne 0 ]; then

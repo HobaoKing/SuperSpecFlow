@@ -7,4 +7,5 @@ Run release gate under `.superspecflow/release/<change-id>/`:
 2. Rollback Plan.
 3. Monitoring Plan.
 4. PR Description.
-5. Ship Decision.
+5. Spec cluster `integration-gate.md` check when `<change-id>` is a parent change.
+6. Ship Decision.

@@ -322,7 +322,7 @@ Browser / MCP QA 状态必须明确：
 
 允许的英文类型：`feat / fix / docs / style / refactor / perf / test / build / ci / chore / revert / spec`。
 
-英文范围使用 `<根模块>` 或 `<根模块>:<业务子模块>` 形式。根模块取自仓库根目录划分（`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`examples`、`meta`），业务子模块使用小写英文 kebab-case。
+英文范围使用 `<根模块>` 或 `<根模块>:<业务子模块>` 形式。根模块取自仓库根目录划分（`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`openspec`、`examples`、`meta`），业务子模块使用小写英文 kebab-case。
 
 ## 7. Completion Criteria
 

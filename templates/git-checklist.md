@@ -10,7 +10,7 @@
 - [ ] 已检查 `git diff --stat`
 - [ ] 已检查 `git diff --check`
 - [ ] staged diff 只包含本次变更
-- [ ] staged diff 不包含 `superpowers/`、`.superspecflow/`、`.claude/`、`.codex/`、`.DS_Store` 等运行时、安装或缓存产物
+- [ ] staged diff 不包含 `superpowers/`、`docs/superpowers/`、`.superspecflow/`、`.claude/`、`.codex/`、`.DS_Store` 等运行时、安装或缓存产物
 
 ## 提交
 - [ ] commit 标题符合 `<英文类型>(<英文范围>): <中文摘要>` 规范

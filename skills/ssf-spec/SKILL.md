@@ -44,6 +44,9 @@ openspec/changes/<change-id>/
 - 每个 requirement 至少有一个 scenario。
 - 高风险变更必须包含 rollback / monitoring / risk matrix 输入。
 - 生成完核心文档后，先做 Spec Readiness Review，再进入 build。
+- 如果 change 预计超过 8 个 tasks、超过 6 个 Spec IDs，或横跨两个以上相对独立子系统，必须评估是否拆成 Spec cluster。
+- 需要拆分时，parent change 记录整体目标和最终 gate，并使用 `.superspecflow/clusters/<parent-change>/cluster-plan.md` 记录 cluster id、Spec IDs、依赖、worktree、owner、分支、QA expectations 和 integration order。
+- 不拆分时，必须在 proposal、design 或 implementation plan 中记录原因。
 
 ## Step 1 — proposal.md
 
@@ -212,7 +215,7 @@ Spec Readiness Review 通过后，使用 Agent tool 起 general-purpose 子代�
 如果要提交规格文档，commit 必须为中文，例如：
 
 ```text
-规格(会员): 建立续费提醒变更合同
+spec(openspec:members): 建立续费提醒变更合同
 
 变更编号：add-membership-renewal-reminder
 关联规格：MEMBERSHIP-001, MEMBERSHIP-002

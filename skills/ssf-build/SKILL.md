@@ -116,27 +116,18 @@ implementation-plan.md 必须按以下 6 个子节生成。代码示例和命令
   Run: `<同 Step 2>`
   Expected: PASS
 
-- [ ] **Step 5: 提交**
+- [ ] **Step 5: 准备 Git gate**
 
   ```bash
+  git status --short
+  git diff --stat
+  git diff --check
   git add tests/path/file.test.ext path/to/file.ext
-  git commit -m "$(cat <<'EOF'
-  <英文类型>(<英文范围>): <中文摘要>
-
-  变更编号：<change-id>
-  关联规格：[SPEC-ID]
-
-  变更内容：
-  - <中文说明本 task 实现内容>
-
-  验证方式：
-  - <Step 2 / Step 4 的测试命令>
-
-  风险与回滚：
-  - <风险一句话>；回滚方式
-  EOF
-  )"
+  git diff --staged --stat
+  git diff --staged --check
   ```
+
+  然后进入 `/ssf-commit [change-id]`，不得在 implementation plan 中直接提交。
 ```
 
 强制约束：
@@ -144,7 +135,7 @@ implementation-plan.md 必须按以下 6 个子节生成。代码示例和命令
 - 每个 task 必须有且只有一个 `**Spec:**` 字段引用 SPEC-ID
 - Step 1 和 Step 3 的代码块必须完整可执行，禁止 `...` 省略或抽象描述
 - Step 2 和 Step 4 的测试命令必须含具体路径和断言点，禁止「运行测试」这类抽象表述
-- Step 5 commit 消息必须符合项目中文规范（英文类型/范围 + 中文摘要、正文、字段名）
+- Step 5 只能准备 Git gate，commit 消息由 `/ssf-commit` 生成并检查
 
 ### 1.5 Plan Review Loop
 
@@ -210,6 +201,16 @@ templates/progress-handoff.md
 3. `state.json.last_verification` 必须引用最近相关验证记录。
 4. 准备停止且仍有 meaningful work remains 时更新 `handoff.md`。
 5. fresh verification 必须晚于本次声明覆盖范围内的最新相关变更。
+
+## Step 3.5 — Spec Cluster Execution
+
+如果当前 change 属于 parent change 下的 Spec cluster：
+
+1. 先读取 `.superspecflow/clusters/<parent-change>/cluster-plan.md`。
+2. 确认当前 cluster 的 Spec IDs、worktree path、branch、依赖和 QA expectations。
+3. 每完成 build、review、QA、commit 或遇到 blocker，更新 `.superspecflow/clusters/<parent-change>/cluster-status.md`。
+4. 每个 cluster 仍必须独立维护 tasks、spec-to-code map、review、QA 和 Git evidence。
+5. Worktree 只作为执行隔离机制，不得被当作发布边界。
 
 ## Step 4 — 执行任务
 

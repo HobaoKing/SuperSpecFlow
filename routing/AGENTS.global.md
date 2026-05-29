@@ -1,6 +1,6 @@
 # SuperSpecFlow Global Routing for Codex / Generic Agents
 
-本文件是 SuperSpecFlow 的全局薄壳入口，被用户家目录 `~/.codex/AGENTS.md` 通过 `@<repo>/routing/AGENTS.global.md` 引用。
+本文件是 SuperSpecFlow 的全局薄壳源文件；安装脚本会把它渲染为 `~/.codex/superspecflow/AGENTS.global.md`，再由用户家目录 `~/.codex/AGENTS.md` 引用。
 
 ## 1. 项目 opt-in 自检测（必须在响应任何非问答类请求前完成）
 

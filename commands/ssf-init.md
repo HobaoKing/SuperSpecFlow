@@ -21,7 +21,7 @@ Steps:
    - `.superspecflow/verification/` (占位，保持空，由 cross-agent-verification change 定义)
 
 4. **Do not** create `.superspecflow/CLAUDE.routing.md`, `.superspecflow/AGENTS.routing.md`, or `.superspecflow/templates`. These are reserved for **optional** project-level overrides; users add them only when they want to override the global default routing.
-5. **Do not** edit the host `CLAUDE.md` or `AGENTS.md`. If the user wants global activation, point them at `scripts/install-global.sh`. If they want project-only activation without global install, they may manually add `@<pack>/routing/CLAUDE.global.md` to their project's `CLAUDE.md` themselves.
+5. **Do not** edit the host `CLAUDE.md` or `AGENTS.md`. If the user wants global activation, point them at `scripts/install-global.sh`. If they want project-only activation without global install, they may manually add `@<pack>/routing/CLAUDE.routing.md` to their project's `CLAUDE.md` or `@<pack>/routing/AGENTS.routing.md` to their project's `AGENTS.md` themselves.
 6. Print the next-step guidance produced by the contract script.
 
 Notes:

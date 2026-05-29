@@ -64,8 +64,7 @@ done
 
 remove_include() {
   local target="$1"          # ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md
-  local include_path="$2"    # routing/CLAUDE.global.md 或 routing/AGENTS.global.md
-  local include_line="@${REPO_ROOT}/${include_path}"
+  local include_line="$2"    # 已生成 wrapper 的绝对路径 include
 
   if [ ! -e "$target" ]; then
     echo "= $target 不存在，跳过"
@@ -91,12 +90,65 @@ remove_include() {
   fi
 }
 
+file_checksum() {
+  shasum -a 256 "$1" | awk '{print $1}'
+}
+
+dir_checksum() {
+  local dir="$1"
+  local file rel
+
+  (
+    cd "$dir"
+    find . -type f ! -name '.superspecflow-installed' -print | LC_ALL=C sort | while IFS= read -r file; do
+      rel="${file#./}"
+      printf '%s\n' "$rel"
+      shasum -a 256 "$rel"
+    done
+  ) | shasum -a 256 | awk '{print $1}'
+}
+
+remove_manifested_capabilities() {
+  local manifest="$1"
+  local kind checksum target current marker
+
+  [ -f "$manifest" ] || return 0
+
+  while IFS=$'\t' read -r kind checksum target; do
+    [ -n "${target:-}" ] || continue
+    if [ "$kind" = "F" ] && [ -f "$target" ]; then
+      current="$(file_checksum "$target")"
+      if [ "$current" = "$checksum" ]; then
+        rm -f "$target"
+      fi
+    elif [ "$kind" = "D" ] && [ -d "$target" ]; then
+      marker="$target/.superspecflow-installed"
+      current="$(dir_checksum "$target")"
+      if [ -f "$marker" ] &&
+         grep -Fxq "$REPO_ROOT" "$marker" &&
+         [ "$current" = "$checksum" ]; then
+        rm -rf "$target"
+      fi
+    fi
+  done < "$manifest"
+
+  rm -f "$manifest"
+}
+
 if [ "$REMOVE_CLAUDE" -eq 1 ]; then
-  remove_include "$HOME/.claude/CLAUDE.md" "routing/CLAUDE.global.md"
+  remove_include "$HOME/.claude/CLAUDE.md" "@$HOME/.claude/superspecflow/CLAUDE.global.md"
+  remove_include "$HOME/.claude/CLAUDE.md" "@${REPO_ROOT}/routing/CLAUDE.global.md"
+  remove_manifested_capabilities "$HOME/.claude/superspecflow/install-manifest.tsv"
+  rm -f "$HOME/.claude/superspecflow/CLAUDE.global.md"
+  rmdir "$HOME/.claude/superspecflow" 2>/dev/null || true
 fi
 
 if [ "$REMOVE_CODEX" -eq 1 ]; then
-  remove_include "$HOME/.codex/AGENTS.md" "routing/AGENTS.global.md"
+  remove_include "$HOME/.codex/AGENTS.md" "@$HOME/.codex/superspecflow/AGENTS.global.md"
+  remove_include "$HOME/.codex/AGENTS.md" "@${REPO_ROOT}/routing/AGENTS.global.md"
+  remove_manifested_capabilities "$HOME/.codex/superspecflow/install-manifest.tsv"
+  rm -f "$HOME/.codex/superspecflow/AGENTS.global.md"
+  rmdir "$HOME/.codex/superspecflow" 2>/dev/null || true
 fi
 
 if [ "$REMOVE_CLAUDE" -eq 1 ]; then

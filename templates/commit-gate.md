@@ -10,5 +10,5 @@
 - [ ] commit 摘要为中文
 - [ ] commit 正文为中文
 - [ ] commit 正文包含 change-id、Spec ID、验证方式、风险与回滚
-- [ ] 没有 `superpowers/`、`.superspecflow/`、`.claude/`、`.codex/`、`.DS_Store` 等运行时、安装或缓存产物
+- [ ] 没有 `superpowers/`、`docs/superpowers/`、`.superspecflow/`、`.claude/`、`.codex/`、`.DS_Store` 等运行时、安装或缓存产物
 - [ ] 没有 secret、日志、缓存、临时文件、无关格式化

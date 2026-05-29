@@ -63,10 +63,155 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+file_checksum() {
+  shasum -a 256 "$1" | awk '{print $1}'
+}
+
+dir_checksum() {
+  local dir="$1"
+  local file rel
+
+  (
+    cd "$dir"
+    find . -type f ! -name '.superspecflow-installed' -print | LC_ALL=C sort | while IFS= read -r file; do
+      rel="${file#./}"
+      printf '%s\n' "$rel"
+      shasum -a 256 "$rel"
+    done
+  ) | shasum -a 256 | awk '{print $1}'
+}
+
+manifest_has_path() {
+  local manifest="$1"
+  local target="$2"
+
+  [ -f "$manifest" ] || return 1
+  awk -F '\t' -v p="$target" '$3 == p { found = 1 } END { exit found ? 0 : 1 }' "$manifest"
+}
+
+manifest_checksum_matches() {
+  local manifest="$1"
+  local kind="$2"
+  local checksum="$3"
+  local target="$4"
+
+  [ -f "$manifest" ] || return 1
+  awk -F '\t' -v k="$kind" -v c="$checksum" -v p="$target" '
+    $1 == k && $2 == c && $3 == p { found = 1 }
+    END { exit found ? 0 : 1 }
+  ' "$manifest"
+}
+
+record_manifest() {
+  local manifest="$1"
+  local kind="$2"
+  local checksum="$3"
+  local target="$4"
+
+  mkdir -p "$(dirname "$manifest")"
+  printf '%s\t%s\t%s\n' "$kind" "$checksum" "$target" >> "$manifest"
+}
+
+copy_file_safe() {
+  local src="$1"
+  local target="$2"
+  local manifest="$3"
+  local current
+
+  mkdir -p "$(dirname "$target")"
+  if [ -e "$target" ]; then
+    if [ ! -f "$target" ]; then
+      echo "⚠ $target already exists but is not a regular file; skipped"
+      return 0
+    fi
+    current="$(file_checksum "$target")"
+    if manifest_has_path "$manifest" "$target"; then
+      if ! manifest_checksum_matches "$manifest" "F" "$current" "$target"; then
+        echo "⚠ $target was modified after SuperSpecFlow installed it; skipped"
+        return 0
+      fi
+    else
+      echo "⚠ $target already exists and was not installed by SuperSpecFlow; skipped"
+      return 0
+    fi
+  fi
+
+  cp "$src" "$target"
+  record_manifest "$manifest" "F" "$(file_checksum "$target")" "$target"
+}
+
+copy_dir_safe() {
+  local src="$1"
+  local target="$2"
+  local manifest="$3"
+  local marker="$target/.superspecflow-installed"
+  local current
+
+  if [ -e "$target" ]; then
+    if [ ! -d "$target" ]; then
+      echo "⚠ $target already exists but is not a directory; skipped"
+      return 0
+    fi
+    current="$(dir_checksum "$target")"
+    if [ -f "$marker" ] &&
+       grep -Fxq "$REPO_ROOT" "$marker" &&
+       manifest_checksum_matches "$manifest" "D" "$current" "$target"; then
+      rm -rf "$target"
+    else
+      echo "⚠ $target already exists or was modified after SuperSpecFlow installed it; skipped"
+      return 0
+    fi
+  fi
+
+  mkdir -p "$(dirname "$target")"
+  cp -R "$src" "$target"
+  printf '%s\n' "$REPO_ROOT" > "$marker"
+  record_manifest "$manifest" "D" "$(dir_checksum "$target")" "$target"
+}
+
+sync_claude_capabilities() {
+  local manifest="$HOME/.claude/superspecflow/install-manifest.tsv"
+  local path
+
+  mkdir -p "$HOME/.claude/skills" "$HOME/.claude/agents" "$HOME/.claude/commands"
+  for path in "$REPO_ROOT/skills/"ssf-*; do
+    copy_dir_safe "$path" "$HOME/.claude/skills/$(basename "$path")" "$manifest"
+  done
+  for path in "$REPO_ROOT/agents/"*.md; do
+    copy_file_safe "$path" "$HOME/.claude/agents/$(basename "$path")" "$manifest"
+  done
+  for path in "$REPO_ROOT/commands/"ssf-*.md; do
+    copy_file_safe "$path" "$HOME/.claude/commands/$(basename "$path")" "$manifest"
+  done
+  echo "✓ synced Claude Code skills, agents, and commands"
+}
+
+sync_codex_capabilities() {
+  local manifest="$HOME/.codex/superspecflow/install-manifest.tsv"
+  local path
+
+  mkdir -p "$HOME/.codex/skills"
+  for path in "$REPO_ROOT/skills/"ssf-*; do
+    copy_dir_safe "$path" "$HOME/.codex/skills/$(basename "$path")" "$manifest"
+  done
+  echo "✓ synced Codex skills"
+}
+
+render_wrapper() {
+  local template="$1"
+  local output="$2"
+  local routing_file="$3"
+
+  mkdir -p "$(dirname "$output")"
+  sed \
+    -e "s#<repo>/routing/${routing_file}#${REPO_ROOT}/routing/${routing_file}#g" \
+    -e "s#<repo>#${REPO_ROOT}#g" \
+    "$template" > "$output"
+}
+
 ensure_include() {
   local target="$1"          # ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md
-  local include_path="$2"    # routing/CLAUDE.global.md 或 routing/AGENTS.global.md
-  local include_line="@${REPO_ROOT}/${include_path}"
+  local include_line="$2"    # 已生成 wrapper 的绝对路径 include
 
   if [ ! -e "$target" ]; then
     mkdir -p "$(dirname "$target")"
@@ -93,11 +238,21 @@ MSG
 }
 
 if [ "$INSTALL_CLAUDE" -eq 1 ]; then
-  ensure_include "$HOME/.claude/CLAUDE.md" "routing/CLAUDE.global.md"
+  sync_claude_capabilities
+  render_wrapper \
+    "$REPO_ROOT/routing/CLAUDE.global.md" \
+    "$HOME/.claude/superspecflow/CLAUDE.global.md" \
+    "CLAUDE.routing.md"
+  ensure_include "$HOME/.claude/CLAUDE.md" "@$HOME/.claude/superspecflow/CLAUDE.global.md"
 fi
 
 if [ "$INSTALL_CODEX" -eq 1 ]; then
-  ensure_include "$HOME/.codex/AGENTS.md" "routing/AGENTS.global.md"
+  sync_codex_capabilities
+  render_wrapper \
+    "$REPO_ROOT/routing/AGENTS.global.md" \
+    "$HOME/.codex/superspecflow/AGENTS.global.md" \
+    "AGENTS.routing.md"
+  ensure_include "$HOME/.codex/AGENTS.md" "@$HOME/.codex/superspecflow/AGENTS.global.md"
 fi
 
 if [ "$SKIP_HOOK" -eq 0 ] && [ "$INSTALL_CLAUDE" -eq 1 ]; then

@@ -16,16 +16,16 @@
 
 - [x] T3: 增加全局安装自然语言路由开关
   - Spec: SSF-INIT-003, SSF-INIT-004, SSF-INIT-N2, SSF-INIT-N3
-  - Files: `update.sh`
-  - Test: `rtk bash -n update.sh`, `rtk bash update.sh --help`
-  - Acceptance: 默认安装提示自然语言未启用；`--enable-natural-language <project>` 调用项目初始化流程。
+  - Files: `update.sh`, `scripts/install-global.sh`, `scripts/uninstall-global.sh`, `scripts/_ssf_init_apply.sh`
+  - Test: `rtk bats tests/install/test_install_global.bats`, `rtk bash update.sh --help`
+  - Acceptance: 默认安装同步能力文件与 global wrapper 但不启用任意项目；`--enable-natural-language <project>` 调用 zero-touch 初始化流程。
   - Estimate: 30 min
 
-- [x] T4: 验证项目软链安装命令集合
+- [x] T4: 验证 zero-touch 项目初始化命令集合
   - Spec: SSF-INIT-002, SSF-INIT-N1, SSF-INIT-N3
-  - Files: `scripts/install-project-symlinks.sh`
-  - Test: 临时项目烟测
-  - Acceptance: 安装脚本创建 `.superspecflow/` 软链和 `.claude/commands/ssf-init.md`，不创建旧初始化命令文件。
+  - Files: `commands/ssf-init.md`, `scripts/_ssf_init_apply.sh`, `tests/init/test_ssf_init_zero_touch.bats`
+  - Test: `rtk bats tests/init/test_ssf_init_zero_touch.bats`
+  - Acceptance: `/ssf-init` 创建 `.superspecflow/enabled` 和标准运行产物目录，不创建 routing 软链，不修改宿主指令文件。
   - Estimate: 15 min
 
 - [x] T5: 收敛仓库根指令文件为薄入口并保留 routing 完整契约

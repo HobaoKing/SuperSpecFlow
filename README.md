@@ -141,7 +141,7 @@ git clone https://github.com/HobaoKing/SuperSpecFlow.git ~/.superspecflow
 
 ## 卸载
 
-与安装一对一对称，三种方式任选其一。卸载只移除 SuperSpecFlow 自己写入的 include 行，绝不改动用户在 `CLAUDE.md` / `AGENTS.md` 里的其他内容。
+与安装一对一对称，三种方式任选其一。卸载只移除 SuperSpecFlow 自己写入的 include 行、generated wrappers 和能力文件，绝不改动用户在 `CLAUDE.md` / `AGENTS.md` 里的其他内容。
 
 ### 方式 1：让 AI 帮你卸（推荐）
 
@@ -152,9 +152,9 @@ git clone https://github.com/HobaoKing/SuperSpecFlow.git ~/.superspecflow
 
 1. 如果 ~/.superspecflow/scripts/uninstall-global.sh 存在，执行：
    ~/.superspecflow/scripts/uninstall-global.sh --both --purge
-   该脚本会精确移除 ~/.claude/CLAUDE.md 和 ~/.codex/AGENTS.md 里的 SuperSpecFlow include 行（其他内容保留），并删除 ~/.superspecflow/ 目录。
-2. 如果 ~/.superspecflow/ 不存在，但 ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md 里还有指向其他路径的 SuperSpecFlow include 行：
-   找出形如 "@/path/to/SuperSpecFlow/routing/CLAUDE.global.md" 或 "@/path/to/SuperSpecFlow/routing/AGENTS.global.md" 的行，把那一行（且只有那一行）删除。如果文件因此变空，把文件本身也删除。
+   该脚本会精确移除 ~/.claude/CLAUDE.md 和 ~/.codex/AGENTS.md 里的 SuperSpecFlow include 行（其他内容保留），清理 generated wrappers 与 manifest 中记录且未被用户修改的能力文件，并删除 ~/.superspecflow/ 目录。
+2. 如果 ~/.superspecflow/ 不存在，但 ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md 里还有 SuperSpecFlow include 行：
+   找出形如 "@~/.claude/superspecflow/CLAUDE.global.md"、"@~/.codex/superspecflow/AGENTS.global.md" 或旧版 "@/path/to/SuperSpecFlow/routing/*.global.md" 的行，把那一行（且只有那一行）删除。如果文件因此变空，把文件本身也删除。
 3. 如果之前在 ~/.claude/settings.json 中合并过 SuperSpecFlow 的 SessionStart hook（command 指向 .../scripts/hooks/session-start-detect.sh），手动移除该 hook 条目。
 4. 简要报告每一步结果。
 ```
@@ -177,7 +177,7 @@ git clone https://github.com/HobaoKing/SuperSpecFlow.git ~/.superspecflow
 ### 方式 3：手动
 
 ```bash
-# 1. 找出 include 行（形如 @<pack>/routing/CLAUDE.global.md）
+# 1. 找出 include 行（形如 @~/.claude/superspecflow/CLAUDE.global.md）
 grep SuperSpecFlow ~/.claude/CLAUDE.md ~/.codex/AGENTS.md 2>/dev/null
 
 # 2. 用编辑器删除这些 include 行；如果文件因此变空，删除整个文件
@@ -323,6 +323,7 @@ SuperSpecFlow 应先判断这是非平凡行为变更，然后进入产品思考
 | Git / PR | `git-checklist.md`、`git-status-audit.md`、`commit-message.md`、`commit-gate.md`、`git-pr-gate.md`、`git-pr-archive.md`、`git-hooks/commit-msg` |
 | Archive / Retro | `archive-summary.md`、`documentation-coverage.md`、`retro.md` |
 | Progress / Verification | `progress-state.json`、`progress-timeline.md`、`progress-verification.md`、`progress-handoff.md`、`verification-request.md`、`verification-evidence.md`、`verification-reviewer-notes.md`、`verification-signoff.md` |
+| Cluster | `cluster-plan.md`、`cluster-status.md`、`integration-gate.md` |
 
 ## 目录结构
 
@@ -344,7 +345,7 @@ SuperSpecFlow 应先判断这是非平凡行为变更，然后进入产品思考
 
 SuperSpecFlow 仓库提交工作流包源码和 OpenSpec 变更契约：`routing/`、`skills/`、`commands/`、`agents/`、`templates/`、`scripts/`、用户文档、测试、示例和 `openspec/`。其中 `openspec/` 是本仓库行为规则变更的 change contract，不能被当作运行时产物忽略。
 
-不要提交本地 workflow 运行时、安装副本或缓存产物，例如 `superpowers/`、`.superspecflow/`、`.claude/`、`.codex/` 和 `.DS_Store`。
+不要提交本地 workflow 运行时、安装副本或缓存产物，例如 `superpowers/`、`docs/superpowers/`、`.superspecflow/`、`.claude/`、`.codex/` 和 `.DS_Store`。
 
 宿主项目运行时产物统一写入 `.superspecflow/`：
 
@@ -410,7 +411,7 @@ changes
 测试目录使用 bats：
 
 ```bash
-bats tests
+./scripts/test.sh
 ```
 
 如果本机没有 bats，可以至少运行 `./scripts/validate-pack.sh` 做包结构和文档契约验证。

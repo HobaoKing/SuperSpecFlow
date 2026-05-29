@@ -10,7 +10,7 @@
 2. 安装范围：全局安装，还是只给某个项目安装。
 3. 宿主项目是否已有 `AGENTS.md` / `CLAUDE.md`。
 
-如果宿主项目已有指令文件，不要覆盖，也不要复制大段路由内容。推荐通过软连接入 SuperSpecFlow，并在宿主项目指令文件中只保留极薄入口。
+如果宿主项目已有指令文件，不要覆盖，也不要复制大段路由内容。推荐使用方案 C：全局安装 SuperSpecFlow 能力和 global wrapper，再由项目内 `/ssf-init` 创建 `.superspecflow/enabled` sentinel。
 
 ## 1. 第三方工作流关系
 
@@ -28,11 +28,11 @@ SuperSpecFlow 集成的是多套研发方法，不是把它们都作为应用运
 
 SuperSpecFlow 仓库自身只提交工作流包源码和 OpenSpec 变更契约。`openspec/` 是本仓库行为规则变更的可追踪 contract，应随对应 change-id 提交；不要把它和运行时产物一起忽略。
 
-不要在 SuperSpecFlow 仓库提交本地 workflow 运行时、安装副本或缓存产物，例如 `superpowers/`、`.superspecflow/`、`.claude/`、`.codex/` 和 `.DS_Store`。这些产物可能由外部工具、本机安装或 agent 会话生成，应留在本地或重新生成。
+不要在 SuperSpecFlow 仓库提交本地 workflow 运行时、安装副本或缓存产物，例如 `superpowers/`、`docs/superpowers/`、`.superspecflow/`、`.claude/`、`.codex/` 和 `.DS_Store`。这些产物可能由外部工具、本机安装或 agent 会话生成，应留在本地或重新生成。
 
 SuperSpecFlow 本仓库的 `engineering/<change-id>/` 是包源码层可提交工程交付目录，不属于宿主项目运行时产物。宿主项目运行时产物使用 `.superspecflow/<stage>/` 命名空间，读取时新路径优先、旧路径 fallback，新写入不再推荐根目录旧路径。
 
-宿主业务项目的规则不同：如果宿主项目采用 OpenSpec 管理需求，其项目内 `openspec/` 应正常提交；如果团队选择 repo 内 opt-in，`.superspecflow/` 中的 routing 接入文件是否提交由宿主项目约定决定，但不要提交本机缓存、日志、工具安装副本或外部 `superpowers/` 运行产物。
+宿主业务项目的规则不同：如果宿主项目采用 OpenSpec 管理需求，其项目内 `openspec/` 应正常提交；如果团队选择 repo 内 opt-in，`.superspecflow/` 中的 routing 接入文件是否提交由宿主项目约定决定，但不要提交本机缓存、日志、工具安装副本或外部 `superpowers/` / `docs/superpowers/` 运行产物。
 
 ## 3. 推荐：方案 C 零侵入接入
 
@@ -40,7 +40,7 @@ SuperSpecFlow 本仓库的 `engineering/<change-id>/` 是包源码层可提交�
 
 ### 3.1 全局安装一次
 
-提供三种入口，按推荐顺序排列。无论用哪种方式，最终都执行 `scripts/install-global.sh` 把 routing include 写入 `~/.claude/CLAUDE.md` 和/或 `~/.codex/AGENTS.md`。
+提供三种入口，按推荐顺序排列。无论用哪种方式，最终都执行 `scripts/install-global.sh`：Claude 侧同步 `~/.claude/{skills,agents,commands}` 和 global wrapper；Codex 侧同步 `~/.codex/skills` 和 global wrapper；然后把 wrapper include 写入 `~/.claude/CLAUDE.md` 和/或 `~/.codex/AGENTS.md`。
 
 #### 方式 1：让 AI 帮你装（推荐）
 
@@ -99,7 +99,10 @@ git clone https://github.com/HobaoKing/SuperSpecFlow.git ~/.superspecflow
 `install-global.sh` 会：
 
 - 根据 `--claude-only` / `--codex-only` / `--both`（默认）决定写哪些宿主。`--claude-only` 与 `--codex-only` 互斥。
-- 检测 `~/.claude/CLAUDE.md`：不存在则创建并写入 `@<pack>/routing/CLAUDE.global.md`；存在则只打印应追加的行，不擅自改写。
+- Claude 侧同步 `skills/`、`agents/`、`commands/` 到 `~/.claude/`。
+- Codex 侧同步 `skills/` 到 `~/.codex/skills/`。
+- 生成不含 `<repo>` 占位符的 global wrapper：`~/.claude/superspecflow/CLAUDE.global.md` 和 `~/.codex/superspecflow/AGENTS.global.md`。
+- 检测 `~/.claude/CLAUDE.md`：不存在则创建并写入 wrapper include；存在则只打印应追加的行，不擅自改写。
 - 同样规则处理 `~/.codex/AGENTS.md`。
 - 仅在写入 Claude 一侧时，打印 Claude Code SessionStart hook 的可选 JSON 片段（建议手动合并到 `~/.claude/settings.json`）。`--no-hook` 跳过该提示。脚本不擅自改写 `settings.json`。
 
@@ -229,7 +232,7 @@ cp -R routing templates <project>/.superspecflow/
 ./update.sh
 ```
 
-全局安装默认只提供 skills / commands / agents 能力，不接管所有项目的自然语言。项目只有在存在 `.superspecflow/` 或显式 `@./.superspecflow/*.routing.md` include 时，才启用 SuperSpecFlow Intake Gate。
+全局安装默认只提供能力文件和 global wrapper，不接管所有项目的自然语言。项目只有在存在 `.superspecflow/enabled` 或显式 routing include 时，才启用 SuperSpecFlow Intake Gate。
 
 如果全局安装时也要初始化某个项目的自然语言路由，显式打开开关：
 
@@ -237,7 +240,7 @@ cp -R routing templates <project>/.superspecflow/
 ./update.sh --enable-natural-language <project>
 ```
 
-该选项会在完成全局安装后调用项目初始化流程，为指定项目创建 `.superspecflow/` 软链，但仍不会覆盖宿主项目 `AGENTS.md` 或 `CLAUDE.md`。
+该选项会在完成全局安装后调用项目初始化流程，为指定项目创建 `.superspecflow/enabled` sentinel 和标准运行产物目录，但仍不会覆盖宿主项目 `AGENTS.md` 或 `CLAUDE.md`。
 
 ## 6. Codex CLI 安装
 
@@ -292,16 +295,16 @@ openspec/changes/<change-id>/
 
 ## 8. 安装后烟测
 
-### 8.1 软连检查
+### 8.1 Zero-touch 检查
 
 在宿主项目中执行：
 
 ```bash
-ls -l .superspecflow
-ls -l .claude/skills | grep ssf-
+test -f .superspecflow/enabled && echo enabled
+ls -d .superspecflow/{engineering,qa,release,archive,retro,decisions,maps,reviews,karpathy,progress,verification}
 ```
 
-期望：`.superspecflow/*.routing.md`、`.superspecflow/templates` 和 `.claude/skills/ssf-*` 指向 SuperSpecFlow 仓库。
+期望：项目 opt-in sentinel 和标准运行产物目录存在，且宿主 `AGENTS.md` / `CLAUDE.md` 未被修改。
 
 ### 8.2 Intake Gate
 
@@ -364,8 +367,8 @@ bash <pack>/scripts/hooks/session-start-detect.sh
 升级 SuperSpecFlow 时：
 
 1. 更新 SuperSpecFlow 仓库。
-2. 确认宿主项目 `.superspecflow/*.routing.md` 仍指向正确仓库路径。
-3. 如宿主项目移动目录，重新运行 `./scripts/install-project-symlinks.sh <project>`。
+2. 重新运行 `scripts/install-global.sh`，刷新 global wrapper 和能力文件。
+3. 确认宿主项目仍存在 `.superspecflow/enabled`；软连兼容路径用户再确认 `.superspecflow/*.routing.md` 指向正确仓库路径。
 4. 运行宿主项目自己的测试和 SuperSpecFlow pack 自检。
 5. 不自动覆盖宿主项目已有 `AGENTS.md` / `CLAUDE.md`。
 
@@ -384,9 +387,9 @@ bash <pack>/scripts/hooks/session-start-detect.sh
 
 1. 如果 ~/.superspecflow/scripts/uninstall-global.sh 存在，执行：
    ~/.superspecflow/scripts/uninstall-global.sh --both --purge
-   该脚本会精确移除 ~/.claude/CLAUDE.md 和 ~/.codex/AGENTS.md 里的 SuperSpecFlow include 行（其他内容保留），并删除 ~/.superspecflow/ 目录。
-2. 如果 ~/.superspecflow/ 不存在，但 ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md 里还有指向其他路径的 SuperSpecFlow include 行：
-   找出形如 "@/path/to/SuperSpecFlow/routing/CLAUDE.global.md" 或 "@/path/to/SuperSpecFlow/routing/AGENTS.global.md" 的行，把那一行（且只有那一行）删除。如果文件因此变空，把文件本身也删除。
+   该脚本会精确移除 ~/.claude/CLAUDE.md 和 ~/.codex/AGENTS.md 里的 SuperSpecFlow include 行（其他内容保留），清理 generated wrappers 与 manifest 中记录且未被用户修改的能力文件，并删除 ~/.superspecflow/ 目录。
+2. 如果 ~/.superspecflow/ 不存在，但 ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md 里还有 SuperSpecFlow include 行：
+   找出形如 "@~/.claude/superspecflow/CLAUDE.global.md"、"@~/.codex/superspecflow/AGENTS.global.md" 或旧版 "@/path/to/SuperSpecFlow/routing/*.global.md" 的行，把那一行（且只有那一行）删除。如果文件因此变空，把文件本身也删除。
 3. 如果之前在 ~/.claude/settings.json 中合并过 SuperSpecFlow 的 SessionStart hook（command 指向 .../scripts/hooks/session-start-detect.sh），手动移除该 hook 条目。
 4. 简要报告每一步结果。
 ```
@@ -409,6 +412,7 @@ bash <pack>/scripts/hooks/session-start-detect.sh
 防御性行为：
 
 - 精确移除 include 行：仅删除恰好等于本仓库 install 时写入的那一行，文件其它内容原样保留。
+- 清理 generated global wrappers 和 manifest 中记录且未被用户修改的 `ssf-*` commands / skills / agents；已有同名用户文件不会被覆盖或删除。
 - 文件因移除而变空 → 删除整个文件；否则保留文件，只删那一行。
 - `--purge` 删除 pack 目录所在路径（`~/.superspecflow/` 或用户手动 clone 的位置），如果当前工作目录在 pack 内部会拒绝执行，避免 `rm -rf` 掉运行中的脚本。
 - 重复运行幂等，不报错。
@@ -421,8 +425,9 @@ bash <pack>/scripts/hooks/session-start-detect.sh
 grep SuperSpecFlow ~/.claude/CLAUDE.md ~/.codex/AGENTS.md 2>/dev/null
 
 # 2. 用编辑器删除这些行；如果文件因此变空，删除整个文件
-#    (Claude: @<pack>/routing/CLAUDE.global.md)
-#    (Codex:  @<pack>/routing/AGENTS.global.md)
+#    (Claude: @~/.claude/superspecflow/CLAUDE.global.md)
+#    (Codex:  @~/.codex/superspecflow/AGENTS.global.md)
+#    (legacy source include: @<pack>/routing/*.global.md)
 
 # 3. 删除 pack 目录（默认 clone 位置）
 rm -rf ~/.superspecflow

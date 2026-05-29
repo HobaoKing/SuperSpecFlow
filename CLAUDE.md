@@ -73,7 +73,7 @@ commit 标题格式：
 
 - `英文类型`：使用 conventional commits 标准集合（见下）。
 - `英文范围`：必须采用 `<根模块>` 或 `<根模块>:<业务子模块>` 的形式。
-  - 根模块取自仓库根目录划分：`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`examples`、`meta`（用于 `CLAUDE.md`、`README.md` 等根级文档）。
+  - 根模块取自仓库根目录划分：`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`openspec`、`examples`、`meta`（用于 `CLAUDE.md`、`README.md` 等根级文档）。
   - 业务子模块按本次改动实际涉及的业务模块填写，使用小写英文 kebab-case，例如 `members`、`payment`、`auth`。
   - 示例：`feat(skills:members): 增加续费提醒入口`、`fix(routing:payment): 修复重试状态不一致`。
 - `中文摘要`：必须是中文。

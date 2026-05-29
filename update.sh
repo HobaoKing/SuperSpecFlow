@@ -14,7 +14,7 @@ Usage:
 Options:
   --enable-natural-language <project>
       After global installation, initialize SuperSpecFlow routing for the given
-      project by creating .superspecflow/ symlinks. Host AGENTS.md / CLAUDE.md
+      project by creating .superspecflow/enabled. Host AGENTS.md / CLAUDE.md
       files are not overwritten.
 MSG
 }
@@ -43,23 +43,12 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-mkdir -p ~/.claude/skills ~/.claude/agents ~/.claude/commands
-cp -R "$SCRIPT_DIR/skills/"* ~/.claude/skills/
-cp -R "$SCRIPT_DIR/agents/"* ~/.claude/agents/
-cp -R "$SCRIPT_DIR/commands/"* ~/.claude/commands/
-
-echo "✓ Installed SuperSpecFlow Claude Code skills, agents, and commands"
-
-if [ -d ~/.codex ]; then
-  mkdir -p ~/.codex/skills
-  cp -R "$SCRIPT_DIR/skills/"* ~/.codex/skills/ || true
-  echo "✓ Synced SuperSpecFlow skills to Codex"
-fi
+"$SCRIPT_DIR/scripts/install-global.sh" --both
 
 if [ "$ENABLE_NATURAL_LANGUAGE" -eq 1 ]; then
-  "$SCRIPT_DIR/scripts/install-project-symlinks.sh" "$PROJECT_DIR"
+  SSF_INIT_PROJECT_DIR="$PROJECT_DIR" "$SCRIPT_DIR/scripts/_ssf_init_apply.sh"
 else
-  echo "Natural-language routing not enabled. Run /ssf-init in a project, or rerun:"
+  echo "Natural-language routing not enabled for any project. Run /ssf-init in a project, or rerun:"
   echo "  ./update.sh --enable-natural-language <project>"
 fi
 

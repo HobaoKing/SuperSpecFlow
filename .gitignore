@@ -7,6 +7,7 @@
 # 本仓库本地 workflow / 安装运行时产物
 .codex/
 .superspecflow/
+docs/superpowers/
 superpowers/
 
 # 编辑器/IDE

@@ -7,6 +7,11 @@ set -euo pipefail
 
 project="${SSF_INIT_PROJECT_DIR:-$PWD}"
 
+if [ ! -d "$project" ]; then
+  echo "error: project directory does not exist: $project" >&2
+  exit 1
+fi
+
 mkdir -p "$project/.superspecflow"
 if [ -e "$project/.superspecflow/enabled" ] && [ ! -f "$project/.superspecflow/enabled" ]; then
   echo "error: $project/.superspecflow/enabled exists but is not a regular file" >&2
@@ -29,6 +34,8 @@ SuperSpecFlow 项目 opt-in 已生效：$project/.superspecflow/enabled
   bash <pack>/scripts/install-global.sh
 
 如果你只想给本项目使用而不做全局安装，可手动在 $project/CLAUDE.md 中加入：
-  @<pack>/routing/CLAUDE.global.md
+  @<pack>/routing/CLAUDE.routing.md
+或在 $project/AGENTS.md 中加入：
+  @<pack>/routing/AGENTS.routing.md
 （这一行为可选；不加也不影响 /ssf-* 显式命令）
 MSG
