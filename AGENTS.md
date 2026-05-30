@@ -2,9 +2,9 @@
 
 本项目使用一套 AI 软件研发流程：
 
-- **OpenSpec 风格**：把需求沉淀为可追踪的 change contract。
-- **Superpowers 风格**：执行时先理解、再计划、再测试、再实现、再验证。
-- **gstack 风格**：通过产品、设计、工程、QA、安全、发布角色做门禁审查。
+- **OpenSpec 合同层**：把需求沉淀为可追踪的 change contract，维护 change-id、Spec ID、requirements、tasks、archive 和 traceability。
+- **Superpowers 执行纪律层**：执行时先理解、再计划、再测试、再实现、再验证。
+- **SuperSpecFlow 路由与适配层**：把自然语言请求路由到合适的 OpenSpec contract 与 Superpowers 执行纪律组合，并连接阶段产物。
 - **Karpathy 风格**：编码前暴露假设，简单优先，外科手术式修改，目标驱动验证。
 - **GitOps 风格**：分支、暂存、commit（英文类型 + 中文正文）、PR、回滚与 change-id / Spec ID 对齐。
 

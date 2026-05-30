@@ -25,10 +25,12 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 5. 生成 risk-matrix.md。
 6. 生成 regression-checklist.md。
 7. 对 E2E、user journey 或需要真实浏览器验证的场景，生成 `qa-execution-plan.md`。
+   - 只从 E2E、user journey 或 browser-required acceptance matrix 行派生，并 preserve Spec ID mapping。
 8. 检查 target 和 Browser/MCP 工具是否可用。
 9. 可执行时运行或建议测试，并记录 `browser-run-report.md` 与 `qa-evidence/`。
 10. 不可执行时写明 blocked 状态。
 11. 对 UI 还原、视觉回归、截图对比或设计对齐场景，生成 `visual-execution-plan.md`。
+    - 只从 UI restoration、screenshot comparison、visual regression 或 design-alignment acceptance matrix 行派生，并 preserve Spec ID mapping。
 12. 记录 `platform: web | mini-program`、route/page、viewport/device、DPR、theme、locale、environment、data preconditions、screenshot source、baseline policy 和 optional reference image/design source。
 13. 检查 baseline、actual screenshot、diff output 或人工验收记录，并写入 `visual-comparison-report.md` 与 `qa-evidence/visual/`。
 14. 输出 qa-signoff.md。
@@ -42,9 +44,11 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 - Browser/MCP QA 只有在存在 `browser-run-report.md`、`qa-evidence/` 或明确人工验证记录时，才可标记 `Automated Browser Passed` 或 `Manual Verified`。
 - 没有可运行 target 时使用 `Blocked: No runnable target`。
 - Browser/MCP 工具不可用时使用 `Blocked: Tool unavailable`。
+- Missing target requires `Blocked: No runnable target`；Tool unavailable requires `Blocked: Tool unavailable`；Failed journey forbids `Automated Browser Passed`。
 - `qa-evidence/` 不得包含 secret、token、凭据、生产客户数据或敏感日志。
 - Visual QA 只有在存在 baseline、actual screenshot、visual-comparison-report.md、qa-evidence/visual/ 和阈值内 diff result 时，才可标记 `Visual Passed`。
 - 没有自动 diff 但人工验收记录完整时使用 `Manual Visual Verified`，并记录 manual reviewer、comparison notes、accepted differences 和 residual risk。
+- Manual reviewer required for `Manual Visual Verified`。
 - 视觉不匹配时使用 `Visual Failed`；缺少 baseline 时使用 `Blocked: Missing baseline`；缺少 actual screenshot 时使用 `Blocked: Missing actual screenshot`；声明 automated diff 但工具或输出不可用时使用 `Blocked: Diff tool unavailable`。
 - 不得把 `visual-execution-plan.md` 当作 acceptance matrix 的替代品，不得用聊天描述替代落盘 visual evidence。
 - 不得把 actual screenshot 自动提升为 baseline；baseline 建立或更新必须记录 reviewer 或 approval gate、原因、timestamp 和关联 Spec ID。

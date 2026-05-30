@@ -9,7 +9,7 @@ description: Git 工作流与中文 commit 正文门禁。用户输入 /ssf-git�
 
 把“代码改完了”变成可审计、可回滚、可追踪的 Git 记录。
 
-本阶段把 OpenSpec 的 change-id / Spec ID、Superpowers 的小步验证、Karpathy 的 surgical changes，以及 gstack 的发布门禁连接到 Git：
+本阶段把 OpenSpec 的 change-id / Spec ID、Superpowers 的小步验证、Karpathy 的 surgical changes，以及发布检查结果连接到 Git：
 
 ```text
 Spec ID → 任务 → 测试 → 最小实现 → 规范 commit（英文类型 + 中文正文） → PR → Release Gate

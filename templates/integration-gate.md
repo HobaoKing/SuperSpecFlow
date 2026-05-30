@@ -7,8 +7,8 @@ Path: `.superspecflow/clusters/[parent-change]/integration-gate.md`
 - Reason:
 
 ## Cluster Evidence
-| Cluster ID | Spec IDs | QA Evidence | Review Result | Commit Evidence | Blockers |
-|---|---|---|---|---|---|
+| Cluster ID | Spec IDs | Browser QA Status | Visual QA Status | Manual QA Status | Evidence Paths | Review Result | Commit Evidence | Blocked Reason | Parent Integration Regression |
+|---|---|---|---|---|---|---|---|---|---|
 
 ## Cross-cluster Regression
 - Scope:
@@ -27,4 +27,5 @@ Path: `.superspecflow/clusters/[parent-change]/integration-gate.md`
 - Required before ship:
 
 ## Rule
-- Missing integration gate, cluster QA evidence, review result, or commit evidence blocks parent ship.
+- Missing integration gate, cluster QA evidence, review result, commit evidence, or Parent Integration Regression blocks parent ship.
+- Missing cluster QA evidence blocks Ship unless an explicit blocked or waived reason is recorded.

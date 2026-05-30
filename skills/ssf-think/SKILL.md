@@ -1,6 +1,6 @@
 ---
 name: ssf-think
-description: 阶段一（想）。用户输入 /ssf-think 或描述新想法/新功能时触发。用 gstack 风格的 CEO/Designer/Product 多角色反问，产出 Product Change Brief、Decision Record 和 design.md，然后进入 ssf-spec。
+description: 阶段一（想）。用户输入 /ssf-think 或描述新想法/新功能时触发。用 Superpowers brainstorming 纪律做价值、体验、范围反问，产出 Product Change Brief、Decision Record 和 design.md，然后进入 ssf-spec。
 ---
 
 # ssf-think — 想清楚再动手
@@ -9,7 +9,7 @@ description: 阶段一（想）。用户输入 /ssf-think 或描述新想法/新
 
 把一句模糊想法变成可进入 OpenSpec 的产品决策。
 
-本阶段体现 gstack 的价值：不是顺着用户写功能，而是用 CEO、Designer、Product Owner 的视角挑战价值、压缩范围、识别伪需求。
+本阶段体现 SuperSpecFlow 路由与适配层：先用 Superpowers brainstorming 纪律理解价值、体验和范围，再把结果整理成 OpenSpec proposal 输入。
 
 ## 触发
 
@@ -47,7 +47,7 @@ description: 阶段一（想）。用户输入 /ssf-think 或描述新想法/新
 
 用户说「跳过 / 不知道 / 下一个」时记录为 `TBD`。
 
-## Step 2 — gstack 风格三重审判
+## Step 2 — 产品视角检查
 
 六问完成后，输出以下三段。
 
@@ -172,7 +172,7 @@ design.md 确认吗？确认后进入 /ssf-spec。
   - ❌ Issues Found → 修复后与用户对齐，再重新 dispatch，最多 3 轮
   - 超过 3 轮 → 交人工裁决
 
-注意：reviewer prompt 是英文，针对单一 design.md 结构（跟本阶段产物吻合度较高）。如反复给出与项目中文化或 gstack 三重审判无关的反馈，记录 follow-up。
+注意：reviewer prompt 是英文，针对单一 design.md 结构（跟本阶段产物吻合度较高）。如反复给出与项目中文化或产品视角检查无关的反馈，记录 follow-up。
 
 ## Step 7 — 自动续接
 

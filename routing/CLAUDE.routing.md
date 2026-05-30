@@ -14,9 +14,9 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 
 本项目使用一套 AI 软件研发流程：
 
-- **OpenSpec 风格**：把需求沉淀为可追踪的 change contract。
-- **Superpowers 风格**：执行时先理解、再计划、再测试、再实现、再验证。
-- **gstack 风格**：通过产品、设计、工程、QA、安全、发布角色做门禁审查。
+- **OpenSpec 合同层**：把需求沉淀为可追踪的 change contract，维护 change-id、Spec ID、requirements、tasks、archive 和 traceability。
+- **Superpowers 执行纪律层**：执行时先理解、再计划、再测试、再实现、再验证。
+- **SuperSpecFlow 路由与适配层**：把自然语言请求路由到合适的 OpenSpec contract 与 Superpowers 执行纪律组合，并连接阶段产物。
 - **Karpathy 风格**：编码前暴露假设，简单优先，外科手术式修改，目标驱动验证。
 - **GitOps 风格**：分支、暂存、commit（英文类型 + 中文正文）、PR、回滚与 change-id / Spec ID 对齐。
 
@@ -89,6 +89,14 @@ SuperSpecFlow 仓库提交的是工作流包源码和可追踪变更契约，不
 
 自然语言请求必须先分类，不是所有任务都适合走完整工作流。
 
+### 路由契约
+
+SuperSpecFlow 路由与适配层必须把路由决策写成可复查的输入输出关系：
+
+- **路由输入**：用户自然语言、显式 `/ssf-*` 命令、是否已有 change-id / Spec ID、宿主项目上下文、风险等级、可用 evidence 和当前 Git / runtime 状态。
+- **路由输出**：请求分类、下一阶段（问答、轻量任务、Think、Spec、Build、Review、QA、Ship、Git、Archive、Retro）、是否需要 OpenSpec contract、需要使用的 Superpowers 执行纪律、应写入或读取的阶段产物。
+- **执行纪律选择记录**：正式 change 必须在 brainstorming context、implementation plan、TDD 证据、review notes、verification evidence、qa signoff、spec-to-code map 或 progress handoff 中记录实际采用的 Superpowers discipline，并关联 OpenSpec change-id / Spec ID。
+
 先判断用户请求属于哪一类，再选择流程：
 
 | 类别 | 判定标准 | 处理方式 |
@@ -151,11 +159,13 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 
 输出：
 
+- Brainstorming Context、Assumption Audit、Alternatives Considered、Open Questions Disposition
 - `openspec/changes/<change-id>/proposal.md`
 - `openspec/changes/<change-id>/design.md`，必要时
 - `openspec/changes/<change-id>/tasks.md`
 - `openspec/changes/<change-id>/specs/*.md`
 - Spec Readiness Review
+- Spec Document Review Loop、Reviewer Result、Blocked / Waived Evidence
 
 ### Build / Engineering
 
@@ -173,7 +183,7 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 
 1. 先读取 OpenSpec change。
 2. 先运行 Karpathy 编码前判断：目标、假设、歧义、简单方案。
-3. 先生成 implementation plan。
+3. 先生成 implementation plan，必须包含 Goal、Architecture、Spec Contract、Tech Stack、Scope Check、File Structure、Bite-Sized Tasks、Plan Review Loop 和 Execution Handoff。
 4. 维护 spec-to-code-map。
 5. 优先 TDD。
 6. 不实现 OpenSpec 之外的功能。
@@ -293,6 +303,7 @@ Browser / MCP QA:
 - 如果没有可运行目标，QA signoff 必须使用 `Blocked: No runnable target`。
 - 如果浏览器/MCP 工具不可用，QA signoff 必须使用 `Blocked: Tool unavailable`。
 - 不得在没有 browser run report、qa-evidence 或明确人工验证记录时声明 `Automated Browser Passed`。
+- browser pass consistency: missing target、tool unavailable 或 failed journey 均不得写成 `Automated Browser Passed`。
 - `/ssf-qa <parent-change>` 在 Spec cluster 场景必须汇总 cluster QA evidence，并额外记录 parent integration 级回归或 blocked reason。
 
 Visual UI QA:
@@ -302,6 +313,7 @@ Visual UI QA:
 - Agent 记录 `.superspecflow/qa/<change-id>/visual-comparison-report.md` 和 `qa-evidence/visual/`，并区分 baseline、actual screenshot、diff output 和人工验收记录。
 - 视觉 QA 状态必须使用 `Visual Passed`、`Manual Visual Verified`、`Visual Failed`、`Blocked: Missing baseline`、`Blocked: Missing actual screenshot` 或 `Blocked: Diff tool unavailable`。
 - 不得在缺少 baseline、actual screenshot、visual comparison report 或落盘 evidence 时声明 `Visual Passed`。
+- visual pass consistency: `Visual Passed` 必须具备 baseline approval、actual screenshot、diff output 或 threshold result、comparison report 和 evidence。
 - 不得把 `visual-execution-plan.md` 当作 acceptance matrix 的替代品，不得把聊天描述替代落盘 visual evidence。
 - 小程序端第一版只定义协议，不绑定具体 runner、微信开发者工具、小程序 CLI、模拟器或具体图片 diff 算法。
 

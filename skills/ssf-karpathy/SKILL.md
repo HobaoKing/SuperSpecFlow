@@ -14,7 +14,7 @@ description: Karpathy 风格的 AI 编码行为约束。用于写代码、review
 3. 外科手术式修改，只改必须改的地方。
 4. 目标驱动执行，把任务变成可验证结果。
 
-它不是替代 OpenSpec / Superpowers / gstack，而是作为所有工程动作的底层行为约束。
+它不是替代 OpenSpec 合同层、Superpowers 执行纪律层或 SuperSpecFlow 路由与适配层，而是作为所有工程动作的底层行为约束。
 
 ## 触发
 

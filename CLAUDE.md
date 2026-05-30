@@ -6,6 +6,10 @@
 
 本项目使用：
 
+- **OpenSpec 合同层**：把需求沉淀为可追踪的 change contract，维护 change-id、Spec ID、requirements、tasks、archive 和 traceability。
+- **Superpowers 执行纪律层**：执行时先理解、再计划、再测试、再实现、再验证。
+- **SuperSpecFlow 路由与适配层**：把自然语言请求路由到合适的 OpenSpec contract 与 Superpowers 执行纪律组合，并连接阶段产物。
+
 - `skills/ssf-think`：想清楚产品和设计
 - `skills/ssf-spec`：写 OpenSpec 风格规格
 - `skills/ssf-build`：按任务和 TDD 执行

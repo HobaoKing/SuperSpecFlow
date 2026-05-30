@@ -18,9 +18,9 @@ SuperSpecFlow 集成的是多套研发方法，不是把它们都作为应用运
 
 | 来源 | 在 SuperSpecFlow 中的作用 | 用户安装时怎么处理 |
 |---|---|---|
-| OpenSpec | change-id、proposal、specs、tasks、archive 的规格驱动结构 | 不要求安装外部运行时；在宿主项目中按需生成 `openspec/changes/<change-id>/` |
-| Superpowers | 先理解、再计划、TDD、小步实现、验证、处理 review 先验证 | 可选增强；如果用户已安装 Superpowers，SuperSpecFlow 与其纪律兼容；未安装也可使用本包内 `ssf-*` skills |
-| gstack | 产品、设计、工程、QA、安全、发布多角色门禁 | 通过 `agents/` 和 `skills/` 表达，不需要额外依赖 |
+| OpenSpec 合同层 | change-id、proposal、specs、tasks、archive 的规格驱动结构 | 不要求安装外部运行时；在宿主项目中按需生成 `openspec/changes/<change-id>/` |
+| Superpowers 执行纪律层 | 先理解、再计划、TDD、小步实现、验证、处理 review 先验证 | 可选增强；如果用户已安装 Superpowers，SuperSpecFlow 与其纪律兼容；未安装也可使用本包内 `ssf-*` skills |
+| SuperSpecFlow 路由与适配层 | 把自然语言请求路由到 OpenSpec contract 与 Superpowers 执行纪律组合，并连接阶段产物 | 安装 routing、skills、agents、commands 和 templates；不接管宿主项目业务规则 |
 | Karpathy skills | 编码前暴露假设、简单优先、外科手术式修改、目标驱动验证 | 已适配为 `skills/ssf-karpathy`，不是原仓库逐字复制 |
 | GitOps | 分支、暂存、commit（英文类型 + 中文正文）、PR、回滚与 Spec ID 对齐 | 使用宿主项目自己的 Git；可选安装 commit hook |
 
@@ -282,7 +282,7 @@ chmod +x .git/hooks/commit-msg
 
 ### 7.2 Superpowers
 
-如果用户希望同时使用 Superpowers 原生 skills，可按 Superpowers 自身说明安装。SuperSpecFlow 不假设它一定存在；本包已经把必要纪律体现在 `ssf-think`、`ssf-build`、`ssf-review`、`ssf-karpathy` 等 skills 中。
+如果用户希望同时使用 Superpowers 原生 skills，可按 Superpowers 自身说明安装。SuperSpecFlow 不假设它一定存在；本包已经把必要执行纪律体现在 `ssf-think`、`ssf-build`、`ssf-review`、`ssf-karpathy` 等 skills 中。
 
 ### 7.3 OpenSpec 目录
 

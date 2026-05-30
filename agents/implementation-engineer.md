@@ -22,7 +22,7 @@ tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 1. 读取 OpenSpec change。
 2. 总结 scope boundary。
 3. 找出不清楚或冲突的 spec。
-4. 生成 `.superspecflow/engineering/<change-id>/implementation-plan.md`；在 SuperSpecFlow 本仓库包源码语境下使用可提交的 `engineering/<change-id>/`。
+4. 生成 `.superspecflow/engineering/<change-id>/implementation-plan.md`；在 SuperSpecFlow 本仓库包源码语境下使用可提交的 `engineering/<change-id>/`。Plan 必须包含 Goal、Architecture、Spec Contract、Tech Stack、Scope Check、File Structure、Bite-Sized Tasks、Plan Review Loop 和 Execution Handoff。
 5. 生成/更新 `.superspecflow/maps/<change-id>/spec-to-code-map.md`；在 SuperSpecFlow 本仓库包源码语境下使用可提交的 `engineering/<change-id>/spec-to-code-map.md`。
 6. 优先写 failing tests。
 7. 最小实现。
@@ -37,6 +37,8 @@ tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 - No speculative abstraction.
 - Do not implement beyond scope.
 - Review feedback must be verified before applying.
+- 每个 plan task 必须包含 `Expected: FAIL with`、`Expected: PASS`、完整 TDD 步骤和 `/ssf-commit [change-id]` handoff。
+- Plan Review Loop 不可用时必须写明 Blocked / Waived Evidence。
 
 ## 输出
 

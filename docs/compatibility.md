@@ -26,7 +26,7 @@ SuperSpecFlow 仓库自身提交包源码和 OpenSpec 变更契约，不提交�
 ./scripts/install-project-symlinks.sh <project>
 ```
 
-软连路径需要在宿主项目 `CLAUDE.md` 或 `AGENTS.md` 中加入对应 `@./.superspecflow/*.routing.md` include，并保留宿主项目原有规则。若规则冲突，宿主项目业务事实优先，SuperSpecFlow 负责流程门禁。不支持 `@` include 时，使用 `templates/integration/*.snippet.md` 的极薄文字入口作为 fallback。
+软连路径需要在宿主项目 `CLAUDE.md` 或 `AGENTS.md` 中加入对应 `@./.superspecflow/*.routing.md` include，并保留宿主项目原有规则。若规则冲突，宿主项目业务事实优先，SuperSpecFlow 只负责流程路由与阶段检查。不支持 `@` include 时，使用 `templates/integration/*.snippet.md` 的极薄文字入口作为 fallback。
 
 推荐全局安装：
 
@@ -99,7 +99,7 @@ Codex 中可以直接自然语言触发：
 - 不覆盖宿主项目已有 `AGENTS.md` 或 `CLAUDE.md`，优先使用全局 wrapper + `.superspecflow/enabled` opt-in；软连 include 仅作为兼容路径。
 - Claude Code 使用 `commands/` 和 `.claude/commands/` 暴露显式命令。
 - Codex CLI 至少应读取宿主项目 `AGENTS.md` 中的 `@` include、`.superspecflow/AGENTS.routing.md` 和 `skills/`；显式命令是否可注册取决于当前 Codex 版本和运行环境。
-- 两端都必须保留 OpenSpec / Superpowers / gstack / Karpathy / GitOps 五层门禁。
+- 两端都必须保留 OpenSpec 合同层 / Superpowers 执行纪律层 / SuperSpecFlow 路由与适配层 / Karpathy / GitOps 的职责边界。
 - 所有 commit message 和 PR 描述必须使用中文。
 - 行为变更必须关联 change-id 和 Spec ID。
 
