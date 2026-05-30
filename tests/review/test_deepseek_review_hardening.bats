@@ -32,9 +32,11 @@ load '../lib/test_helper'
   grep -q '`rg`' "$REPO_ROOT/docs/compatibility.md"
 }
 
-@test "README OpenSpec quick reference uses design.md naming" {
+@test "OpenSpec design artifacts use design.md naming" {
   grep -q 'proposal.md.*spec.md.*design.md.*tasks.md' "$REPO_ROOT/README.md"
   ! grep -q 'technical-design.md' "$REPO_ROOT/README.md"
+  [ -f "$REPO_ROOT/templates/design.md" ]
+  [ ! -e "$REPO_ROOT/templates/technical-design.md" ]
 }
 
 @test "three stage review PoC lives under docs/research" {
@@ -71,4 +73,10 @@ load '../lib/test_helper'
   grep -q 'commands/ssf-branch.md' "$REPO_ROOT/scripts/validate-pack.sh"
   grep -q 'commands/ssf-decision.md' "$REPO_ROOT/scripts/validate-pack.sh"
   grep -q 'commands/ssf-map.md' "$REPO_ROOT/scripts/validate-pack.sh"
+  grep -q 'Use the `ssf-git` skill.' "$REPO_ROOT/scripts/validate-pack.sh"
+  grep -q 'ssf/<change-id>-<short-slug>' "$REPO_ROOT/scripts/validate-pack.sh"
+  grep -q '.superspecflow/decisions/' "$REPO_ROOT/scripts/validate-pack.sh"
+  grep -q 'Linked Specs / PRs' "$REPO_ROOT/scripts/validate-pack.sh"
+  grep -q '.superspecflow/maps/<change-id>/spec-to-code-map.md' "$REPO_ROOT/scripts/validate-pack.sh"
+  grep -q 'engineering/<change-id>/spec-to-code-map.md' "$REPO_ROOT/scripts/validate-pack.sh"
 }

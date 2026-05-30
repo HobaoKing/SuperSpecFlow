@@ -909,10 +909,12 @@ check_deepseek_review_hardening_contract() {
     pass "compatibility.md 包含平台和工具依赖说明"
   fi
 
-  if grep -q 'technical-design.md' README.md; then
-    fail "README.md 不得引用 technical-design.md 作为 OpenSpec artifact"
+  if grep -q 'technical-design.md' README.md ||
+     [ ! -f templates/design.md ] ||
+     [ -e templates/technical-design.md ]; then
+    fail "OpenSpec design artifact 必须统一使用 design.md 命名"
   else
-    pass "README.md 使用 design.md 命名"
+    pass "OpenSpec design artifact 使用 design.md 命名"
   fi
 
   if [ ! -f docs/research/three-stage-review-poc-2026-05-24.md ] ||
@@ -932,9 +934,12 @@ check_deepseek_review_hardening_contract() {
     pass "GitHub Actions workflow 覆盖 validate-pack、完整测试、update.sh 和 shellcheck"
   fi
 
-  if ! grep -q 'ssf/<change-id>-<short-slug>' commands/ssf-branch.md ||
+  if ! grep -q 'Use the `ssf-git` skill.' commands/ssf-branch.md ||
+     ! grep -q 'ssf/<change-id>-<short-slug>' commands/ssf-branch.md ||
      ! grep -q '.superspecflow/decisions/' commands/ssf-decision.md ||
-     ! grep -q '.superspecflow/maps/<change-id>/spec-to-code-map.md' commands/ssf-map.md; then
+     ! grep -q 'Linked Specs / PRs' commands/ssf-decision.md ||
+     ! grep -q '.superspecflow/maps/<change-id>/spec-to-code-map.md' commands/ssf-map.md ||
+     ! grep -q 'engineering/<change-id>/spec-to-code-map.md' commands/ssf-map.md; then
     fail "ssf-branch / ssf-decision / ssf-map 命令合同缺少必要字段"
   else
     pass "ssf-branch / ssf-decision / ssf-map 命令合同合法"

@@ -1,4 +1,4 @@
-# Technical Design: [change-id]
+# Design: [change-id]
 
 ## Architecture Summary
 
