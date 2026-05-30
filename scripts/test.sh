@@ -35,7 +35,7 @@ normalize_test_arg() {
   local rel
 
   case "$arg" in
-    "$ROOT_DIR"/*) rel="${arg#$ROOT_DIR/}" ;;
+    "$ROOT_DIR"/*) rel="${arg#"$ROOT_DIR"/}" ;;
     /*) error "test file must be under tests/ and end with .bats: $arg" ;;
     *) rel="$arg" ;;
   esac

@@ -60,3 +60,8 @@ load '../lib/test_helper'
   [ "$status" -eq 1 ]
   [[ "$output" == *"test file must be under tests/ and end with .bats"* ]]
 }
+
+@test "scripts/test.sh keeps ROOT_DIR prefix removal shellcheck-safe" {
+  grep -Fq 'rel="${arg#"$ROOT_DIR"/}"' "$REPO_ROOT/scripts/test.sh"
+  ! grep -Fq 'rel="${arg#$ROOT_DIR/}"' "$REPO_ROOT/scripts/test.sh"
+}
