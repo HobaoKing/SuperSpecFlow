@@ -209,6 +209,13 @@ render_wrapper() {
     "$template" > "$output"
 }
 
+write_pack_root() {
+  local output="$1"
+
+  mkdir -p "$(dirname "$output")"
+  printf '%s\n' "$REPO_ROOT" > "$output"
+}
+
 ensure_include() {
   local target="$1"          # ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md
   local include_line="$2"    # 已生成 wrapper 的绝对路径 include
@@ -239,6 +246,7 @@ MSG
 
 if [ "$INSTALL_CLAUDE" -eq 1 ]; then
   sync_claude_capabilities
+  write_pack_root "$HOME/.claude/superspecflow/pack-root"
   render_wrapper \
     "$REPO_ROOT/routing/CLAUDE.global.md" \
     "$HOME/.claude/superspecflow/CLAUDE.global.md" \
@@ -248,6 +256,7 @@ fi
 
 if [ "$INSTALL_CODEX" -eq 1 ]; then
   sync_codex_capabilities
+  write_pack_root "$HOME/.codex/superspecflow/pack-root"
   render_wrapper \
     "$REPO_ROOT/routing/AGENTS.global.md" \
     "$HOME/.codex/superspecflow/AGENTS.global.md" \

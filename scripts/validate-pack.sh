@@ -846,6 +846,7 @@ check_cross_agent_verification_contract() {
 artifact_namespaces() {
   cat <<'EOF'
 .superspecflow/engineering/<change-id>/
+.superspecflow/intake/<change-id>/
 .superspecflow/qa/<change-id>/
 .superspecflow/release/<change-id>/
 .superspecflow/archive/<change-id>/
@@ -855,6 +856,94 @@ artifact_namespaces() {
 .superspecflow/reviews/<change-id>/
 .superspecflow/karpathy/<change-id>/
 EOF
+}
+
+check_root_instruction_files_thin() {
+  if ! grep -q 'routing/AGENTS.routing.md' AGENTS.md; then
+    fail "AGENTS.md 必须作为 routing/AGENTS.routing.md 的薄入口"
+  elif grep -q '| 类别 | 判定标准 | 处理方式 |' AGENTS.md ||
+       grep -q '显式命令集合' AGENTS.md ||
+       grep -q '/ssf-think <idea>' AGENTS.md; then
+    fail "AGENTS.md 不得复制完整 Intake Gate 或显式命令集合"
+  else
+    pass "AGENTS.md 是薄入口"
+  fi
+
+  if ! grep -q 'routing/CLAUDE.routing.md' CLAUDE.md; then
+    fail "CLAUDE.md 必须作为 routing/CLAUDE.routing.md 的薄入口"
+  elif grep -q 'Intake Gate 分类' CLAUDE.md ||
+       grep -q '显式命令集合' CLAUDE.md ||
+       grep -q '/ssf-think <idea>' CLAUDE.md; then
+    fail "CLAUDE.md 不得复制完整 Intake Gate 或显式命令集合"
+  else
+    pass "CLAUDE.md 是薄入口"
+  fi
+}
+
+check_change_ledger_contract() {
+  if [ ! -x scripts/validate-change-ledger.sh ]; then
+    fail "scripts/validate-change-ledger.sh 不存在或不可执行"
+  elif scripts/validate-change-ledger.sh; then
+    pass "openspec/change-ledger.md 覆盖当前 OpenSpec changes"
+  else
+    fail "openspec/change-ledger.md 未覆盖当前 OpenSpec changes"
+  fi
+
+  if ! grep -q 'Path: `.superspecflow/intake/\[change-id\]/intake-gate.md`' templates/intake-gate.md; then
+    fail "templates/intake-gate.md 缺少 intake runtime 路径"
+  elif ! grep -q 'intake' scripts/_ssf_init_apply.sh; then
+    fail "ssf-init 初始化脚本缺少 intake 目录"
+  else
+    pass "Intake Gate runtime path and init namespace 已定义"
+  fi
+}
+
+check_host_portability_contract() {
+  if ! grep -q 'pack-root' scripts/install-global.sh ||
+     ! grep -q 'pack-root' commands/ssf-init.md; then
+    fail "install / ssf-init 缺少 pack-root 确定性定位"
+  elif grep -R -q 'claude-plugins-official/superpowers/5.0.5' skills; then
+    fail "runtime skills 不得硬编码 Claude Superpowers plugin cache path"
+  elif ! grep -q 'Reviewer prompt unavailable' skills/ssf-spec/SKILL.md ||
+       ! grep -q 'Reviewer prompt unavailable' skills/ssf-build/SKILL.md ||
+       ! grep -q 'Reviewer prompt unavailable' skills/ssf-think/SKILL.md; then
+    fail "ssf-think / ssf-spec / ssf-build 缺少 reviewer prompt unavailable 降级记录"
+  else
+    pass "Host portability contract 合法"
+  fi
+}
+
+check_runtime_gate_validators() {
+  for script in scripts/validate-commit-message.sh scripts/validate-qa-signoff.sh scripts/validate-change-ledger.sh; do
+    if [ ! -x "$script" ]; then
+      fail "$script 不存在或不可执行"
+      return
+    fi
+  done
+
+  if ! grep -q 'validate-commit-message.sh' templates/git-hooks/commit-msg; then
+    fail "commit-msg hook 未委托 validate-commit-message.sh"
+  else
+    pass "Runtime gate validators 已接入"
+  fi
+}
+
+check_high_risk_release_templates() {
+  for term in Owner Mitigation Detection Waiver 'Residual Risk'; do
+    if ! grep -q "$term" templates/risk-matrix.md; then
+      fail "risk-matrix.md 缺少 $term"
+      return
+    fi
+  done
+
+  if ! grep -q 'Rollback Drill' templates/rollback-plan.md ||
+     ! grep -q 'Decision Owner' templates/rollback-plan.md ||
+     ! grep -q 'Detection Query' templates/monitoring-plan.md ||
+     ! grep -q 'Alert Owner' templates/monitoring-plan.md; then
+    fail "rollback / monitoring 模板缺少高风险发布字段"
+  else
+    pass "高风险 release templates 包含结构化字段"
+  fi
 }
 
 extract_artifact_paths_section() {
@@ -999,6 +1088,7 @@ check_no_hw_prefix
 check_no_colon_filenames
 check_no_tracked_runtime_artifacts
 check_no_host_instruction_overwrite
+check_root_instruction_files_thin
 check_version_contract
 check_skill_frontmatter
 check_command_file_names
@@ -1008,6 +1098,10 @@ check_command_docs_consistency
 check_zero_touch_artifacts
 check_install_global_contract
 check_recursive_test_runner
+check_change_ledger_contract
+check_host_portability_contract
+check_runtime_gate_validators
+check_high_risk_release_templates
 check_progress_contract
 check_cross_agent_verification_contract
 check_browser_mcp_qa_contract

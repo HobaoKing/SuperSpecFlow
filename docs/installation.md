@@ -102,6 +102,7 @@ git clone https://github.com/HobaoKing/SuperSpecFlow.git ~/.superspecflow
 - Claude 侧同步 `skills/`、`agents/`、`commands/` 到 `~/.claude/`。
 - Codex 侧同步 `skills/` 到 `~/.codex/skills/`。
 - 生成不含 `<repo>` 占位符的 global wrapper：`~/.claude/superspecflow/CLAUDE.global.md` 和 `~/.codex/superspecflow/AGENTS.global.md`。
+- 写入 pack root 元数据：`~/.claude/superspecflow/pack-root` 和 `~/.codex/superspecflow/pack-root`，供已安装的 `/ssf-init` 确定性定位当前 SuperSpecFlow 包。
 - 检测 `~/.claude/CLAUDE.md`：不存在则创建并写入 wrapper include；存在则只打印应追加的行，不擅自改写。
 - 同样规则处理 `~/.codex/AGENTS.md`。
 - 仅在写入 Claude 一侧时，打印 Claude Code SessionStart hook 的可选 JSON 片段（建议手动合并到 `~/.claude/settings.json`）。`--no-hook` 跳过该提示。脚本不擅自改写 `settings.json`。
@@ -125,6 +126,7 @@ bash <pack>/scripts/_ssf_init_apply.sh
 ```text
 .superspecflow/
 ├── enabled                 # sentinel，存在即 opt-in
+├── intake/                 # intake-gate.md
 ├── engineering/            # implementation plan、dev handoff
 ├── qa/                     # acceptance、negative、risk、signoff
 ├── release/                # release checklist、rollback、monitoring、PR 描述
@@ -307,7 +309,7 @@ openspec/changes/<change-id>/
 
 ```bash
 test -f .superspecflow/enabled && echo enabled
-ls -d .superspecflow/{engineering,qa,release,archive,retro,decisions,maps,reviews,karpathy,progress,verification}
+ls -d .superspecflow/{intake,engineering,qa,release,archive,retro,decisions,maps,reviews,karpathy,progress,verification}
 ```
 
 期望：项目 opt-in sentinel 和标准运行产物目录存在，且宿主 `AGENTS.md` / `CLAUDE.md` 未被修改。
@@ -451,7 +453,7 @@ rm -rf <project>/.superspecflow
 这会移除：
 
 - `.superspecflow/enabled` sentinel（关闭项目 opt-in）
-- 所有运行时产物子目录（`engineering/`、`qa/`、`release/`、`archive/`、`retro/`、`decisions/`、`maps/`、`reviews/`、`karpathy/`、`progress/`、`verification/`）
+- 所有运行时产物子目录（`intake/`、`engineering/`、`qa/`、`release/`、`archive/`、`retro/`、`decisions/`、`maps/`、`reviews/`、`karpathy/`、`progress/`、`verification/`）
 - 项目级 routing 覆盖文件（`CLAUDE.routing.md`、`AGENTS.routing.md`，如果用户曾手动创建）
 
 `/ssf-init` 不会修改宿主项目的 `CLAUDE.md` / `AGENTS.md`，所以项目级卸载不需要回滚指令文件。

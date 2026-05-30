@@ -14,6 +14,7 @@ SuperSpecFlow 是一套面向 Claude Code / Codex CLI 的 AI 软件研发工作�
 - **TDD：先失败测试，再最小实现**。`/ssf-build` 要把 OpenSpec tasks 转成 implementation plan，每个可测试任务优先写失败测试、记录 `Expected: FAIL`，再写最小实现并记录 `Expected: PASS`。
 - **OpenSpec + Superpowers 不是简单拼接**。OpenSpec 合同层负责 proposal、specs、tasks、MUST NOT 和 archive；Superpowers 执行纪律层负责 brainstorming、writing-plans、TDD、review handling 和 verification-before-completion；SuperSpecFlow 路由与适配层把自然语言请求路由到正确阶段，并把每个阶段的证据连接起来。
 - **Evidence-backed QA**。QA 不是凭感觉点页面，而是从 requirements、scenarios 和 MUST NOT 派生 acceptance、negative、risk、regression、Browser/MCP QA、Visual UI QA 和 blocked signoff。
+- **可执行门禁**。关键门禁不只写在模板里：pack validation 会检查根入口薄化、change ledger、安装可移植性、runtime validators 和高风险发布字段；提交与 QA signoff 也有可复用 validator。
 - **GitOps 可追踪交付**。分支、选择性暂存、中文 commit 正文、PR、rollback 和 release decision 都要关联 change-id、Spec ID 和验证证据，避免“代码改完了但没人说得清为什么能发”。
 
 ## 一条完整链路
@@ -405,6 +406,7 @@ SuperSpecFlow 应先判断这是非平凡行为变更，然后进入产品思考
 | `scripts/` | 安装、初始化、验证和 hook 脚本 |
 | `docs/` | 安装、兼容性、分支策略等用户文档 |
 | `openspec/changes/` | 本仓库自身行为规则变更的 OpenSpec contract |
+| `openspec/change-ledger.md` | 本仓库 OpenSpec changes 的 committable 状态索引，记录 active / complete / archived / superseded 和 evidence gaps |
 | `engineering/<change-id>/` | 本仓库包源码层工程交付物，例如 spec-to-code map |
 | `tests/` | bats 测试，覆盖安装、初始化、artifact path、progress、verification 等契约 |
 | `examples/` | 示例变更流程，展示从 OpenSpec 到 QA、release、archive、retro 的产物 |
@@ -431,6 +433,7 @@ SuperSpecFlow 仓库提交工作流包源码和 OpenSpec 变更契约：`routing
 | 产物 | 宿主项目运行时路径 |
 |---|---|
 | Engineering artifacts | `.superspecflow/engineering/<change-id>/` |
+| Intake artifacts | `.superspecflow/intake/<change-id>/` |
 | QA artifacts | `.superspecflow/qa/<change-id>/` |
 | Release artifacts | `.superspecflow/release/<change-id>/` |
 | Archive artifacts | `.superspecflow/archive/<change-id>/` |
@@ -441,9 +444,11 @@ SuperSpecFlow 仓库提交工作流包源码和 OpenSpec 变更契约：`routing
 | Karpathy audits | `.superspecflow/karpathy/<change-id>/` |
 | Cluster artifacts | `.superspecflow/clusters/<parent-change>/` |
 
-`/ssf-init` 会创建常用运行时目录：`engineering/`、`qa/`、`release/`、`archive/`、`retro/`、`decisions/`、`maps/`、`reviews/`、`karpathy/`、`progress/` 和 `verification/`。`.superspecflow/clusters/` 由 Spec cluster 流程按需创建，不是普通项目 opt-in 的必备目录。
+`/ssf-init` 会创建常用运行时目录：`intake/`、`engineering/`、`qa/`、`release/`、`archive/`、`retro/`、`decisions/`、`maps/`、`reviews/`、`karpathy/`、`progress/` 和 `verification/`。`.superspecflow/clusters/` 由 Spec cluster 流程按需创建，不是普通项目 opt-in 的必备目录。
 
 读取历史产物时采用新路径优先、旧路径 fallback；新写入不再推荐根目录旧路径。`.superspecflow/progress/`、`.superspecflow/verification/` 和 `.superspecflow/clusters/` 分别由 `progress-tracking`、`cross-agent-verification` 和 `parallel-worktree-spec-clusters` 定义文件协议。
+
+SuperSpecFlow 包源码仓库不提交 `.superspecflow/` 运行时实例；本仓库自身的 durable 状态摘要写入 `openspec/change-ledger.md`，具体实现映射继续写入 `engineering/<change-id>/`。
 
 ## Git 提交规范
 
@@ -488,6 +493,14 @@ changes
 ```
 
 该脚本会检查命令集合、skill frontmatter、旧前缀残留、冒号文件名、已跟踪运行时产物、artifact path contract，以及 README / routing 与 `commands/` 的命令集合一致性。
+
+新增的 runtime gate scripts 可单独运行：
+
+```bash
+./scripts/validate-commit-message.sh <commit-message-file>
+./scripts/validate-qa-signoff.sh .superspecflow/qa/<change-id>/qa-signoff.md
+./scripts/validate-change-ledger.sh
+```
 
 测试目录使用 bats：
 

@@ -16,6 +16,7 @@ teardown() {
 artifact_namespaces() {
   cat <<'EOF'
 .superspecflow/engineering/<change-id>/
+.superspecflow/intake/<change-id>/
 .superspecflow/qa/<change-id>/
 .superspecflow/release/<change-id>/
 .superspecflow/archive/<change-id>/
@@ -36,7 +37,7 @@ extract_artifact_paths_section() {
   ' "$file"
 }
 
-@test "routing files declare the nine runtime artifact namespaces" {
+@test "routing files declare runtime artifact namespaces" {
   for routing in "$REPO_ROOT/routing/AGENTS.routing.md" "$REPO_ROOT/routing/CLAUDE.routing.md"; do
     section="$(extract_artifact_paths_section "$routing")"
     [ -n "$section" ] || { echo "missing Artifact Paths section in $routing"; return 1; }

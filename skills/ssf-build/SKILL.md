@@ -140,9 +140,9 @@ implementation-plan.md 必须按以下 6 个子节生成。代码示例和命令
 
 ### 1.5 Plan Review Loop
 
-implementation-plan.md 完整写出后，使用 Agent tool 起 general-purpose 子代理评审：
+implementation-plan.md 完整写出后，使用可用的 Agent tool 或 reviewer prompt 评审：
 
-- Reviewer prompt：`~/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/writing-plans/plan-document-reviewer-prompt.md`
+- Reviewer prompt：优先使用宿主环境已安装的 Superpowers `plan-document-reviewer-prompt.md`；如果不可定位，不得猜测固定 Claude plugin cache path。
 - 传给子代理：
   - Plan 路径
   - Spec contract 路径（`openspec/changes/<change-id>/specs/`）
@@ -152,6 +152,8 @@ implementation-plan.md 完整写出后，使用 Agent tool 起 general-purpose �
   - 超过 3 轮 → 交人工裁决
 
 注意：reviewer prompt 是英文，针对 superpowers 单一 plan 结构。读中文 plan 和 OpenSpec SPEC-ID 时反馈仍有参考价值，但可能漏检项目特定约束。连续两轮出现明显不适配（例如要求把 SPEC-ID 删掉、不识别中文 commit 模板）时，记录 follow-up，跳过本步并恢复人工审阅。
+
+如果 reviewer prompt、Agent tool 或宿主环境不可用，不得静默跳过；必须在 implementation plan 的 `Blocked / Waived Evidence` 记录 `Reviewer prompt unavailable`、原因、残余风险和人工替代检查。
 
 ### 1.6 Execution Handoff
 

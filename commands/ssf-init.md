@@ -7,16 +7,21 @@ This command is a project opt-in action. It creates `.superspecflow/` in the cur
 Steps:
 
 1. Confirm the current working directory is the project to opt in.
-2. Locate the SuperSpecFlow pack root. Prefer the directory that contains `routing/CLAUDE.global.md`, `routing/AGENTS.global.md`, `commands/`, `skills/`, and `agents/`.
+2. Locate the SuperSpecFlow pack root deterministically:
+   - First use `SUPERSPECFLOW_HOME` when set.
+   - Else read `~/.claude/superspecflow/pack-root` when present.
+   - Else read `~/.codex/superspecflow/pack-root` when present.
+   - Else use the current repository only if it contains `routing/CLAUDE.global.md`, `routing/AGENTS.global.md`, `commands/`, `skills/`, and `agents/`.
+   - If none of these work, stop and ask the user where the pack is installed.
 3. Run the contract script:
 
    ```bash
-   bash <pack>/scripts/_ssf_init_apply.sh
+   bash "$PACK_ROOT/scripts/_ssf_init_apply.sh"
    ```
 
    This creates:
    - `.superspecflow/enabled` (sentinel, empty file)
-   - `.superspecflow/{engineering,qa,release,archive,retro,decisions,maps,reviews,karpathy}/` (标准运行产物子目录)
+   - `.superspecflow/{intake,engineering,qa,release,archive,retro,decisions,maps,reviews,karpathy}/` (标准运行产物子目录)
    - `.superspecflow/progress/` (占位，保持空，由 progress-tracking change 定义)
    - `.superspecflow/verification/` (占位，保持空，由 cross-agent-verification change 定义)
 

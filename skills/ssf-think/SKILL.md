@@ -161,9 +161,9 @@ design.md 确认吗？确认后进入 /ssf-spec。
 
 ## Step 6.5 — Design Document Review Loop
 
-用户确认 design.md 之后、进入 ssf-spec 之前，使用 Agent tool 起 general-purpose 子代理对 design.md 做独立评审：
+用户确认 design.md 之后、进入 ssf-spec 之前，使用可用的 Agent tool 或 reviewer prompt 对 design.md 做独立评审：
 
-- Reviewer prompt：`~/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/brainstorming/spec-document-reviewer-prompt.md`
+- Reviewer prompt：优先使用宿主环境已安装的 Superpowers `spec-document-reviewer-prompt.md`；如果不可定位，不得猜测固定 Claude plugin cache path。
 - 传给子代理：
   - 待审：本阶段产出的 `design.md`
   - 上游：Product Change Brief 和 Decision Record
@@ -173,6 +173,8 @@ design.md 确认吗？确认后进入 /ssf-spec。
   - 超过 3 轮 → 交人工裁决
 
 注意：reviewer prompt 是英文，针对单一 design.md 结构（跟本阶段产物吻合度较高）。如反复给出与项目中文化或产品视角检查无关的反馈，记录 follow-up。
+
+如果 reviewer prompt、Agent tool 或宿主环境不可用，不得静默跳过；必须在 Product Decision Record 或 design handoff 的 `Blocked / Waived Evidence` 记录 `Reviewer prompt unavailable`、原因、残余风险和人工替代检查。
 
 ## Step 7 — 自动续接
 
