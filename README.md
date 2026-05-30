@@ -1,14 +1,41 @@
 # SuperSpecFlow
 
-SuperSpecFlow 是一套面向 Claude Code / Codex CLI 的 AI 软件研发工作流包。它的目标不是让 AI 更快地堆代码，而是让 AI 在已有项目里像一个可审计的小型研发团队一样工作：先判断请求类型，再澄清目标，再形成可追踪规格，再小步实现、审查、验收、发布、归档和复盘。
+SuperSpecFlow 是一套面向 Claude Code / Codex CLI 的 AI 软件研发工作流包。它的目标不是让 AI 更快地堆代码，而是把一句自然语言需求变成一条可审计的 **SDD + TDD 交付链**：先判断请求类型，再形成 OpenSpec 变更合同，再按 Superpowers 执行纪律小步实现、审查、验收、发布、归档和复盘。
 
-项目初衷有三点：
+一句话概括：
+
+> **OpenSpec 管“要交付什么”，Superpowers 管“怎么可靠执行”，SuperSpecFlow 管“什么时候进入哪个阶段，并把证据串起来”。**
+
+最终效果是：用户可以用自然语言发起工作，也可以显式调用 `/ssf-*` 命令；agent 不会默认接管所有项目，而是在项目 opt-in 后按 SuperSpecFlow 的路由与阶段检查执行。
+
+## 为什么值得用
+
+- **SDD：Spec-Driven Development**。非平凡行为变更必须落到 OpenSpec change-id / Spec ID，需求、任务、实现、测试、commit、PR、回滚都能追踪到同一个 contract。
+- **TDD：先失败测试，再最小实现**。`/ssf-build` 要把 OpenSpec tasks 转成 implementation plan，每个可测试任务优先写失败测试、记录 `Expected: FAIL`，再写最小实现并记录 `Expected: PASS`。
+- **OpenSpec + Superpowers 不是简单拼接**。OpenSpec 合同层负责 proposal、specs、tasks、MUST NOT 和 archive；Superpowers 执行纪律层负责 brainstorming、writing-plans、TDD、review handling 和 verification-before-completion；SuperSpecFlow 路由与适配层把自然语言请求路由到正确阶段，并把每个阶段的证据连接起来。
+- **Evidence-backed QA**。QA 不是凭感觉点页面，而是从 requirements、scenarios 和 MUST NOT 派生 acceptance、negative、risk、regression、Browser/MCP QA、Visual UI QA 和 blocked signoff。
+- **GitOps 可追踪交付**。分支、选择性暂存、中文 commit 正文、PR、rollback 和 release decision 都要关联 change-id、Spec ID 和验证证据，避免“代码改完了但没人说得清为什么能发”。
+
+## 一条完整链路
+
+```text
+一句话需求
+  → Intake Gate 判断请求类型和风险
+  → /ssf-think 澄清目标、用户路径、non-goals 和成功指标
+  → /ssf-spec 生成 OpenSpec proposal / specs / tasks / readiness review
+  → /ssf-build 按 Spec ID 做 TDD、小步实现和 spec-to-code map
+  → /ssf-review 检查 spec / code / test 同步和 Karpathy Diff Audit
+  → /ssf-qa 生成验收矩阵、负向测试、风险矩阵和 QA evidence
+  → /ssf-ship 汇总 rollback、monitoring、release blockers 和 ship decision
+  → /ssf-git / /ssf-commit / /ssf-pr 写入可追踪 Git 记录
+  → /ssf-archive / /ssf-retro 归档证据并复盘流程缺口
+```
+
+## 项目初衷
 
 1. **防止一句话需求直接变成失控改动**：自然语言请求先经过 Intake Gate，区分纯问答、轻量任务、非平凡行为变更、高风险变更和 Git/QA/发布动作。
 2. **让每个行为变更都能追踪**：非平凡变更必须落到 OpenSpec change-id / Spec ID，并在实现、测试、commit、PR、回滚说明之间保持映射。
 3. **把优秀研发纪律变成 agent 可执行规则**：融合 OpenSpec 合同层、Superpowers 执行纪律层、SuperSpecFlow 路由与适配层、Karpathy 风格的 diff discipline，以及 GitOps 的分支、暂存、提交和 PR 门禁。
-
-最终效果是：用户可以用自然语言发起工作，也可以显式调用 `/ssf-*` 命令；agent 不会默认接管所有项目，而是在项目 opt-in 后按 SuperSpecFlow 的路由与阶段检查执行。
 
 ## 适合谁
 
