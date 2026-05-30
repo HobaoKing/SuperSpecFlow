@@ -25,6 +25,7 @@ jobs:
       - name: Shellcheck
         run: |
           shellcheck -x \
+            update.sh \
             scripts/*.sh \
             scripts/hooks/*.sh \
             tests/lib/*.bash \

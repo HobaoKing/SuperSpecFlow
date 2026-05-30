@@ -4,7 +4,6 @@ set -euo pipefail
 MSG_FILE="$1"
 MSG="$(cat "$MSG_FILE")"
 FIRST_LINE="$(head -n 1 "$MSG_FILE")"
-HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then

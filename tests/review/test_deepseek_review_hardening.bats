@@ -47,6 +47,12 @@ load '../lib/test_helper'
   grep -q 'scripts/validate-pack.sh' "$REPO_ROOT/.github/workflows/validate.yml"
   grep -q 'scripts/test.sh' "$REPO_ROOT/.github/workflows/validate.yml"
   grep -q 'shellcheck' "$REPO_ROOT/.github/workflows/validate.yml"
+  grep -q 'update.sh' "$REPO_ROOT/.github/workflows/validate.yml"
+}
+
+@test "shellcheck configuration documents intentional literal grep patterns" {
+  grep -q 'shellcheck disable=SC2016' "$REPO_ROOT/scripts/validate-pack.sh"
+  ! grep -q 'HOOK_DIR=' "$REPO_ROOT/templates/git-hooks/commit-msg"
 }
 
 @test "review notes mention CI and shellcheck gates are implemented" {
@@ -62,4 +68,7 @@ load '../lib/test_helper'
 
 @test "validate-pack enforces DeepSeek review hardening contract" {
   grep -q 'check_deepseek_review_hardening_contract' "$REPO_ROOT/scripts/validate-pack.sh"
+  grep -q 'commands/ssf-branch.md' "$REPO_ROOT/scripts/validate-pack.sh"
+  grep -q 'commands/ssf-decision.md' "$REPO_ROOT/scripts/validate-pack.sh"
+  grep -q 'commands/ssf-map.md' "$REPO_ROOT/scripts/validate-pack.sh"
 }

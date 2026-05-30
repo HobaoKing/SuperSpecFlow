@@ -12,6 +12,8 @@ All notable SuperSpecFlow package changes are recorded here.
 
 ### Fixed
 
+- Fixed DeepSeek review hardening gaps: isolated `validate-pack` command diff temp files, removed user-specific root includes, added command contract tests, documented dependencies, moved PoC notes under `docs/research/`, added GitHub Actions validation with shellcheck, and refreshed change ledger status hygiene.
+- Fixed CI commit-message validation under Linux locale by replacing locale-dependent CJK grep ranges with an `LC_ALL=C` non-ASCII text check.
 - Prevented pack validation from requiring the superseded `SuperSpecFlow 角色门禁` wording.
 - Preserved gstack source attribution while keeping runtime guidance free of gstack execution-style recommendations.
 

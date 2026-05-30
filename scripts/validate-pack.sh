@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2016
+# This validator intentionally greps literal documentation strings that contain
+# backticks and dollar-prefixed shell variable examples.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -922,10 +925,19 @@ check_deepseek_review_hardening_contract() {
   if [ ! -f .github/workflows/validate.yml ] ||
      ! grep -q 'scripts/validate-pack.sh' .github/workflows/validate.yml ||
      ! grep -q 'scripts/test.sh' .github/workflows/validate.yml ||
+     ! grep -q 'update.sh' .github/workflows/validate.yml ||
      ! grep -q 'shellcheck' .github/workflows/validate.yml; then
-    fail "GitHub Actions workflow 必须运行 validate-pack、完整测试和 shellcheck"
+    fail "GitHub Actions workflow 必须运行 validate-pack、完整测试、update.sh shellcheck 和 shellcheck"
   else
-    pass "GitHub Actions workflow 覆盖 validate-pack、完整测试和 shellcheck"
+    pass "GitHub Actions workflow 覆盖 validate-pack、完整测试、update.sh 和 shellcheck"
+  fi
+
+  if ! grep -q 'ssf/<change-id>-<short-slug>' commands/ssf-branch.md ||
+     ! grep -q '.superspecflow/decisions/' commands/ssf-decision.md ||
+     ! grep -q '.superspecflow/maps/<change-id>/spec-to-code-map.md' commands/ssf-map.md; then
+    fail "ssf-branch / ssf-decision / ssf-map 命令合同缺少必要字段"
+  else
+    pass "ssf-branch / ssf-decision / ssf-map 命令合同合法"
   fi
 
   if grep -Eq '^\| [^|]+ \| active \|' openspec/change-ledger.md; then
