@@ -1,4 +1,3 @@
-@/Users/wang/.codex/RTK.md
 @./routing/AGENTS.routing.md
 
 # SuperSpecFlow Repository Entry

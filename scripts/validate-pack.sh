@@ -208,9 +208,10 @@ check_skill_frontmatter() {
 }
 
 check_command_docs_consistency() {
-  local doc expected_file actual_file
+  local doc expected_file actual_file command_diff_file
   expected_file="$(tmp_file)"
   actual_file="$(tmp_file)"
+  command_diff_file="$(tmp_file)"
 
   find commands -maxdepth 1 -type f -name 'ssf-*.md' \
     -exec basename {} .md \; \
@@ -220,16 +221,16 @@ check_command_docs_consistency() {
   for doc in README.md routing/AGENTS.routing.md routing/CLAUDE.routing.md; do
     grep -Eo '/ssf-[a-z]+' "$doc" | sort -u >"$actual_file" || true
 
-    if diff -u "$expected_file" "$actual_file" >/tmp/ssf-command-diff.txt; then
+    if diff -u "$expected_file" "$actual_file" >"$command_diff_file"; then
       pass "$doc 命令集合与 commands/ 一致"
     else
       printf '%s\n' "命令集合不一致：$doc" >&2
-      cat /tmp/ssf-command-diff.txt >&2
+      cat "$command_diff_file" >&2
       fail "$doc 命令集合与 commands/ 不一致"
     fi
   done
 
-  rm -f "$expected_file" "$actual_file"
+  rm -f "$expected_file" "$actual_file" "$command_diff_file"
 }
 
 check_zero_touch_artifacts() {
@@ -861,6 +862,8 @@ EOF
 check_root_instruction_files_thin() {
   if ! grep -q 'routing/AGENTS.routing.md' AGENTS.md; then
     fail "AGENTS.md 必须作为 routing/AGENTS.routing.md 的薄入口"
+  elif grep -q '@/Users/' AGENTS.md; then
+    fail "AGENTS.md 不得包含用户机器绝对路径 include"
   elif grep -q '| 类别 | 判定标准 | 处理方式 |' AGENTS.md ||
        grep -q '显式命令集合' AGENTS.md ||
        grep -q '/ssf-think <idea>' AGENTS.md; then
@@ -877,6 +880,58 @@ check_root_instruction_files_thin() {
     fail "CLAUDE.md 不得复制完整 Intake Gate 或显式命令集合"
   else
     pass "CLAUDE.md 是薄入口"
+  fi
+}
+
+check_deepseek_review_hardening_contract() {
+  if grep -Eq 'diff -u "\$expected_file" "\$actual_file" >/?tmp/ssf-command-diff\.txt|cat /?tmp/ssf-command-diff\.txt' scripts/validate-pack.sh; then
+    fail "validate-pack 不得硬编码共享 /tmp diff 文件"
+  elif ! grep -q 'command_diff_file="$(tmp_file)"' scripts/validate-pack.sh; then
+    fail "validate-pack command docs diff 必须使用 tmp_file helper"
+  else
+    pass "validate-pack command docs diff 使用隔离临时文件"
+  fi
+
+  if grep -q '@/Users/' AGENTS.md CLAUDE.md; then
+    fail "根 instruction 文件不得包含用户绝对路径 include"
+  else
+    pass "根 instruction 文件不包含用户绝对路径 include"
+  fi
+
+  if ! grep -q '## Platform and Tool Requirements' docs/compatibility.md ||
+     ! grep -q 'Bash 3.2+' docs/compatibility.md ||
+     ! grep -q '`shellcheck`' docs/compatibility.md; then
+    fail "compatibility.md 缺少平台和工具依赖说明"
+  else
+    pass "compatibility.md 包含平台和工具依赖说明"
+  fi
+
+  if grep -q 'technical-design.md' README.md; then
+    fail "README.md 不得引用 technical-design.md 作为 OpenSpec artifact"
+  else
+    pass "README.md 使用 design.md 命名"
+  fi
+
+  if [ ! -f docs/research/three-stage-review-poc-2026-05-24.md ] ||
+     [ -e docs/three-stage-review-poc-2026-05-24.md ]; then
+    fail "PoC research note 必须位于 docs/research/"
+  else
+    pass "PoC research note 位于 docs/research/"
+  fi
+
+  if [ ! -f .github/workflows/validate.yml ] ||
+     ! grep -q 'scripts/validate-pack.sh' .github/workflows/validate.yml ||
+     ! grep -q 'scripts/test.sh' .github/workflows/validate.yml ||
+     ! grep -q 'shellcheck' .github/workflows/validate.yml; then
+    fail "GitHub Actions workflow 必须运行 validate-pack、完整测试和 shellcheck"
+  else
+    pass "GitHub Actions workflow 覆盖 validate-pack、完整测试和 shellcheck"
+  fi
+
+  if grep -Eq '^\| [^|]+ \| active \|' openspec/change-ledger.md; then
+    fail "openspec/change-ledger.md 不得保留 stale active rows"
+  else
+    pass "openspec/change-ledger.md 无 stale active rows"
   fi
 }
 
@@ -1102,6 +1157,7 @@ check_change_ledger_contract
 check_host_portability_contract
 check_runtime_gate_validators
 check_high_risk_release_templates
+check_deepseek_review_hardening_contract
 check_progress_contract
 check_cross_agent_verification_contract
 check_browser_mcp_qa_contract

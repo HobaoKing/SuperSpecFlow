@@ -383,7 +383,7 @@ SuperSpecFlow 应先判断这是非平凡行为变更，然后进入产品思考
 | 类别 | 文件 |
 |---|---|
 | Intake / 产品 | `intake-gate.md`、`product-change-brief.md`、`user-journey.md`、`decision-record.md` |
-| OpenSpec | `proposal.md`、`spec.md`、`technical-design.md`、`tasks.md`、`spec-readiness-review.md` |
+| OpenSpec | `proposal.md`、`spec.md`、`design.md`、`tasks.md`、`spec-readiness-review.md` |
 | 工程执行 | `implementation-plan.md`、`spec-to-code-map.md`、`dev-handoff.md`、`sync-check.md` |
 | Karpathy 纪律 | `karpathy-preflight.md`、`karpathy-diff-audit.md` |
 | Review | `review-report.md`、`git-hygiene-review.md` |

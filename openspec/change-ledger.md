@@ -8,21 +8,22 @@ Allowed status values: `active`, `complete`, `archived`, `superseded`.
 
 | Change ID | Status | Evidence Summary | Gaps / Notes |
 |---|---|---|---|
-| artifact-path-migration | active | Tasks and engineering map exist. | QA/Ship/Archive evidence not yet durable. |
-| browser-mcp-qa-adapter | active | Tasks and engineering map exist; browser QA contract tests exist. | Needs durable Review/QA/Ship/Archive summary. |
-| change-backlog-status-cleanup | active | Child change created by `workflow-hardening-program`. | Complete after ledger validation passes. |
-| clarify-superspecflow-layer-boundary | active | Tasks and engineering map exist; supersedes role-gate framing. | Needs durable Review/QA/Ship/Archive summary. |
-| cross-agent-verification | active | Tasks and engineering map exist; verification tests exist. | Needs durable Review/QA/Ship/Archive summary. |
-| evidence-lifecycle-root-routing | active | Child change created by `workflow-hardening-program`. | Complete after root thinness and ledger validation pass. |
-| high-risk-release-template-hardening | active | Child change created by `workflow-hardening-program`. | Complete after high-risk template validation passes. |
-| init-project-routing | active | Tasks and engineering map exist; zero-touch tests exist. | Root thinness regression addressed by `evidence-lifecycle-root-routing`. |
-| install-host-portability | active | Child change created by `workflow-hardening-program`. | Complete after host portability validation passes. |
+| artifact-path-migration | complete | Tasks and engineering map exist; covered by artifact path tests and pack validation. | Historical final evidence gap: no separate durable Ship/Archive packet. |
+| browser-mcp-qa-adapter | complete | Tasks and engineering map exist; browser QA contract tests exist. | Historical final evidence gap: no separate durable Ship/Archive packet. |
+| change-backlog-status-cleanup | complete | Child change completed by `workflow-hardening-program`; ledger validator covers rows and status rationale. | Historical final evidence gap: no separate durable Ship/Archive packet. |
+| clarify-superspecflow-layer-boundary | complete | Tasks and engineering map exist; supersedes role-gate framing. | Historical final evidence gap: no separate durable Ship/Archive packet. |
+| cross-agent-verification | complete | Tasks and engineering map exist; verification tests exist. | Historical final evidence gap: no separate durable Ship/Archive packet. |
+| deepseek-review-hardening | complete | DeepSeek review findings mapped to Spec IDs with bats, pack validation, CI, and ledger updates. | Final validation expected in commit evidence; no fabricated historical artifacts. |
+| evidence-lifecycle-root-routing | complete | Child change completed by `workflow-hardening-program`; root thinness and ledger validation pass. | Historical final evidence gap: no separate durable Ship/Archive packet. |
+| high-risk-release-template-hardening | complete | Child change completed by `workflow-hardening-program`; high-risk template validation passes. | Historical final evidence gap: no separate durable Ship/Archive packet. |
+| init-project-routing | complete | Tasks and engineering map exist; zero-touch tests exist; root thinness regression addressed. | Historical final evidence gap: no separate durable Ship/Archive packet. |
+| install-host-portability | complete | Child change completed by `workflow-hardening-program`; host portability validation passes. | Historical final evidence gap: no separate durable Ship/Archive packet. |
 | own-role-gates-remove-gstack-style | superseded | Superseded by `clarify-superspecflow-layer-boundary`. | Historical contract retained for traceability. |
-| parallel-worktree-spec-clusters | active | Tasks and engineering map exist; cluster contract tests exist. | Needs durable Review/QA/Ship/Archive summary. |
-| progress-tracking | active | Tasks and engineering map exist; progress tests exist. | Needs durable Review/QA/Ship/Archive summary. |
-| qa-evidence-consistency-gates | active | Tasks and engineering map exist; QA consistency tests exist. | Needs durable Review/QA/Ship/Archive summary. |
-| runtime-gate-validators | active | Child change created by `workflow-hardening-program`. | Complete after runtime validators pass. |
-| strengthen-superpowers-spec-plans | active | Tasks and engineering map exist. | Host portability follow-up removes hardcoded reviewer prompt paths. |
+| parallel-worktree-spec-clusters | complete | Tasks and engineering map exist; cluster contract tests exist. | Historical final evidence gap: no separate durable Ship/Archive packet. |
+| progress-tracking | complete | Tasks and engineering map exist; progress tests exist. | Historical final evidence gap: no separate durable Ship/Archive packet. |
+| qa-evidence-consistency-gates | complete | Tasks and engineering map exist; QA consistency tests exist. | Historical final evidence gap: no separate durable Ship/Archive packet. |
+| runtime-gate-validators | complete | Child change completed by `workflow-hardening-program`; runtime validator tests pass. | Historical final evidence gap: no separate durable Ship/Archive packet. |
+| strengthen-superpowers-spec-plans | complete | Tasks and engineering map exist; host portability follow-up removed hardcoded reviewer prompt paths. | Historical final evidence gap: no separate durable Ship/Archive packet. |
 | visual-ui-qa-adapter | archived | Local QA, release, archive, and retro evidence exists; released as `v1.2.0`. | `.superspecflow/` evidence remains local by design. |
-| workflow-hardening-program | active | Parent hardening contract created. | Complete after child changes are verified. |
-| workflow-scale-architecture | active | Parent contract and child changes exist; child changes are implemented. | Local release evidence still describes child work as follow-up; durable refresh tracked here. |
+| workflow-hardening-program | complete | Parent and child hardening changes verified by pack validation and full bats suite. | Historical final evidence gap: no separate durable Ship/Archive packet. |
+| workflow-scale-architecture | complete | Parent contract and child changes exist; child changes are implemented. | Historical final evidence gap: no separate durable Ship/Archive packet. |
