@@ -39,6 +39,8 @@ openspec/changes/<change-id>/
 
 ## 关键规则
 
+- 生成 proposal 前必须做 Superpowers Spec Discipline：记录 Brainstorming Context、Assumption Audit、Alternatives Considered、Open Questions Disposition。
+- 如果没有上游 `ssf-think` 或 brainstorming context，必须记录 Blocked / Waived Evidence，或先问一个关键问题。
 - 每个 requirement 必须有稳定 Spec ID，如 `AUTH-001`、`BILLING-002`。
 - 必须写 `MUST NOT`，用于测试负向场景。
 - 每个 requirement 至少有一个 scenario。
@@ -47,6 +49,34 @@ openspec/changes/<change-id>/
 - 如果 change 预计超过 8 个 tasks、超过 6 个 Spec IDs，或横跨两个以上相对独立子系统，必须评估是否拆成 Spec cluster。
 - 需要拆分时，parent change 记录整体目标和最终 gate，并使用 `.superspecflow/clusters/<parent-change>/cluster-plan.md` 记录 cluster id、Spec IDs、依赖、worktree、owner、分支、QA expectations 和 integration order。
 - 不拆分时，必须在 proposal、design 或 implementation plan 中记录原因。
+
+## Step 0 — Superpowers Spec Discipline
+
+```markdown
+## Brainstorming Context
+- Upstream Think / Design Source:
+- Goal:
+- Non-goals:
+- Waiver Reason if no upstream context:
+
+## Assumption Audit
+- Assumption:
+- Evidence:
+- Risk if wrong:
+
+## Alternatives Considered
+- Option:
+- Reason accepted / rejected:
+
+## Open Questions Disposition
+| Question | Decision / Disposition | Owner | Blocks Ready? |
+|---|---|---|---:|
+
+## Blocked / Waived Evidence
+- Reviewer / Tool unavailable:
+- Waiver reason:
+- Residual risk:
+```
 
 ## Step 1 — proposal.md
 
@@ -165,6 +195,20 @@ openspec/changes/<change-id>/
 ```markdown
 # Spec Readiness Review: [change-id]
 
+## Brainstorming Context
+
+## Assumption Audit
+
+## Alternatives Considered
+
+## Open Questions Disposition
+
+## Spec Document Review Loop
+
+## Reviewer Result
+
+## Blocked / Waived Evidence
+
 ## Ready Checklist
 - [ ] Problem clear
 - [ ] Scope clear
@@ -199,6 +243,8 @@ Spec Readiness Review 通过后，使用 Agent tool 起 general-purpose 子代�
   - 超过 3 轮 → 交人工裁决
 
 注意：reviewer prompt 是英文 + 针对 superpowers 单一 design.md 结构。读 SuperSpecFlow 多文件结构（proposal/specs/design/tasks）和中文 SPEC-ID 时可能给出偏向通用结构的反馈。如果连续两轮出现明显不适配（例如要求把多文件合并、不识别 MUST NOT 语义），记录 follow-up，跳过本步并恢复纯人工 Spec Readiness Review。
+
+如果 reviewer prompt、Agent tool 或宿主环境不可用，不得静默跳过；必须在 Spec Readiness Review 的 `Blocked / Waived Evidence` 记录原因、残余风险和人工替代检查。
 
 ## Step 6 — 自动续接
 

@@ -405,6 +405,86 @@ check_visual_ui_qa_contract() {
   fi
 }
 
+check_gstack_attribution_boundary() {
+  local bad_pattern='gstack 风格|gstack 能力|本阶段体现 gstack|gstack 的发布门禁|gstack 三重审判|gstack 的 Release Manager'
+  local out_file
+  out_file="$(tmp_file)"
+
+  if grep -R -E "$bad_pattern" AGENTS.md CLAUDE.md routing skills commands agents >"$out_file"; then
+    cat "$out_file" >&2
+    fail "runtime 指令不得把 gstack 作为推荐执行风格"
+  elif ! grep -q 'SuperSpecFlow 角色门禁' README.md ||
+       ! grep -q 'SuperSpecFlow 角色门禁' routing/AGENTS.routing.md ||
+       ! grep -q 'SuperSpecFlow 角色门禁' routing/CLAUDE.routing.md; then
+    fail "runtime 文档缺少 SuperSpecFlow 角色门禁归属"
+  elif ! grep -q 'gstack' NOTICE.md; then
+    fail "NOTICE.md 缺少设计来源 attribution"
+  else
+    pass "gstack attribution boundary 合法"
+  fi
+
+  rm -f "$out_file"
+}
+
+check_superpowers_spec_discipline() {
+  if ! grep -q 'Brainstorming Context' templates/spec-readiness-review.md ||
+     ! grep -q 'Assumption Audit' templates/spec-readiness-review.md ||
+     ! grep -q 'Alternatives Considered' templates/spec-readiness-review.md ||
+     ! grep -q 'Open Questions Disposition' templates/spec-readiness-review.md ||
+     ! grep -q 'Reviewer Result' templates/spec-readiness-review.md ||
+     ! grep -q 'Blocked / Waived Evidence' templates/spec-readiness-review.md; then
+    fail "spec-readiness-review template 缺少 Superpowers spec review 字段"
+  elif ! grep -q 'Brainstorming Context' skills/ssf-spec/SKILL.md ||
+       ! grep -q 'Spec Document Review Loop' commands/ssf-spec.md ||
+       ! grep -q 'Blocked / Waived Evidence' agents/spec-architect.md; then
+    fail "ssf-spec skill/command/agent 缺少 Superpowers spec discipline"
+  else
+    pass "Superpowers spec discipline contract 合法"
+  fi
+}
+
+check_superpowers_implementation_plan_contract() {
+  if ! grep -q '\*\*Goal:\*\*' templates/implementation-plan.md ||
+     ! grep -q '\*\*Architecture:\*\*' templates/implementation-plan.md ||
+     ! grep -q '\*\*Spec Contract:\*\*' templates/implementation-plan.md ||
+     ! grep -q '## Bite-Sized Tasks' templates/implementation-plan.md ||
+     ! grep -q '## Plan Review Loop' templates/implementation-plan.md ||
+     ! grep -q '## Execution Handoff' templates/implementation-plan.md; then
+    fail "implementation-plan template 缺少 Superpowers writing-plans 结构"
+  elif ! grep -q 'Expected: FAIL with' templates/implementation-plan.md ||
+       ! grep -q 'Expected: PASS' templates/implementation-plan.md ||
+       ! grep -q '/ssf-commit \[change-id\]' templates/implementation-plan.md; then
+    fail "implementation-plan template 缺少 TDD 五步或 commit handoff"
+  elif ! grep -q 'Plan Review Loop' commands/ssf-build.md ||
+       ! grep -q 'Plan Review Loop' agents/implementation-engineer.md; then
+    fail "ssf-build command/agent 缺少 Plan Review Loop"
+  else
+    pass "Superpowers implementation plan contract 合法"
+  fi
+}
+
+check_qa_evidence_consistency_contract() {
+  if ! grep -q 'Pass Consistency Check' templates/qa-signoff.md ||
+     ! grep -q 'Failed journey forbids `Automated Browser Passed`' templates/browser-run-report.md ||
+     ! grep -q 'Missing target requires `Blocked: No runnable target`' skills/ssf-qa/SKILL.md; then
+    fail "Browser/MCP QA 缺少 evidence consistency gate"
+  elif ! grep -q 'Visual Pass Consistency Check' templates/qa-signoff.md ||
+       ! grep -q 'Baseline approval required for `Visual Passed`' templates/visual-comparison-report.md ||
+       ! grep -q 'Manual reviewer required for `Manual Visual Verified`' agents/qa-gatekeeper.md; then
+    fail "Visual QA 缺少 evidence consistency gate"
+  elif ! grep -q 'Derivation Rules' templates/qa-execution-plan.md ||
+       ! grep -q 'Derivation Rules' templates/visual-execution-plan.md ||
+       ! grep -q 'preserve Spec ID mapping' agents/qa-gatekeeper.md; then
+    fail "QA execution plans 缺少 acceptance matrix derivation rules"
+  elif ! grep -q 'Browser QA Status' templates/integration-gate.md ||
+       ! grep -q 'Parent Integration Regression' skills/ssf-qa/SKILL.md ||
+       ! grep -q 'missing cluster QA evidence blocks Ship' skills/ssf-ship/SKILL.md; then
+    fail "Parent cluster QA summary 缺少 consistency gate"
+  else
+    pass "QA evidence consistency contract 合法"
+  fi
+}
+
 check_spec_cluster_contract() {
   for f in templates/cluster-plan.md templates/cluster-status.md templates/integration-gate.md; do
     if [ ! -f "$f" ]; then
@@ -896,6 +976,10 @@ check_progress_contract
 check_cross_agent_verification_contract
 check_browser_mcp_qa_contract
 check_visual_ui_qa_contract
+check_gstack_attribution_boundary
+check_superpowers_spec_discipline
+check_superpowers_implementation_plan_contract
+check_qa_evidence_consistency_contract
 check_spec_cluster_contract
 check_git_gate_contract
 check_init_project_routing_zero_touch_spec

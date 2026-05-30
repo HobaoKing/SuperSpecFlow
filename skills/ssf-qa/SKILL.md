@@ -27,15 +27,19 @@ description: 阶段四点五（测）。用户输入 /ssf-qa 或由 ssf-review �
 - QA 运行时产物默认写入 `.superspecflow/qa/<change-id>/`。
 - 读取历史 QA 产物时先读 `.superspecflow/qa/<change-id>/`，缺失时 fallback 到兼容期旧路径；新写入不得推荐根目录 `qa/<change-id>/`。
 - 对 E2E、user journey 或明确需要真实浏览器验证的场景，必须从 acceptance matrix 派生 `.superspecflow/qa/<change-id>/qa-execution-plan.md`。
+- Browser/MCP execution plan 只能派生 E2E、user journey 或明确 browser-required 的 acceptance matrix 行，并必须 preserve Spec ID mapping。
 - 目标和浏览器/MCP 工具可用时，执行路径并记录 `.superspecflow/qa/<change-id>/browser-run-report.md` 与 `.superspecflow/qa/<change-id>/qa-evidence/`。
 - 目标不可用时，QA signoff 使用 `Blocked: No runnable target`；浏览器/MCP 工具不可用时，使用 `Blocked: Tool unavailable`。
 - 不得在没有 `browser-run-report.md`、`qa-evidence/` 或明确人工验证记录时声明 `Automated Browser Passed`。
+- Missing target requires `Blocked: No runnable target`；Tool unavailable requires `Blocked: Tool unavailable`；Failed journey forbids `Automated Browser Passed`。
 - 对 UI 还原、视觉回归、截图对比或设计对齐场景，必须从 acceptance matrix 派生 `.superspecflow/qa/<change-id>/visual-execution-plan.md`。
+- Visual execution plan 只能派生 UI restoration、screenshot comparison、visual regression 或 design-alignment 的 acceptance matrix 行，并必须 preserve Spec ID mapping。
 - Visual QA 使用 `platform: web | mini-program`，并记录 route/page、viewport/device、DPR、theme、locale、environment、data preconditions、screenshot source 和 optional reference image/design source。
 - Visual QA 证据写入或引用 `.superspecflow/qa/<change-id>/qa-evidence/visual/`，对比结果写入 `.superspecflow/qa/<change-id>/visual-comparison-report.md`。
 - Visual QA 状态只能使用 `Visual Passed`、`Manual Visual Verified`、`Visual Failed`、`Blocked: Missing baseline`、`Blocked: Missing actual screenshot` 和 `Blocked: Diff tool unavailable`。
 - `Visual Passed` 只能在 baseline、actual screenshot、comparison report 和 diff output / threshold result 齐全时使用。
 - 没有自动 diff 时可使用 `Manual Visual Verified`，但必须记录 manual reviewer、comparison notes、accepted differences、residual risk 和 evidence path。
+- Manual reviewer required for `Manual Visual Verified`。
 - 不得在缺少 baseline、baseline 未确认、缺少 actual screenshot、缺少 visual comparison report 或缺少 evidence 时声明视觉通过。
 - 不得把 `visual-execution-plan.md` 当作 acceptance matrix 的替代品，不得用聊天描述替代落盘 visual evidence。
 - 不得把 actual screenshot 自动提升为 baseline；baseline 建立或更新必须记录 reviewer 或 approval gate、原因、timestamp 和关联 Spec ID。
@@ -155,8 +159,9 @@ description: 阶段四点五（测）。用户输入 /ssf-qa 或由 ssf-review �
 如果 `<change-id>` 是 parent change 且存在 `.superspecflow/clusters/<change-id>/`：
 
 1. 读取 `cluster-plan.md` 和 `cluster-status.md`。
-2. 汇总每个 cluster 的 QA signoff、browser-run-report、qa-evidence、review 和 blocker。
-3. 记录 parent integration 级回归结果；缺少证据时 Recommendation 不能是 `Ship`。
+2. 汇总每个 cluster 的 QA signoff、browser-run-report、qa-evidence、visual-comparison-report、review、Blocked Reason 和 blocker。
+3. 记录 Browser QA Status、Visual QA Status、Manual QA Status、Evidence Paths 和 Parent Integration Regression。
+4. 记录 parent integration 级回归结果；缺少证据时 Recommendation 不能是 `Ship`。
 
 ## Step 10 — 自动续接
 

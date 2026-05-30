@@ -22,7 +22,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 3. 检查 QA signoff。
 4. 检查测试证据。
 5. 如果 `<change-id>` 是 parent change，读取 `.superspecflow/clusters/<change-id>/integration-gate.md`。
-6. 对每个 Spec cluster 检查 cluster QA evidence、review、commit evidence、blocker 和跨 cluster 回归。
+6. 对每个 Spec cluster 检查 cluster QA evidence、Browser QA Status、Visual QA Status、Manual QA Status、Blocked Reason、review、commit evidence、blocker 和 Parent Integration Regression。
 7. 检查 rollback 和 monitoring。
 8. 生成 PR 描述。
 9. 给出 Ship / Ship with monitoring / Do not ship。
@@ -34,6 +34,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 - 不确定项必须明确标注，不可假装已确认。
 - Parent change 缺少 `integration-gate.md` 时不得推荐 Ship。
 - 任一 cluster 缺少 QA signoff、browser-run-report、qa-evidence、review 或 commit evidence 时不得推荐 Ship。
+- missing cluster QA evidence blocks Ship，除非 integration gate 明确记录 blocked 或 waived reason。
 - Worktree 只是执行隔离机制，不是发布边界；parent change 必须通过 integration gate 才能发布。
 
 ## 输出

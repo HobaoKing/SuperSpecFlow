@@ -2,6 +2,35 @@
 
 Path: `.superspecflow/engineering/[change-id]/spec-readiness-review.md`
 
+## Brainstorming Context
+- Upstream Think / Design Source:
+- Goal:
+- Non-goals:
+- Waiver Reason if no upstream context:
+
+## Assumption Audit
+- Assumption:
+- Evidence:
+- Risk if wrong:
+
+## Alternatives Considered
+- Option:
+- Reason accepted / rejected:
+
+## Open Questions Disposition
+| Question | Decision / Disposition | Owner | Blocks Ready? |
+|---|---|---|---:|
+
+## Spec Document Review Loop
+- Reviewer:
+- Iteration Count:
+- Evidence:
+- Blocked / Waived Evidence:
+
+## Reviewer Result
+- Approved / Changes Requested / Blocked / Waived:
+- Residual Risk:
+
 ## Ready Checklist
 - [ ] Problem clear
 - [ ] Scope clear

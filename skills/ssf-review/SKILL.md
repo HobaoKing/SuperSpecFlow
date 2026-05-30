@@ -1,6 +1,6 @@
 ---
 name: ssf-review
-description: 阶段四（审）。用户输入 /ssf-review 或由 ssf-build 续接时触发。用 gstack 风格工程审查 + Superpowers 风格 review 接收纪律，输出阻塞项、建议项、记录项，并确认 spec/code/test 同步。
+description: 阶段四（审）。用户输入 /ssf-review 或由 ssf-build 续接时触发。用 SuperSpecFlow 工程审查门禁 + Superpowers review 接收纪律，输出阻塞项、建议项、记录项，并确认 spec/code/test 同步。
 ---
 
 # ssf-review — 工程审查
@@ -9,7 +9,7 @@ description: 阶段四（审）。用户输入 /ssf-review 或由 ssf-build 续�
 
 在 QA 和发布前，进行对抗式工程审查。
 
-本阶段体现 gstack 的价值：由工程经理、代码 reviewer、安全 reviewer 的视角审查。体现 Superpowers 的价值：处理 review 反馈时先验证事实，不盲目认同。
+本阶段执行 SuperSpecFlow 工程审查门禁：从工程、代码、安全视角审查。体现 Superpowers 的价值：处理 review 反馈时先验证事实，不盲目认同。
 
 ## 触发
 

@@ -4,7 +4,7 @@
 
 - **OpenSpec 风格**：把需求沉淀为可追踪的 change contract。
 - **Superpowers 风格**：执行时先理解、再计划、再测试、再实现、再验证。
-- **gstack 风格**：通过产品、设计、工程、QA、安全、发布角色做门禁审查。
+- **SuperSpecFlow 角色门禁**：通过产品、设计、工程、QA、安全、发布角色做门禁审查。
 - **Karpathy 风格**：编码前暴露假设，简单优先，外科手术式修改，目标驱动验证。
 - **GitOps 风格**：分支、暂存、commit（英文类型 + 中文正文）、PR、回滚与 change-id / Spec ID 对齐。
 

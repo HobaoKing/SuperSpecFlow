@@ -136,6 +136,7 @@ implementation-plan.md 必须按以下 6 个子节生成。代码示例和命令
 - Step 1 和 Step 3 的代码块必须完整可执行，禁止 `...` 省略或抽象描述
 - Step 2 和 Step 4 的测试命令必须含具体路径和断言点，禁止「运行测试」这类抽象表述
 - Step 5 只能准备 Git gate，commit 消息由 `/ssf-commit` 生成并检查
+- 模板和生成计划必须保留 `Bite-Sized Tasks`、`Plan Review Loop` 和 `Execution Handoff` 标题，便于 Superpowers writing-plans 契约验证。
 
 ### 1.5 Plan Review Loop
 

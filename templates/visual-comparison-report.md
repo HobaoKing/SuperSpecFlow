@@ -17,6 +17,7 @@ Path: `.superspecflow/qa/[change-id]/visual-comparison-report.md`
 - Baseline Approval / Reviewer:
 - Actual Screenshot:
 - Diff Output:
+- Threshold Result:
 - Optional Reference Image / Design Source:
 - Evidence Directory: `.superspecflow/qa/[change-id]/qa-evidence/visual/`
 
@@ -29,6 +30,13 @@ Path: `.superspecflow/qa/[change-id]/visual-comparison-report.md`
 - Comparison Notes:
 - Accepted Differences:
 - Residual Risk:
+
+## Consistency Rules
+- Baseline approval required for `Visual Passed`.
+- Actual screenshot required for `Visual Passed`.
+- Diff output or threshold result required for `Visual Passed`.
+- Manual reviewer required for `Manual Visual Verified`.
+- Accepted Differences required for `Manual Visual Verified`.
 
 ## Blocked / Failed Notes
 - Missing baseline:

@@ -22,6 +22,11 @@ Path: `.superspecflow/qa/[change-id]/visual-execution-plan.md`
 | Spec ID | Scenario | Platform | Route / Page | Viewport / Device | DPR | Baseline Policy | Actual Screenshot Source | Optional Reference | Comparison Mode | Expected Visual Result | Evidence Path | Status |
 |---|---|---|---|---|---:|---|---|---|---|---|---|---|
 
+## Derivation Rules
+- Derive only UI restoration, screenshot comparison, visual regression, or design-alignment acceptance matrix rows.
+- preserve Spec ID mapping from `acceptance-matrix.md`.
+- Do not replace or delete the source acceptance matrix.
+
 ## Baseline Lifecycle
 - Baseline Candidate:
 - Baseline Approval / Reviewer:

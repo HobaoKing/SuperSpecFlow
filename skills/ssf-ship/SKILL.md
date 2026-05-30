@@ -9,7 +9,7 @@ description: 阶段五（发）。用户输入 /ssf-ship 或由 ssf-qa 续接时
 
 把“代码完成”转成“可以安全发布”。
 
-本阶段体现 gstack 的 Release Manager 价值：不是生成 PR 文案，而是做发布风险判断。
+本阶段执行 SuperSpecFlow 发布门禁：不是生成 PR 文案，而是做发布风险判断。
 
 ## 触发
 
@@ -26,7 +26,7 @@ description: 阶段五（发）。用户输入 /ssf-ship 或由 ssf-qa 续接时
 - 发布运行时产物默认写入 `.superspecflow/release/<change-id>/`。
 - 读取历史发布产物时先读 `.superspecflow/release/<change-id>/`，缺失时 fallback 到兼容期旧路径；新写入不得推荐根目录 `release/<change-id>/`。
 - Parent change 有 Spec cluster 时，必须读取 `.superspecflow/clusters/<parent-change>/integration-gate.md`。
-- 缺少 integration gate、cluster QA evidence、review 结论或 commit evidence 时，不得推荐 Ship。
+- 缺少 integration gate、cluster QA evidence、review 结论或 commit evidence 时，不得推荐 Ship；missing cluster QA evidence blocks Ship。
 
 ## Step 1 — Release Checklist
 
@@ -123,7 +123,7 @@ Recommendation: Ship / Ship with monitoring / Do not ship
 如果 `<change-id>` 是 parent change 且存在 `.superspecflow/clusters/<change-id>/`：
 
 1. 读取 `integration-gate.md`。
-2. 检查每个 cluster 的 Spec IDs、QA evidence、review 结论、commit evidence、blocker 和跨 cluster 回归。
+2. 检查每个 cluster 的 Spec IDs、QA evidence、Browser QA Status、Visual QA Status、Manual QA Status、Blocked Reason、review 结论、commit evidence、blocker 和 Parent Integration Regression。
 3. 缺少 integration gate 或任一 cluster evidence 时，Recommendation 必须是 `Do not ship` 或 `Ship blocked by cluster integration gate`。
 4. Worktree 只作为执行隔离机制，不得作为发布边界。
 
