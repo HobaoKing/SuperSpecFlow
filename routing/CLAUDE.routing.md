@@ -14,9 +14,9 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 
 本项目使用一套 AI 软件研发流程：
 
-- **OpenSpec 风格**：把需求沉淀为可追踪的 change contract。
-- **Superpowers 风格**：执行时先理解、再计划、再测试、再实现、再验证。
-- **SuperSpecFlow 角色门禁**：通过产品、设计、工程、QA、安全、发布角色做门禁审查。
+- **OpenSpec 合同层**：把需求沉淀为可追踪的 change contract，维护 change-id、Spec ID、requirements、tasks、archive 和 traceability。
+- **Superpowers 执行纪律层**：执行时先理解、再计划、再测试、再实现、再验证。
+- **SuperSpecFlow 路由与适配层**：把自然语言请求路由到合适的 OpenSpec contract 与 Superpowers 执行纪律组合，并连接阶段产物。
 - **Karpathy 风格**：编码前暴露假设，简单优先，外科手术式修改，目标驱动验证。
 - **GitOps 风格**：分支、暂存、commit（英文类型 + 中文正文）、PR、回滚与 change-id / Spec ID 对齐。
 
@@ -88,6 +88,14 @@ SuperSpecFlow 仓库提交的是工作流包源码和可追踪变更契约，不
 ## Strict Intake Gate
 
 自然语言请求必须先分类，不是所有任务都适合走完整工作流。
+
+### 路由契约
+
+SuperSpecFlow 路由与适配层必须把路由决策写成可复查的输入输出关系：
+
+- **路由输入**：用户自然语言、显式 `/ssf-*` 命令、是否已有 change-id / Spec ID、宿主项目上下文、风险等级、可用 evidence 和当前 Git / runtime 状态。
+- **路由输出**：请求分类、下一阶段（问答、轻量任务、Think、Spec、Build、Review、QA、Ship、Git、Archive、Retro）、是否需要 OpenSpec contract、需要使用的 Superpowers 执行纪律、应写入或读取的阶段产物。
+- **执行纪律选择记录**：正式 change 必须在 brainstorming context、implementation plan、TDD 证据、review notes、verification evidence、qa signoff、spec-to-code map 或 progress handoff 中记录实际采用的 Superpowers discipline，并关联 OpenSpec change-id / Spec ID。
 
 先判断用户请求属于哪一类，再选择流程：
 

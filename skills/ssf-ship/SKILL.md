@@ -9,7 +9,7 @@ description: 阶段五（发）。用户输入 /ssf-ship 或由 ssf-qa 续接时
 
 把“代码完成”转成“可以安全发布”。
 
-本阶段执行 SuperSpecFlow 发布门禁：不是生成 PR 文案，而是做发布风险判断。
+本阶段体现 SuperSpecFlow 路由与适配层：汇总 OpenSpec tasks、QA evidence、rollback、monitoring 和 release blockers 后做发布风险判断。
 
 ## 触发
 

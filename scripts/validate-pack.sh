@@ -413,14 +413,50 @@ check_gstack_attribution_boundary() {
   if grep -R -E "$bad_pattern" AGENTS.md CLAUDE.md routing skills commands agents >"$out_file"; then
     cat "$out_file" >&2
     fail "runtime 指令不得把 gstack 作为推荐执行风格"
-  elif ! grep -q 'SuperSpecFlow 角色门禁' README.md ||
-       ! grep -q 'SuperSpecFlow 角色门禁' routing/AGENTS.routing.md ||
-       ! grep -q 'SuperSpecFlow 角色门禁' routing/CLAUDE.routing.md; then
-    fail "runtime 文档缺少 SuperSpecFlow 角色门禁归属"
   elif ! grep -q 'gstack' NOTICE.md; then
     fail "NOTICE.md 缺少设计来源 attribution"
   else
     pass "gstack attribution boundary 合法"
+  fi
+
+  rm -f "$out_file"
+}
+
+check_superspecflow_layer_boundary() {
+  local bad_pattern='SuperSpecFlow 角色门禁|项目自有角色做门禁|项目自有门禁|SuperSpecFlow 的门禁|SuperSpecFlow 负责流程门禁|SuperSpecFlow 产品三重门禁'
+  local out_file
+  out_file="$(tmp_file)"
+
+  if grep -R -E "$bad_pattern" README.md AGENTS.md CLAUDE.md routing skills commands agents docs/installation.md docs/compatibility.md >"$out_file"; then
+    cat "$out_file" >&2
+    fail "runtime 指令不得把 SuperSpecFlow 表述为自有角色门禁框架"
+  elif ! grep -q 'OpenSpec 合同层' README.md ||
+       ! grep -q 'Superpowers 执行纪律层' README.md ||
+       ! grep -q 'SuperSpecFlow 路由与适配层' README.md ||
+       ! grep -q '路由输入' README.md ||
+       ! grep -q '路由输出' README.md ||
+       ! grep -q '执行纪律选择记录' README.md ||
+       ! grep -q 'OpenSpec 合同层' AGENTS.md ||
+       ! grep -q 'Superpowers 执行纪律层' AGENTS.md ||
+       ! grep -q 'SuperSpecFlow 路由与适配层' AGENTS.md ||
+       ! grep -q 'OpenSpec 合同层' CLAUDE.md ||
+       ! grep -q 'Superpowers 执行纪律层' CLAUDE.md ||
+       ! grep -q 'SuperSpecFlow 路由与适配层' CLAUDE.md ||
+       ! grep -q 'OpenSpec 合同层' routing/AGENTS.routing.md ||
+       ! grep -q 'Superpowers 执行纪律层' routing/AGENTS.routing.md ||
+       ! grep -q 'SuperSpecFlow 路由与适配层' routing/AGENTS.routing.md ||
+       ! grep -q '路由输入' routing/AGENTS.routing.md ||
+       ! grep -q '路由输出' routing/AGENTS.routing.md ||
+       ! grep -q '执行纪律选择记录' routing/AGENTS.routing.md ||
+       ! grep -q 'OpenSpec 合同层' routing/CLAUDE.routing.md ||
+       ! grep -q 'Superpowers 执行纪律层' routing/CLAUDE.routing.md ||
+       ! grep -q 'SuperSpecFlow 路由与适配层' routing/CLAUDE.routing.md ||
+       ! grep -q '路由输入' routing/CLAUDE.routing.md ||
+       ! grep -q '路由输出' routing/CLAUDE.routing.md ||
+       ! grep -q '执行纪律选择记录' routing/CLAUDE.routing.md; then
+    fail "runtime 文档缺少 OpenSpec / Superpowers / SuperSpecFlow 层级边界"
+  else
+    pass "SuperSpecFlow layer boundary 合法"
   fi
 
   rm -f "$out_file"
@@ -977,6 +1013,7 @@ check_cross_agent_verification_contract
 check_browser_mcp_qa_contract
 check_visual_ui_qa_contract
 check_gstack_attribution_boundary
+check_superspecflow_layer_boundary
 check_superpowers_spec_discipline
 check_superpowers_implementation_plan_contract
 check_qa_evidence_consistency_contract

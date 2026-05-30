@@ -6,9 +6,9 @@ SuperSpecFlow 是一套面向 Claude Code / Codex CLI 的 AI 软件研发工作�
 
 1. **防止一句话需求直接变成失控改动**：自然语言请求先经过 Intake Gate，区分纯问答、轻量任务、非平凡行为变更、高风险变更和 Git/QA/发布动作。
 2. **让每个行为变更都能追踪**：非平凡变更必须落到 OpenSpec change-id / Spec ID，并在实现、测试、commit、PR、回滚说明之间保持映射。
-3. **把优秀研发纪律变成 agent 可执行规则**：融合 OpenSpec、Superpowers、SuperSpecFlow 角色门禁、Karpathy 风格的 diff discipline，以及 GitOps 的分支、暂存、提交和 PR 门禁。
+3. **把优秀研发纪律变成 agent 可执行规则**：融合 OpenSpec 合同层、Superpowers 执行纪律层、SuperSpecFlow 路由与适配层、Karpathy 风格的 diff discipline，以及 GitOps 的分支、暂存、提交和 PR 门禁。
 
-最终效果是：用户可以用自然语言发起工作，也可以显式调用 `/ssf-*` 命令；agent 不会默认接管所有项目，而是在项目 opt-in 后按 SuperSpecFlow 的门禁执行。
+最终效果是：用户可以用自然语言发起工作，也可以显式调用 `/ssf-*` 命令；agent 不会默认接管所有项目，而是在项目 opt-in 后按 SuperSpecFlow 的路由与阶段检查执行。
 
 ## 适合谁
 
@@ -19,7 +19,7 @@ SuperSpecFlow 是一套面向 Claude Code / Codex CLI 的 AI 软件研发工作�
 不适合的场景：
 
 - 只想要一次性代码补全，不关心规格、测试、提交和回滚。
-- 希望 agent 自动覆盖宿主项目已有 `AGENTS.md` / `CLAUDE.md` 的项目。SuperSpecFlow 的原则是宿主项目规则优先，自己只提供流程门禁。
+- 希望 agent 自动覆盖宿主项目已有 `AGENTS.md` / `CLAUDE.md` 的项目。SuperSpecFlow 的原则是宿主项目规则优先，自己只提供流程路由与阶段检查。
 
 ## 工作模型
 
@@ -33,33 +33,33 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 
 | 风格 | 在本项目中的作用 |
 |---|---|
-| OpenSpec | 用 change-id、Spec ID、proposal、specs、tasks 和 archive 记录变更合同 |
-| Superpowers | 强制先理解、再计划、TDD、小步实现、验证后再宣称完成 |
-| SuperSpecFlow 角色门禁 | 用产品、规格、工程、QA、发布、Git 等项目自有角色做门禁审查 |
+| OpenSpec 合同层 | 用 change-id、Spec ID、proposal、specs、tasks 和 archive 记录变更合同 |
+| Superpowers 执行纪律层 | 强制先理解、再计划、TDD、小步实现、验证后再宣称完成 |
+| SuperSpecFlow 路由与适配层 | 把自然语言请求路由到合适的 OpenSpec contract 与 Superpowers 执行纪律组合，并连接阶段产物 |
 | Karpathy | 编码前暴露假设，简单优先，外科手术式修改，目标驱动验证 |
 | GitOps | 分支、暂存、commit、PR、rollback 与 change-id / Spec ID 对齐 |
 
 这些来源不是作为外部运行时依赖被整体搬进项目，而是被拆成阶段能力：
 
-- **OpenSpec** 提供变更合同：change-id、Spec ID、proposal、design、specs、tasks、scenarios、MUST NOT、archive。
-- **Superpowers** 提供执行纪律：先理解、再计划、优先 TDD、小步实现、验证后再宣称完成、接收 review 前先核验事实。
-- **SuperSpecFlow 角色门禁** 定义项目自有门禁：产品、设计、规格、工程、代码审查、QA、发布、Git 管理等角色视角。
+- **OpenSpec 合同层** 提供变更合同：change-id、Spec ID、proposal、design、specs、tasks、scenarios、MUST NOT、archive。
+- **Superpowers 执行纪律层** 提供执行纪律：先理解、再计划、优先 TDD、小步实现、验证后再宣称完成、接收 review 前先核验事实。
+- **SuperSpecFlow 路由与适配层** 负责 glue / routing / adapter：把自然语言请求路由到合适的 OpenSpec contract 与 Superpowers 执行纪律组合，并连接 Think、Spec、Build、Review、QA、Ship、Git、Archive 和 Retro 的阶段产物。
 - **Karpathy** 提供编码行为约束：暴露假设、寻找更简单方案、避免投机抽象、保持 surgical diff、把目标变成可验证结果。
 
 各阶段使用的能力如下：
 
-| 阶段 | OpenSpec 能力 | Superpowers 能力 | SuperSpecFlow 角色门禁 | Karpathy 能力 |
+| 阶段 | OpenSpec 能力 | Superpowers 能力 | SuperSpecFlow 路由与适配职责 | Karpathy 能力 |
 |---|---|---|---|---|
-| Intake | 判断请求是否需要 change-id / Spec ID | 先分类、再行动，轻量任务不强行升级完整流程 | 判断是否需要产品、工程、QA、发布或 Git 门禁介入 | 选择最小流程，避免把小问题过度流程化 |
-| Think | 产出可进入 proposal 的问题、目标、non-goals 和成功指标 | 先理解用户目的和约束，再提出方案 | 产品价值、体验路径、范围收敛三重门禁 | 暴露假设，压缩 MVP，寻找更简单方案 |
-| Spec | 生成 proposal、design、specs、tasks、scenarios、MUST NOT 和 Spec Readiness Review | Superpowers spec review：保留 Brainstorming Context、Assumption Audit、Alternatives Considered、Open Questions Disposition 和 reviewer evidence | 规格门禁检查需求是否完整、可测、可归档 | 防止范围膨胀，把每条要求收敛成可验证目标 |
-| Build | 读取 OpenSpec change，只实现映射到 Spec ID 的任务，更新 tasks 和 spec-to-code map | Superpowers writing-plans：implementation plan、Bite-Sized Tasks、优先 failing tests、小步实现、Plan Review Loop、Execution Handoff、fresh verification | 工程实现门禁执行实现和交接 | Karpathy preflight、surgical changes、不做无关重构、不写投机抽象 |
-| Review | 检查 spec / code / test 是否同步，确认行为改动都有 Spec ID | 接收 review 反馈前先验证事实，支持 cross-agent verification | 工程审查、安全审查和代码审查门禁找阻塞问题 | Karpathy Diff Audit，检查错误假设、过度设计、无关改动和不可验证目标 |
-| QA | 从 requirements、scenarios、MUST NOT 生成 acceptance、negative、risk 和 regression 矩阵 | 用证据驱动验收，不只看 happy path | QA 门禁给出 ship / monitoring / no-ship 建议 | 关注边界条件、残余风险和未验证假设 |
-| Ship | 检查 OpenSpec tasks、QA signoff、rollback、monitoring 和 release blockers | 完成前必须有新鲜验证证据，不确定项必须标注 | 发布门禁做 go / no-go 判断 | 确认可发布范围足够小，阻止含混风险被包装成完成态 |
-| Git / PR | commit 和 PR 关联 change-id、Spec ID、验证方式和回滚说明 | 小步、可验证、可恢复的提交纪律 | Git 门禁检查分支、暂存、PR、merge、rollback | 审查 staged diff 是否 surgical，拒绝无关文件和顺手重构 |
-| Archive | 归档 change、决策、文档覆盖和最终产物索引 | 把上下文落盘，避免历史只留在聊天记录 | 文档和发布收尾门禁检查可追踪性 | 记录实际范围，避免归档时扩大解释 |
-| Retro | 对照 OpenSpec contract 回看流程缺口 | 把执行经验转成下一轮可操作改进 | 从产品、规格、工程、QA、发布各门禁复盘质量 | 复盘是否存在错误假设、过度设计、非最小改动或验证不足 |
+| Intake | 判断请求是否需要 change-id / Spec ID | 先分类、再行动，轻量任务不强行升级完整流程 | 路由到问答、轻量任务、OpenSpec、QA、Ship 或 Git 流程 | 选择最小流程，避免把小问题过度流程化 |
+| Think | 产出可进入 proposal 的问题、目标、non-goals 和成功指标 | 先理解用户目的和约束，再提出方案 | 把产品判断适配成 OpenSpec proposal 输入 | 暴露假设，压缩 MVP，寻找更简单方案 |
+| Spec | 生成 proposal、design、specs、tasks、scenarios、MUST NOT 和 Spec Readiness Review | Superpowers spec review：保留 Brainstorming Context、Assumption Audit、Alternatives Considered、Open Questions Disposition 和 reviewer evidence | 连接 brainstorm、assumptions、OpenSpec artifacts 和 readiness evidence | 防止范围膨胀，把每条要求收敛成可验证目标 |
+| Build | 读取 OpenSpec change，只实现映射到 Spec ID 的任务，更新 tasks 和 spec-to-code map | Superpowers writing-plans：implementation plan、Bite-Sized Tasks、优先 failing tests、小步实现、Plan Review Loop、Execution Handoff、fresh verification | 把 OpenSpec tasks 适配到 writing-plans、TDD 和 spec-to-code map | Karpathy preflight、surgical changes、不做无关重构、不写投机抽象 |
+| Review | 检查 spec / code / test 是否同步，确认行为改动都有 Spec ID | 接收 review 反馈前先验证事实，支持 cross-agent verification | 把 diff、OpenSpec、progress 和 evidence 路由到工程审查或交叉核验 | Karpathy Diff Audit，检查错误假设、过度设计、无关改动和不可验证目标 |
+| QA | 从 requirements、scenarios、MUST NOT 生成 acceptance、negative、risk 和 regression 矩阵 | 用证据驱动验收，不只看 happy path | 把 OpenSpec requirements 适配成 QA 矩阵、执行计划和 signoff | 关注边界条件、残余风险和未验证假设 |
+| Ship | 检查 OpenSpec tasks、QA signoff、rollback、monitoring 和 release blockers | 完成前必须有新鲜验证证据，不确定项必须标注 | 汇总 contract、QA evidence、rollback 和 monitoring 后给出 ship / no-ship | 确认可发布范围足够小，阻止含混风险被包装成完成态 |
+| Git / PR | commit 和 PR 关联 change-id、Spec ID、验证方式和回滚说明 | 小步、可验证、可恢复的提交纪律 | 把 change-id、Spec ID、验证证据和回滚信息写入分支、暂存、commit 与 PR | 审查 staged diff 是否 surgical，拒绝无关文件和顺手重构 |
+| Archive | 归档 change、决策、文档覆盖和最终产物索引 | 把上下文落盘，避免历史只留在聊天记录 | 把完成证据回写到 OpenSpec archive、decision ledger 和文档索引 | 记录实际范围，避免归档时扩大解释 |
+| Retro | 对照 OpenSpec contract 回看流程缺口 | 把执行经验转成下一轮可操作改进 | 把 contract、evidence 和执行经验适配成可复用改进项 | 复盘是否存在错误假设、过度设计、非最小改动或验证不足 |
 
 自然语言不会被简单关键词直接升级成完整流程。SuperSpecFlow 先做 Intake Gate：
 
@@ -82,6 +82,14 @@ Think → Spec → Build → Review → QA → Ship → Git/PR → Archive → R
 QA evidence 是后续 Review / Ship / Git / Archive 可引用的事实来源，但不替代 OpenSpec requirements 或 Spec ID。Worktree 只是执行隔离机制，不是发布边界。
 
 `visual-ui-qa-adapter` 在 browser/MCP QA 之后补充视觉验收协议。它让 `/ssf-qa` 可以为 `platform: web | mini-program` 的 UI 还原、截图对比和视觉回归场景生成 `.superspecflow/qa/<change-id>/visual-execution-plan.md`，并记录 `.superspecflow/qa/<change-id>/visual-comparison-report.md` 与 `qa-evidence/visual/`。第一版只定义协议和门禁，不内置图片 diff 算法，不绑定具体小程序 runner。
+
+## 路由契约
+
+SuperSpecFlow 路由与适配层有明确输入输出，不是关键词触发器，也不是自有角色框架。
+
+- **路由输入**：用户自然语言、显式 `/ssf-*` 命令、是否已有 change-id / Spec ID、宿主项目上下文、风险等级、可用 evidence 和当前 Git / runtime 状态。
+- **路由输出**：请求分类、下一阶段（问答、轻量任务、Think、Spec、Build、Review、QA、Ship、Git、Archive、Retro）、是否需要 OpenSpec contract、需要使用的 Superpowers 执行纪律、应写入或读取的阶段产物。
+- **执行纪律选择记录**：当任务进入正式 change，所选 Superpowers 纪律必须落到对应产物中，例如 brainstorming context、implementation plan、TDD 证据、review notes、verification evidence、qa signoff、spec-to-code map 或 progress handoff；这些记录引用 OpenSpec change-id / Spec ID，但不替代 OpenSpec requirements。
 
 ## 版本策略
 
@@ -364,7 +372,7 @@ SuperSpecFlow 应先判断这是非平凡行为变更，然后进入产品思考
 |---|---|
 | `commands/` | 显式命令入口，一条命令一个 Markdown 文件 |
 | `skills/` | 阶段能力定义，供 Claude Code / Codex 读取执行 |
-| `agents/` | 角色规则，用于产品、规格、工程、审查、QA、发布和 Git 门禁 |
+| `agents/` | 阶段视角和专用 persona，用于产品、规格、工程、审查、QA、发布和 Git 工作 |
 | `routing/` | 全局薄壳和默认完整路由 |
 | `templates/` | 各阶段产物模板和集成入口片段 |
 | `scripts/` | 安装、初始化、验证和 hook 脚本 |
