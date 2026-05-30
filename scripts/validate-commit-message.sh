@@ -10,7 +10,11 @@ fi
 msg="$(cat "$msg_file")"
 first_line="$(head -n 1 "$msg_file")"
 
-if ! printf '%s' "$msg" | grep -Eq '[一-龥]'; then
+has_non_ascii_text() {
+  LC_ALL=C grep -Eq '[^ -~[:space:]]'
+}
+
+if ! printf '%s' "$msg" | has_non_ascii_text; then
   echo "错误：commit 摘要与正文必须包含中文。" >&2
   exit 1
 fi
@@ -22,7 +26,8 @@ fi
 
 type_re='(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|spec)'
 scope_re='\([a-z0-9][a-z0-9:_-]*\)'
-if ! printf '%s' "$first_line" | grep -Eq "^${type_re}${scope_re}: .*[一-龥]"; then
+if ! printf '%s' "$first_line" | grep -Eq "^${type_re}${scope_re}: .+" ||
+   ! printf '%s' "$first_line" | has_non_ascii_text; then
   echo "错误：commit 标题必须符合 <英文类型>(<英文范围>): <中文摘要> 格式。" >&2
   exit 1
 fi

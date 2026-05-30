@@ -20,7 +20,11 @@ if [ -n "$REPO_ROOT" ] && [ -x "$REPO_ROOT/scripts/validate-commit-message.sh" ]
   "$REPO_ROOT/scripts/validate-commit-message.sh" "$MSG_FILE"
 else
   # Fallback for host projects that copied only the hook.
-  if ! printf '%s' "$MSG" | grep -Eq '[一-龥]'; then
+  has_non_ascii_text() {
+    LC_ALL=C grep -Eq '[^ -~[:space:]]'
+  }
+
+  if ! printf '%s' "$MSG" | has_non_ascii_text; then
     echo "错误：commit 摘要与正文必须包含中文。" >&2
     exit 1
   fi
@@ -30,7 +34,8 @@ else
   fi
   TYPE_RE='(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|spec)'
   SCOPE_RE='\([a-z0-9][a-z0-9:_-]*\)'
-  if ! printf '%s' "$FIRST_LINE" | grep -Eq "^${TYPE_RE}${SCOPE_RE}: .*[一-龥]"; then
+  if ! printf '%s' "$FIRST_LINE" | grep -Eq "^${TYPE_RE}${SCOPE_RE}: .+" ||
+     ! printf '%s' "$FIRST_LINE" | has_non_ascii_text; then
     echo "错误：commit 标题必须符合 <英文类型>(<英文范围>): <中文摘要> 格式。" >&2
     exit 1
   fi

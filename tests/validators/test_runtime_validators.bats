@@ -69,6 +69,13 @@ MSG
   [[ "$output" == *"英文范围"* ]] || [[ "$stderr" == *"英文范围"* ]]
 }
 
+@test "commit message validator avoids locale-dependent CJK grep ranges" {
+  ! grep -q '\[一-龥\]' "$REPO_ROOT/scripts/validate-commit-message.sh"
+  ! grep -q '\[一-龥\]' "$REPO_ROOT/templates/git-hooks/commit-msg"
+  grep -q 'has_non_ascii_text' "$REPO_ROOT/scripts/validate-commit-message.sh"
+  grep -q 'has_non_ascii_text' "$REPO_ROOT/templates/git-hooks/commit-msg"
+}
+
 @test "QA signoff validator rejects blocked status that still recommends ship without waiver" {
   signoff="$TMP_PROJECT/qa-signoff.md"
   cat > "$signoff" <<'MD'
