@@ -18,10 +18,10 @@ teardown() {
   [ -f "$PROJECT/.superspecflow/enabled" ]
 }
 
-@test "创建九个标准运行产物子目录" {
+@test "创建标准运行产物子目录" {
   cd "$PROJECT"
   "$APPLY"
-  for sub in engineering qa release archive retro decisions maps reviews karpathy; do
+  for sub in intake engineering qa release archive retro decisions maps reviews karpathy; do
     [ -d "$PROJECT/.superspecflow/$sub" ] || { echo "missing $sub"; return 1; }
   done
 }

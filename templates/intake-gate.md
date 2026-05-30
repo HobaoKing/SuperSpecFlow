@@ -1,5 +1,10 @@
 # Intake Gate: [request]
 
+Path: `.superspecflow/intake/[change-id]/intake-gate.md`
+
+This artifact records the routing decision for formal changes. For pure Q&A or
+one-off lightweight tasks, write it only when the decision needs durable review.
+
 ## User Intent
 
 ## Classification

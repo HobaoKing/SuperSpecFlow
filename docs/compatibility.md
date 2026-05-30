@@ -6,6 +6,26 @@ SuperSpecFlow 是工作流包，不是应用运行时。它通过集中 routing�
 
 完整用户安装流程见 `docs/installation.md`。
 
+## Platform and Tool Requirements
+
+Runtime scripts are written for `bash` and avoid Bash 4-only features so they remain compatible with macOS Bash 3.2+ and common Linux Bash versions.
+
+Required runtime tools:
+
+- `bash` 3.2+
+- `git`
+- POSIX-style `find`, `sed`, `awk`, `grep`, `sort`, `mktemp`, and `mkdir`
+
+Optional runtime tools:
+
+- `curl` for one-line bootstrap installation
+- `rg` for faster validation search; scripts fall back to `grep` when unavailable
+
+Development and CI tools:
+
+- `bats` for the test suite
+- `shellcheck` for shell static analysis in CI
+
 ## Version-Control Boundary
 
 SuperSpecFlow 仓库自身提交包源码和 OpenSpec 变更契约，不提交本地 workflow 运行时、安装副本或缓存产物。`openspec/` 必须保留为可追踪 change contract；`superpowers/`、`docs/superpowers/`、`.superspecflow/`、`.claude/`、`.codex/` 和 `.DS_Store` 不得进入 Git 跟踪列表。

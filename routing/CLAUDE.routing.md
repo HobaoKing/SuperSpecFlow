@@ -66,6 +66,7 @@ SuperSpecFlow 仓库提交的是工作流包源码和可追踪变更契约，不
 | 产物 | 宿主项目运行时路径 |
 |---|---|
 | Engineering artifacts | `.superspecflow/engineering/<change-id>/` |
+| Intake gate artifacts | `.superspecflow/intake/<change-id>/` |
 | QA artifacts | `.superspecflow/qa/<change-id>/` |
 | Release artifacts | `.superspecflow/release/<change-id>/` |
 | Archive artifacts | `.superspecflow/archive/<change-id>/` |

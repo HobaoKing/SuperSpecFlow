@@ -4,6 +4,7 @@ set -euo pipefail
 MSG_FILE="$1"
 MSG="$(cat "$MSG_FILE")"
 FIRST_LINE="$(head -n 1 "$MSG_FILE")"
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   BAD_PATHS="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^(superpowers|docs/superpowers|\.superspecflow|\.claude|\.codex)/|(^|/)\.DS_Store$' || true)"
@@ -14,28 +15,27 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   fi
 fi
 
-# commit 摘要与正文必须包含中文。允许代码标识符、路径、命令、Spec ID、change-id 等以英文出现。
-if ! printf '%s' "$MSG" | grep -Eq '[一-龥]'; then
-  echo "错误：commit 摘要与正文必须包含中文。" >&2
-  exit 1
-fi
+if [ -n "$REPO_ROOT" ] && [ -x "$REPO_ROOT/scripts/validate-commit-message.sh" ]; then
+  "$REPO_ROOT/scripts/validate-commit-message.sh" "$MSG_FILE"
+else
+  # Fallback for host projects that copied only the hook.
+  has_non_ascii_text() {
+    LC_ALL=C grep -Eq '[^ -~[:space:]]'
+  }
 
-# 禁止常见模糊英文占位标题。
-if printf '%s' "$FIRST_LINE" | grep -Eiq '^(wip|update|updates|change|changes|fix bug|misc|temp)$'; then
-  echo "错误：commit 标题过于模糊。请使用格式：<英文类型>(<英文范围>): <中文摘要>" >&2
-  exit 1
-fi
-
-# 标题必须符合 <英文类型>(<英文范围>): <中文摘要> 规范。
-# - 英文类型：conventional commits 标准 + 项目定制 spec
-# - 英文范围：可选；若提供，必须为 <根模块> 或 <根模块>:<业务子模块>，使用小写英文 kebab-case
-# - 中文摘要：必须包含至少一个中文字符
-TYPE_RE='(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|spec)'
-SCOPE_RE='\([a-z0-9][a-z0-9:_-]*\)'
-if ! printf '%s' "$FIRST_LINE" | grep -Eq "^${TYPE_RE}(${SCOPE_RE})?: .*[一-龥]"; then
-  echo "错误：commit 标题必须符合 <英文类型>(<英文范围>): <中文摘要> 格式。" >&2
-  echo "  允许的类型：feat / fix / docs / style / refactor / perf / test / build / ci / chore / revert / spec" >&2
-  echo "  范围采用 <根模块> 或 <根模块>:<业务子模块>，使用小写英文 kebab-case" >&2
-  echo "  示例：feat(skills:members): 增加续费提醒入口" >&2
-  exit 1
+  if ! printf '%s' "$MSG" | has_non_ascii_text; then
+    echo "错误：commit 摘要与正文必须包含中文。" >&2
+    exit 1
+  fi
+  if printf '%s' "$FIRST_LINE" | grep -Eiq '^(wip|update|updates|change|changes|fix bug|misc|temp)$'; then
+    echo "错误：commit 标题过于模糊。请使用格式：<英文类型>(<英文范围>): <中文摘要>" >&2
+    exit 1
+  fi
+  TYPE_RE='(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|spec)'
+  SCOPE_RE='\([a-z0-9][a-z0-9:_-]*\)'
+  if ! printf '%s' "$FIRST_LINE" | grep -Eq "^${TYPE_RE}${SCOPE_RE}: .+" ||
+     ! printf '%s' "$FIRST_LINE" | has_non_ascii_text; then
+    echo "错误：commit 标题必须符合 <英文类型>(<英文范围>): <中文摘要> 格式。" >&2
+    exit 1
+  fi
 fi

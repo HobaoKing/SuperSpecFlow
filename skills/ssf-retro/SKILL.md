@@ -52,6 +52,16 @@ description: 复盘。用户输入 /ssf-retro 时触发。复盘本轮 SuperSpec
 - Residual risk:
 ```
 
+## Probing Questions
+
+Use these questions to expose process weaknesses before writing recommendations:
+
+- Evidence: Which completion claim depended on weak, stale, missing, or non-replayable evidence?
+- Gates: Which gate passed mechanically but failed to catch the real risk?
+- Scope: Where did implementation expand beyond the OpenSpec contract, or where was needed scope left implicit?
+- Handoff: What would a fresh agent fail to reconstruct from the written artifacts alone?
+- Recovery: Which blocker repeated because the workflow lacked a clear next action?
+
 ## Step 2 — 3-5 条改进建议
 
 每条必须具体到一个阶段：

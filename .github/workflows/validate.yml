@@ -1,0 +1,39 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats shellcheck ripgrep
+
+      - name: Pack validation
+        run: bash scripts/validate-pack.sh
+
+      - name: Test suite
+        run: bash scripts/test.sh
+
+      - name: Non-default TMPDIR validation
+        run: |
+          tmpdir="$RUNNER_TEMP/superspecflow tmp"
+          mkdir -p "$tmpdir"
+          TMPDIR="$tmpdir/" bash scripts/validate-pack.sh
+          TMPDIR="$tmpdir/" bash scripts/test.sh
+
+      - name: Shellcheck
+        run: |
+          shellcheck -x \
+            update.sh \
+            scripts/*.sh \
+            scripts/hooks/*.sh \
+            tests/lib/*.bash \
+            templates/git-hooks/commit-msg

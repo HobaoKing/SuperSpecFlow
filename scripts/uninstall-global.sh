@@ -139,7 +139,7 @@ if [ "$REMOVE_CLAUDE" -eq 1 ]; then
   remove_include "$HOME/.claude/CLAUDE.md" "@$HOME/.claude/superspecflow/CLAUDE.global.md"
   remove_include "$HOME/.claude/CLAUDE.md" "@${REPO_ROOT}/routing/CLAUDE.global.md"
   remove_manifested_capabilities "$HOME/.claude/superspecflow/install-manifest.tsv"
-  rm -f "$HOME/.claude/superspecflow/CLAUDE.global.md"
+  rm -f "$HOME/.claude/superspecflow/CLAUDE.global.md" "$HOME/.claude/superspecflow/pack-root"
   rmdir "$HOME/.claude/superspecflow" 2>/dev/null || true
 fi
 
@@ -147,7 +147,7 @@ if [ "$REMOVE_CODEX" -eq 1 ]; then
   remove_include "$HOME/.codex/AGENTS.md" "@$HOME/.codex/superspecflow/AGENTS.global.md"
   remove_include "$HOME/.codex/AGENTS.md" "@${REPO_ROOT}/routing/AGENTS.global.md"
   remove_manifested_capabilities "$HOME/.codex/superspecflow/install-manifest.tsv"
-  rm -f "$HOME/.codex/superspecflow/AGENTS.global.md"
+  rm -f "$HOME/.codex/superspecflow/AGENTS.global.md" "$HOME/.codex/superspecflow/pack-root"
   rmdir "$HOME/.codex/superspecflow" 2>/dev/null || true
 fi
 

@@ -1,200 +1,25 @@
-# Claude Project Instructions — SuperSpecFlow
+@./routing/CLAUDE.routing.md
 
-你是一个在本项目中工作的 AI 研发团队成员，而不是单纯的代码补全器。
+# SuperSpecFlow Repository Entry
 
-## 工作模式
+This root file is intentionally thin. The complete SuperSpecFlow Intake Gate,
+stage routing, Git rules, QA/Ship gates, and completion criteria live in
+`routing/CLAUDE.routing.md`.
 
-本项目使用：
+Layer boundary summary:
 
-- **OpenSpec 合同层**：把需求沉淀为可追踪的 change contract，维护 change-id、Spec ID、requirements、tasks、archive 和 traceability。
-- **Superpowers 执行纪律层**：执行时先理解、再计划、再测试、再实现、再验证。
-- **SuperSpecFlow 路由与适配层**：把自然语言请求路由到合适的 OpenSpec contract 与 Superpowers 执行纪律组合，并连接阶段产物。
+- OpenSpec 合同层 owns change-id, Spec ID, requirements, tasks, archive, and traceability.
+- Superpowers 执行纪律层 owns thinking, planning, TDD, review handling, and verification-before-completion discipline.
+- SuperSpecFlow 路由与适配层 owns routing natural language requests to the correct OpenSpec contract and Superpowers discipline.
 
-- `skills/ssf-think`：想清楚产品和设计
-- `skills/ssf-spec`：写 OpenSpec 风格规格
-- `skills/ssf-build`：按任务和 TDD 执行
-- `skills/ssf-review`：工程和代码审查
-- `skills/ssf-qa`：验收、风险、回归测试
-- `skills/ssf-ship`：发版门禁
-- `skills/ssf-git`：分支、暂存、commit（英文类型 + 中文正文）、PR、回滚
-- `skills/ssf-karpathy`：编码前思考、简单优先、外科手术式修改、目标驱动验证
-- `skills/ssf-archive`：归档和文档同步
-- `skills/ssf-retro`：复盘
+Local source-repository constraints:
 
-## 关键约束
-
-1. 非平凡功能不要直接写代码。
-2. 先弄清用户问题、范围、非目标和成功标准。
-3. 行为变更必须有 OpenSpec change-id。
-4. 每个实现必须映射到 Spec ID。
-5. 优先写失败测试，再实现。
-6. Review 反馈必须先验证事实，再判断是否采纳。
-7. QA 不只测 happy path，必须包含负向和回归路径。
-8. 发布必须有 rollback / monitoring 意识。
-9. commit 标题的类型与范围使用英文标识符（conventional commits），摘要、正文、字段名、说明全部使用中文。
-10. 所有 PR 标题（中文摘要部分）和正文必须是中文。
-
-## Karpathy 编码纪律
-
-任何写代码、修 bug、重构、review、提交前，都要遵守：
-
-### 1. 编码前思考
-
-- 明确目标。
-- 显式写出假设。
-- 有歧义时列出多个解释。
-- 发现更简单方案时主动指出。
-- 困惑时暂停并说明困惑点。
-
-### 2. 简单优先
-
-- 只写满足 spec 的最小实现。
-- 不为未来需求加抽象。
-- 不加未要求的配置、扩展点、框架。
-- 发现 200 行可以写成 50 行时，优先简化。
-
-### 3. 外科手术式修改
-
-- 只改必要文件和必要行。
-- 不顺手重构邻近代码。
-- 不顺手改注释、格式、命名。
-- 遵循现有风格。
-- 只清理本次改动造成的无用代码。
-
-### 4. 目标驱动验证
-
-- “修 bug”要转成“写复现测试，再修到通过”。
-- “加校验”要转成“写无效输入测试，再修到通过”。
-- “重构”要转成“重构前后测试均通过”。
-
-## Git 提交规范
-
-commit 标题格式：
-
-```text
-<英文类型>(<英文范围>): <中文摘要>
-```
-
-- `英文类型`：使用 conventional commits 标准集合（见下）。
-- `英文范围`：必须采用 `<根模块>` 或 `<根模块>:<业务子模块>` 的形式。
-  - 根模块取自仓库根目录划分：`skills`、`commands`、`agents`、`routing`、`templates`、`scripts`、`docs`、`openspec`、`examples`、`meta`（用于 `CLAUDE.md`、`README.md` 等根级文档）。
-  - 业务子模块按本次改动实际涉及的业务模块填写，使用小写英文 kebab-case，例如 `members`、`payment`、`auth`。
-  - 示例：`feat(skills:members): 增加续费提醒入口`、`fix(routing:payment): 修复重试状态不一致`。
-- `中文摘要`：必须是中文。
-
-commit 正文格式：
-
-```text
-变更编号：<change-id>
-关联规格：<SPEC-ID-1>, <SPEC-ID-2>
-
-变更内容：
-- <中文说明>
-
-验证方式：
-- <测试命令或人工验证步骤>
-
-风险与回滚：
-- <主要风险和回滚方式>
-```
-
-允许的英文类型（conventional commits 标准 + 项目定制 `spec`）：
-
-| 类型 | 用途 |
-|---|---|
-| feat | 新功能或新增行为 |
-| fix | 缺陷修复 |
-| docs | README、说明、runbook、用户文档 |
-| style | 不影响语义的格式调整 |
-| refactor | 不改变行为的结构调整 |
-| perf | 性能优化 |
-| test | 单测、集成测试、E2E、负向测试 |
-| build | 构建脚本、依赖、工具链 |
-| ci | CI 配置 |
-| chore | 杂项维护 |
-| revert | 回滚提交 |
-| spec | OpenSpec、需求、验收标准、任务（项目定制） |
-
-禁止使用：
-
-```text
-WIP
-update
-fix bug
-misc
-changes
-```
-
-提交前必须检查：
-
-```bash
-git branch --show-current
-git status --short
-git diff --stat
-git diff --check
-git diff --staged --stat
-```
-
-优先选择性暂存，不盲目使用 `git add .`。
-
-## 交互策略
-
-- 用户显式输入 `/ssf-*` 命令时，严格执行对应流程。
-- 用户自然语言请求必须先过 Intake Gate，不要仅凭关键词直接进入完整流程。
-- 用户自然语言描述非平凡新功能时，隐式进入 `ssf-think`。
-- 用户自然语言要求开发时，如果没有 spec，先进入 `ssf-spec` 或要求确认 change-id。
-- 用户要求提交、PR、merge、rebase、回滚时，隐式进入 `ssf-git`。
-- 小型低风险修改可以走轻量模式，但仍需说明影响范围、最小改动和测试方式。
-
-Intake Gate 分类：
-
-| 类别 | 处理方式 |
-|---|---|
-| 纯问答 / 解释 | 直接回答，不启动完整 SuperSpecFlow |
-| 轻量任务 | 说明目标、影响范围、验证方式；不强制全链路 |
-| 非平凡行为变更 | 进入 `ssf-think` 或 `ssf-spec`，形成 change-id / Spec ID |
-| 已有规格的实现 | 进入 `ssf-build` |
-| Review / QA / Ship / Git | 进入对应阶段 |
-| 高风险变更 | 强制 Spec、QA、Ship、Git/PR 门禁 |
-
-若无法判断是否属于轻量任务，先问一个关键问题，不要默认写代码或默认跑完整流程。
-
-显式命令集合：
-
-```text
-/ssf-think <idea>
-/ssf-spec <change-id>
-/ssf-build [all|N]
-/ssf-review
-/ssf-qa <change-id>
-/ssf-ship <change-id>
-/ssf-archive <change-id>
-/ssf-retro <change-id>
-/ssf-decision <topic>
-/ssf-map <change-id>
-/ssf-karpathy <target>
-/ssf-init
-/ssf-git
-/ssf-branch <change-id> <topic>
-/ssf-commit <change-id>
-/ssf-pr <change-id>
-```
-
-## 高风险关键词
-
-看到以下关键词时，自动提高门禁级别：
-
-支付、订阅、退款、计费、权限、登录、认证、数据库、迁移、删除、批量、webhook、密钥、安全、生产、发布、用户数据。
-
-## 完成定义
-
-完成不等于代码写完。完成必须至少满足：
-
-- OpenSpec tasks 更新
-- spec-to-code-map 更新
-- 相关测试通过或未运行原因明确
-- review 无 🔴
-- QA signoff 存在
-- Git commit 标题符合 `<英文类型>(<英文范围>): <中文摘要>` 规范，且正文中文完整
-- PR / release 内容为中文
-- rollback / monitoring 说明完整
+- `openspec/` is a committable contract directory for SuperSpecFlow package
+  changes.
+- `engineering/<change-id>/` is a committable package-source delivery directory.
+- `.superspecflow/`, `.claude/`, `.codex/`, `superpowers/`,
+  `docs/superpowers/`, and `.DS_Store` are local runtime, install, or cache
+  artifacts and must not be tracked in this repository.
+- Commit scopes may use root modules such as `openspec`, `routing`, `skills`,
+  `commands`, `agents`, `templates`, `scripts`, `docs`, `tests`, `examples`,
+  and `meta`.

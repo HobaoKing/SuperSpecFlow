@@ -1,14 +1,42 @@
 # SuperSpecFlow
 
-SuperSpecFlow 是一套面向 Claude Code / Codex CLI 的 AI 软件研发工作流包。它的目标不是让 AI 更快地堆代码，而是让 AI 在已有项目里像一个可审计的小型研发团队一样工作：先判断请求类型，再澄清目标，再形成可追踪规格，再小步实现、审查、验收、发布、归档和复盘。
+SuperSpecFlow 是一套面向 Claude Code / Codex CLI 的 AI 软件研发工作流包。它的目标不是让 AI 更快地堆代码，而是把一句自然语言需求变成一条可审计的 **SDD + TDD 交付链**：先判断请求类型，再形成 OpenSpec 变更合同，再按 Superpowers 执行纪律小步实现、审查、验收、发布、归档和复盘。
 
-项目初衷有三点：
+一句话概括：
+
+> **OpenSpec 管“要交付什么”，Superpowers 管“怎么可靠执行”，SuperSpecFlow 管“什么时候进入哪个阶段，并把证据串起来”。**
+
+最终效果是：用户可以用自然语言发起工作，也可以显式调用 `/ssf-*` 命令；agent 不会默认接管所有项目，而是在项目 opt-in 后按 SuperSpecFlow 的路由与阶段检查执行。
+
+## 为什么值得用
+
+- **SDD：Spec-Driven Development**。非平凡行为变更必须落到 OpenSpec change-id / Spec ID，需求、任务、实现、测试、commit、PR、回滚都能追踪到同一个 contract。
+- **TDD：先失败测试，再最小实现**。`/ssf-build` 要把 OpenSpec tasks 转成 implementation plan，每个可测试任务优先写失败测试、记录 `Expected: FAIL`，再写最小实现并记录 `Expected: PASS`。
+- **OpenSpec + Superpowers 不是简单拼接**。OpenSpec 合同层负责 proposal、specs、tasks、MUST NOT 和 archive；Superpowers 执行纪律层负责 brainstorming、writing-plans、TDD、review handling 和 verification-before-completion；SuperSpecFlow 路由与适配层把自然语言请求路由到正确阶段，并把每个阶段的证据连接起来。
+- **Evidence-backed QA**。QA 不是凭感觉点页面，而是从 requirements、scenarios 和 MUST NOT 派生 acceptance、negative、risk、regression、Browser/MCP QA、Visual UI QA 和 blocked signoff。
+- **可执行门禁**。关键门禁不只写在模板里：pack validation 会检查根入口薄化、change ledger、安装可移植性、runtime validators 和高风险发布字段；提交与 QA signoff 也有可复用 validator。
+- **GitOps 可追踪交付**。分支、选择性暂存、中文 commit 正文、PR、rollback 和 release decision 都要关联 change-id、Spec ID 和验证证据，避免“代码改完了但没人说得清为什么能发”。
+
+## 一条完整链路
+
+```text
+一句话需求
+  → Intake Gate 判断请求类型和风险
+  → /ssf-think 澄清目标、用户路径、non-goals 和成功指标
+  → /ssf-spec 生成 OpenSpec proposal / specs / tasks / readiness review
+  → /ssf-build 按 Spec ID 做 TDD、小步实现和 spec-to-code map
+  → /ssf-review 检查 spec / code / test 同步和 Karpathy Diff Audit
+  → /ssf-qa 生成验收矩阵、负向测试、风险矩阵和 QA evidence
+  → /ssf-ship 汇总 rollback、monitoring、release blockers 和 ship decision
+  → /ssf-git / /ssf-commit / /ssf-pr 写入可追踪 Git 记录
+  → /ssf-archive / /ssf-retro 归档证据并复盘流程缺口
+```
+
+## 项目初衷
 
 1. **防止一句话需求直接变成失控改动**：自然语言请求先经过 Intake Gate，区分纯问答、轻量任务、非平凡行为变更、高风险变更和 Git/QA/发布动作。
 2. **让每个行为变更都能追踪**：非平凡变更必须落到 OpenSpec change-id / Spec ID，并在实现、测试、commit、PR、回滚说明之间保持映射。
 3. **把优秀研发纪律变成 agent 可执行规则**：融合 OpenSpec 合同层、Superpowers 执行纪律层、SuperSpecFlow 路由与适配层、Karpathy 风格的 diff discipline，以及 GitOps 的分支、暂存、提交和 PR 门禁。
-
-最终效果是：用户可以用自然语言发起工作，也可以显式调用 `/ssf-*` 命令；agent 不会默认接管所有项目，而是在项目 opt-in 后按 SuperSpecFlow 的路由与阶段检查执行。
 
 ## 适合谁
 
@@ -107,136 +135,43 @@ SuperSpecFlow 使用 SemVer。当前包版本记录在 `VERSION`，发布记录�
 
 ## 快速接入
 
-SuperSpecFlow 同时支持 Claude Code 和 Codex CLI。默认会同时准备两个宿主的 global wrapper；只装其中一个用 `--claude-only` 或 `--codex-only` 收窄。
-
-全局安装脚本会生成 wrapper 和同步能力文件；如果 `~/.claude/CLAUDE.md` 或 `~/.codex/AGENTS.md` 不存在，脚本会创建并写入 include 行。如果这些全局指令文件已存在，脚本只打印应手动追加的 include 行，不擅自改写用户已有规则。
-
-安装前确认：
-
-- 本机需要 `git` 和 `bash`；使用一句话命令时还需要 `curl`。
-- 发布或同步前建议安装 `bats` 以运行完整测试；没有 `bats` 时仍可运行 `./scripts/validate-pack.sh`。
-- `rg` 是可选加速工具；缺失时验证脚本会退化到 `grep`。
-- `bootstrap.sh` 会把 `~/.superspecflow/` 更新到官方 `master`，已存在 checkout 时会执行 `fetch + reset --hard origin/master`。不要在该安装目录保存未提交的个人改动。
-
-### 方式 1：让 AI 帮你装（推荐）
-
-打开你的 Claude Code 或 Codex CLI，把下面整段中文粘贴进去，AI 会自己完成 clone、安装和校验：
-
-```text
-请把 SuperSpecFlow 安装到本机：
-
-1. 如果 ~/.superspecflow/ 不存在，执行：
-   git clone --depth=1 https://github.com/HobaoKing/SuperSpecFlow.git ~/.superspecflow
-   如果已存在，执行：
-   git -C ~/.superspecflow fetch --depth=1 origin master && git -C ~/.superspecflow reset --hard origin/master
-2. 检测我在用哪个 CLI：
-   - 只有 ~/.claude/ 存在 → 运行 ~/.superspecflow/scripts/install-global.sh --claude-only
-   - 只有 ~/.codex/ 存在 → 运行 ~/.superspecflow/scripts/install-global.sh --codex-only
-   - 两个都存在 → 运行 ~/.superspecflow/scripts/install-global.sh --both
-   - 两个都不存在 → 停下来问我应该装哪一个，不要擅自创建目录
-3. 校验：grep "SuperSpecFlow" 对应的 ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md，确认 include 行已写入；如果全局指令文件已存在且脚本提示要手动追加，把那一行原文展示给我。
-4. 简要报告每一步结果。
-```
-
-### 方式 2：一句话命令
+SuperSpecFlow 支持 Claude Code 和 Codex CLI。全局安装准备 wrapper 与能力文件；项目内执行 `/ssf-init` 后才启用自然语言 Intake Gate。
 
 ```bash
-# 两个 CLI 都装（默认）
+# 默认同时准备 Claude Code 与 Codex CLI
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash
 
-# 只装 Claude Code
+# 只装其中一个宿主
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --claude-only
-
-# 只装 Codex CLI
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --codex-only
 ```
 
-bootstrap 会把仓库 clone 到 `~/.superspecflow/`（可用环境变量 `SUPERSPECFLOW_HOME` 覆盖），然后调用 `install-global.sh` 并透传参数。已存在 checkout 时会 `fetch + reset --hard origin/master` 更新到最新。一句话命令需要的 raw URL 始终指向 `master` 分支，开发分支上的改动合入 master 后才会被一句话安装拿到。
-
-### 方式 3：手动 clone
+手动安装和项目 opt-in：
 
 ```bash
 git clone https://github.com/HobaoKing/SuperSpecFlow.git ~/.superspecflow
-~/.superspecflow/scripts/install-global.sh --both     # 或 --claude-only / --codex-only
-```
-
-### 项目 opt-in
-
-任意一种方式装完后，进入要启用的宿主项目，执行：
-
-```text
+~/.superspecflow/scripts/install-global.sh --both
+# 重启 Claude Code 会话后，/ssf-* 命令（含 /ssf-init）才会进入斜杠补全
+cd <project>
 /ssf-init
 ```
 
-`/ssf-init` 只创建 `.superspecflow/enabled` sentinel 和标准运行产物目录，不修改宿主项目的 `AGENTS.md` 或 `CLAUDE.md`。
+安装入口是 `install-global.sh`（让 `/ssf-*` 命令存在）；安装或项目 opt-in 后需**重启 Claude Code 会话**，`/ssf-init` 等命令才会进入斜杠补全。命令暂不可见时，可用终端方式初始化：`~/.superspecflow/update.sh --enable-natural-language <project>`。
 
-### 平台差异速查
-
-| 宿主 | 全局安装同步内容 | 说明 |
-|---|---|---|
-| Claude Code | `~/.claude/skills/`、`~/.claude/agents/`、`~/.claude/commands/`、`~/.claude/superspecflow/CLAUDE.global.md` | 支持显式 `/ssf-*` 命令文件；可选 SessionStart hook 用于更快检测项目 opt-in。 |
-| Codex CLI | `~/.codex/skills/`、`~/.codex/superspecflow/AGENTS.global.md` | 主要依赖 `AGENTS.md` routing 和 skills；显式 slash command 是否注册取决于当前 Codex 运行环境。 |
-| 两端共同点 | global wrapper + 项目 `.superspecflow/enabled` sentinel | 全局安装只提供能力；项目 opt-in 后才接管自然语言 Intake Gate。 |
-
-详细安装、兼容路径和卸载方式见 [docs/installation.md](docs/installation.md)。Claude Code / Codex 差异见 [docs/compatibility.md](docs/compatibility.md)。
+安装需要 `git`、`bash`；一句话安装还需要 `curl`。`bootstrap.sh` 会更新 `~/.superspecflow/` 到官方 `master`，不要在该目录保存未提交的个人改动。详细安装、兼容路径、平台差异和卸载方式见 [docs/installation.md](docs/installation.md) 与 [docs/compatibility.md](docs/compatibility.md)。
 
 ## 卸载
 
-与安装一对一对称，三种方式任选其一。卸载只移除 SuperSpecFlow 自己写入的 include 行、generated wrappers 和能力文件，绝不改动用户在 `CLAUDE.md` / `AGENTS.md` 里的其他内容。
-
-### 方式 1：让 AI 帮你卸（推荐）
-
-打开你的 Claude Code 或 Codex CLI，把下面整段粘贴进去：
-
-```text
-请把 SuperSpecFlow 从本机卸载：
-
-1. 如果 ~/.superspecflow/scripts/uninstall-global.sh 存在，执行：
-   ~/.superspecflow/scripts/uninstall-global.sh --both --purge
-   该脚本会精确移除 ~/.claude/CLAUDE.md 和 ~/.codex/AGENTS.md 里的 SuperSpecFlow include 行（其他内容保留），清理 generated wrappers 与 manifest 中记录且未被用户修改的能力文件，并删除 ~/.superspecflow/ 目录。
-2. 如果 ~/.superspecflow/ 不存在，但 ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md 里还有 SuperSpecFlow include 行：
-   找出形如 "@~/.claude/superspecflow/CLAUDE.global.md"、"@~/.codex/superspecflow/AGENTS.global.md" 或旧版 "@/path/to/SuperSpecFlow/routing/*.global.md" 的行，把那一行（且只有那一行）删除。如果文件因此变空，把文件本身也删除。
-3. 如果之前在 ~/.claude/settings.json 中合并过 SuperSpecFlow 的 SessionStart hook（command 指向 .../scripts/hooks/session-start-detect.sh），手动移除该 hook 条目。
-4. 简要报告每一步结果。
-```
-
-### 方式 2：本地脚本
+卸载只移除 SuperSpecFlow 自己写入的 include 行、generated wrappers 和能力文件，不改动用户在 `CLAUDE.md` / `AGENTS.md` 里的其他内容。
 
 ```bash
-# 同时移除两个宿主的 include，并删除 pack 目录
 ~/.superspecflow/scripts/uninstall-global.sh --both --purge
-
-# 只清 Claude Code，保留 pack 目录
 ~/.superspecflow/scripts/uninstall-global.sh --claude-only
-
-# 只清 Codex CLI，保留 pack 目录
 ~/.superspecflow/scripts/uninstall-global.sh --codex-only
-```
-
-`--purge` 会删除 pack 目录所在路径（`~/.superspecflow/` 或你手动 clone 的位置），如果当前工作目录在 pack 内部会拒绝执行，避免 `rm -rf` 掉运行中的脚本。`settings.json` 里的 SessionStart hook 由脚本提示你手动清理，不擅自改写。
-
-### 方式 3：手动
-
-```bash
-# 1. 找出 include 行（形如 @~/.claude/superspecflow/CLAUDE.global.md）
-grep SuperSpecFlow ~/.claude/CLAUDE.md ~/.codex/AGENTS.md 2>/dev/null
-
-# 2. 用编辑器删除这些 include 行；如果文件因此变空，删除整个文件
-# 3. 删除 pack 目录
-rm -rf ~/.superspecflow
-
-# 4. 如有 SessionStart hook，从 ~/.claude/settings.json 中移除指向 .../session-start-detect.sh 的条目
-```
-
-### 项目级卸载
-
-宿主项目内的 SuperSpecFlow 运行时仅一个目录：
-
-```bash
 rm -rf <project>/.superspecflow
 ```
 
-不会影响全局安装。`~/.superspecflow/`（家目录的装包路径）与 `<project>/.superspecflow/`（项目运行时）是两个互不依赖的目录。
+`--purge` 删除 pack 目录；项目级卸载只删除项目运行时目录，不影响全局安装。完整卸载细节和旧 include 清理见 [docs/installation.md#10-卸载流程](docs/installation.md#10-卸载流程)。
 
 ## 使用方式
 
@@ -341,8 +276,9 @@ SuperSpecFlow 应先判断这是非平凡行为变更，然后进入产品思考
 |---|---|
 | `AGENTS.md` | Codex / generic agents 的项目入口，引用本仓库规则并声明 SuperSpecFlow routing |
 | `CLAUDE.md` | Claude Code 的项目入口，语义与 `AGENTS.md` 对齐 |
-| `routing/AGENTS.routing.md` | Codex / generic agents 的完整默认路由规则 |
-| `routing/CLAUDE.routing.md` | Claude Code 的完整默认路由规则 |
+| `routing/default.routing.md` | 完整默认路由 canonical source |
+| `routing/AGENTS.routing.md` | Codex / generic agents 的 materialized 默认路由规则 |
+| `routing/CLAUDE.routing.md` | Claude Code 的 materialized 默认路由规则 |
 | `routing/AGENTS.global.md` | Codex 全局薄壳，检测宿主项目是否 opt-in，再决定是否读取默认路由 |
 | `routing/CLAUDE.global.md` | Claude Code 全局薄壳，结合 SessionStart hook 或 sentinel 检测 opt-in |
 | `templates/integration/AGENTS.snippet.md` | 不支持 `@` include 时，给宿主 `AGENTS.md` 使用的极薄入口文本 |
@@ -355,7 +291,7 @@ SuperSpecFlow 应先判断这是非平凡行为变更，然后进入产品思考
 | 类别 | 文件 |
 |---|---|
 | Intake / 产品 | `intake-gate.md`、`product-change-brief.md`、`user-journey.md`、`decision-record.md` |
-| OpenSpec | `proposal.md`、`spec.md`、`technical-design.md`、`tasks.md`、`spec-readiness-review.md` |
+| OpenSpec | `proposal.md`、`spec.md`、`design.md`、`tasks.md`、`spec-readiness-review.md` |
 | 工程执行 | `implementation-plan.md`、`spec-to-code-map.md`、`dev-handoff.md`、`sync-check.md` |
 | Karpathy 纪律 | `karpathy-preflight.md`、`karpathy-diff-audit.md` |
 | Review | `review-report.md`、`git-hygiene-review.md` |
@@ -378,6 +314,7 @@ SuperSpecFlow 应先判断这是非平凡行为变更，然后进入产品思考
 | `scripts/` | 安装、初始化、验证和 hook 脚本 |
 | `docs/` | 安装、兼容性、分支策略等用户文档 |
 | `openspec/changes/` | 本仓库自身行为规则变更的 OpenSpec contract |
+| `openspec/change-ledger.md` | 本仓库 OpenSpec changes 的 committable 状态索引，记录 active / complete / archived / superseded 和 evidence gaps |
 | `engineering/<change-id>/` | 本仓库包源码层工程交付物，例如 spec-to-code map |
 | `tests/` | bats 测试，覆盖安装、初始化、artifact path、progress、verification 等契约 |
 | `examples/` | 示例变更流程，展示从 OpenSpec 到 QA、release、archive、retro 的产物 |
@@ -404,6 +341,7 @@ SuperSpecFlow 仓库提交工作流包源码和 OpenSpec 变更契约：`routing
 | 产物 | 宿主项目运行时路径 |
 |---|---|
 | Engineering artifacts | `.superspecflow/engineering/<change-id>/` |
+| Intake artifacts | `.superspecflow/intake/<change-id>/` |
 | QA artifacts | `.superspecflow/qa/<change-id>/` |
 | Release artifacts | `.superspecflow/release/<change-id>/` |
 | Archive artifacts | `.superspecflow/archive/<change-id>/` |
@@ -414,9 +352,11 @@ SuperSpecFlow 仓库提交工作流包源码和 OpenSpec 变更契约：`routing
 | Karpathy audits | `.superspecflow/karpathy/<change-id>/` |
 | Cluster artifacts | `.superspecflow/clusters/<parent-change>/` |
 
-`/ssf-init` 会创建常用运行时目录：`engineering/`、`qa/`、`release/`、`archive/`、`retro/`、`decisions/`、`maps/`、`reviews/`、`karpathy/`、`progress/` 和 `verification/`。`.superspecflow/clusters/` 由 Spec cluster 流程按需创建，不是普通项目 opt-in 的必备目录。
+`/ssf-init` 会创建常用运行时目录：`intake/`、`engineering/`、`qa/`、`release/`、`archive/`、`retro/`、`decisions/`、`maps/`、`reviews/`、`karpathy/`、`progress/` 和 `verification/`。`.superspecflow/clusters/` 由 Spec cluster 流程按需创建，不是普通项目 opt-in 的必备目录。
 
 读取历史产物时采用新路径优先、旧路径 fallback；新写入不再推荐根目录旧路径。`.superspecflow/progress/`、`.superspecflow/verification/` 和 `.superspecflow/clusters/` 分别由 `progress-tracking`、`cross-agent-verification` 和 `parallel-worktree-spec-clusters` 定义文件协议。
+
+SuperSpecFlow 包源码仓库不提交 `.superspecflow/` 运行时实例；本仓库自身的 durable 状态摘要写入 `openspec/change-ledger.md`，具体实现映射继续写入 `engineering/<change-id>/`。
 
 ## Git 提交规范
 
@@ -461,6 +401,14 @@ changes
 ```
 
 该脚本会检查命令集合、skill frontmatter、旧前缀残留、冒号文件名、已跟踪运行时产物、artifact path contract，以及 README / routing 与 `commands/` 的命令集合一致性。
+
+新增的 runtime gate scripts 可单独运行：
+
+```bash
+./scripts/validate-commit-message.sh <commit-message-file>
+./scripts/validate-qa-signoff.sh .superspecflow/qa/<change-id>/qa-signoff.md
+./scripts/validate-change-ledger.sh
+```
 
 测试目录使用 bats：
 

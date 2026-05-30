@@ -2,20 +2,18 @@
 
 load '../lib/test_helper'
 
+setup() {
+  FIXTURE_REPO="$(ssf_make_tmp_repo_fixture)"
+}
+
 teardown() {
-  rm -rf "$REPO_ROOT/qa/test-fake-change"
-  rm -rf "$REPO_ROOT/progress/test-fake-change"
-  rm -rf "$REPO_ROOT/verification/test-fake-change"
-  rmdir "$REPO_ROOT/qa" 2>/dev/null || true
-  rmdir "$REPO_ROOT/progress" "$REPO_ROOT/verification" 2>/dev/null || true
-  rm -rf "$REPO_ROOT/.superspecflow/qa/test-fake-change"
-  rm -rf "$REPO_ROOT/.superspecflow/maps/progress-tracking"
-  rmdir "$REPO_ROOT/.superspecflow/qa" "$REPO_ROOT/.superspecflow/maps" "$REPO_ROOT/.superspecflow" 2>/dev/null || true
+  ssf_cleanup_tmp "$FIXTURE_REPO"
 }
 
 artifact_namespaces() {
   cat <<'EOF'
 .superspecflow/engineering/<change-id>/
+.superspecflow/intake/<change-id>/
 .superspecflow/qa/<change-id>/
 .superspecflow/release/<change-id>/
 .superspecflow/archive/<change-id>/
@@ -36,7 +34,7 @@ extract_artifact_paths_section() {
   ' "$file"
 }
 
-@test "routing files declare the nine runtime artifact namespaces" {
+@test "routing files declare runtime artifact namespaces" {
   for routing in "$REPO_ROOT/routing/AGENTS.routing.md" "$REPO_ROOT/routing/CLAUDE.routing.md"; do
     section="$(extract_artifact_paths_section "$routing")"
     [ -n "$section" ] || { echo "missing Artifact Paths section in $routing"; return 1; }
@@ -88,61 +86,68 @@ extract_artifact_paths_section() {
 }
 
 @test "openspec remains a committable contract and is not ignored" {
-  run git -C "$REPO_ROOT" check-ignore openspec
+  run git -C "$FIXTURE_REPO" check-ignore openspec
   [ "$status" -ne 0 ]
 
-  run bash "$REPO_ROOT/scripts/validate-pack.sh"
+  run bash "$FIXTURE_REPO/scripts/validate-pack.sh"
   [ "$status" -eq 0 ]
 }
 
 @test "committed engineering delivery directories are not treated as illegal runtime artifacts" {
   for dir in init-project-routing progress-tracking cross-agent-verification; do
-    run git -C "$REPO_ROOT" ls-files "engineering/$dir"
+    run git -C "$FIXTURE_REPO" ls-files "engineering/$dir"
     [ "$status" -eq 0 ]
     [[ "$output" == *"engineering/$dir/"* ]]
   done
 
-  run bash "$REPO_ROOT/scripts/validate-pack.sh"
+  run bash "$FIXTURE_REPO/scripts/validate-pack.sh"
   [ "$status" -eq 0 ]
 }
 
 @test "new root-level qa runtime artifacts are rejected while .superspecflow qa is ignored" {
-  mkdir -p "$REPO_ROOT/qa/test-fake-change"
-  printf 'runtime fixture\n' > "$REPO_ROOT/qa/test-fake-change/notes.md"
+  mkdir -p "$FIXTURE_REPO/qa/test-fake-change"
+  printf 'runtime fixture\n' > "$FIXTURE_REPO/qa/test-fake-change/notes.md"
 
-  run bash "$REPO_ROOT/scripts/validate-pack.sh"
+  run bash "$FIXTURE_REPO/scripts/validate-pack.sh"
   [ "$status" -ne 0 ]
   [[ "$output" == *"qa/test-fake-change"* ]]
 
-  rm -rf "$REPO_ROOT/qa/test-fake-change"
-  rmdir "$REPO_ROOT/qa" 2>/dev/null || true
+  rm -rf "$FIXTURE_REPO/qa/test-fake-change"
+  rmdir "$FIXTURE_REPO/qa" 2>/dev/null || true
 
-  mkdir -p "$REPO_ROOT/.superspecflow/qa/test-fake-change"
-  printf 'runtime fixture\n' > "$REPO_ROOT/.superspecflow/qa/test-fake-change/notes.md"
+  mkdir -p "$FIXTURE_REPO/.superspecflow/qa/test-fake-change"
+  printf 'runtime fixture\n' > "$FIXTURE_REPO/.superspecflow/qa/test-fake-change/notes.md"
 
-  run git -C "$REPO_ROOT" check-ignore .superspecflow/qa/test-fake-change/notes.md
+  run git -C "$FIXTURE_REPO" check-ignore .superspecflow/qa/test-fake-change/notes.md
   [ "$status" -eq 0 ]
+
+  [ ! -e "$REPO_ROOT/qa/test-fake-change" ]
+  [ ! -e "$REPO_ROOT/.superspecflow/qa/test-fake-change" ]
 }
 
 @test "new root-level progress and verification runtime artifacts are rejected" {
-  mkdir -p "$REPO_ROOT/progress/test-fake-change" "$REPO_ROOT/verification/test-fake-change"
-  printf 'runtime fixture\n' > "$REPO_ROOT/progress/test-fake-change/state.json"
-  printf 'runtime fixture\n' > "$REPO_ROOT/verification/test-fake-change/signoff.md"
+  mkdir -p "$FIXTURE_REPO/progress/test-fake-change" "$FIXTURE_REPO/verification/test-fake-change"
+  printf 'runtime fixture\n' > "$FIXTURE_REPO/progress/test-fake-change/state.json"
+  printf 'runtime fixture\n' > "$FIXTURE_REPO/verification/test-fake-change/signoff.md"
 
-  run bash "$REPO_ROOT/scripts/validate-pack.sh"
+  run bash "$FIXTURE_REPO/scripts/validate-pack.sh"
   [ "$status" -ne 0 ]
   [[ "$output" == *"progress/test-fake-change"* ]]
   [[ "$output" == *"verification/test-fake-change"* ]]
+
+  [ ! -e "$REPO_ROOT/progress/test-fake-change" ]
+  [ ! -e "$REPO_ROOT/verification/test-fake-change" ]
 }
 
 @test "engineering source delivery and .superspecflow runtime can coexist" {
-  mkdir -p "$REPO_ROOT/.superspecflow/maps/progress-tracking"
-  printf 'host runtime fixture\n' > "$REPO_ROOT/.superspecflow/maps/progress-tracking/spec-to-code-map.md"
+  mkdir -p "$FIXTURE_REPO/.superspecflow/maps/progress-tracking"
+  printf 'host runtime fixture\n' > "$FIXTURE_REPO/.superspecflow/maps/progress-tracking/spec-to-code-map.md"
 
-  run bash "$REPO_ROOT/scripts/validate-pack.sh"
+  run bash "$FIXTURE_REPO/scripts/validate-pack.sh"
   [ "$status" -eq 0 ]
 
-  [ -f "$REPO_ROOT/engineering/progress-tracking/spec-to-code-map.md" ]
+  [ -f "$FIXTURE_REPO/engineering/progress-tracking/spec-to-code-map.md" ]
+  [ ! -e "$REPO_ROOT/.superspecflow/maps/progress-tracking/spec-to-code-map.md" ]
 }
 
 @test "artifact migration spec-to-code map records requirement and MUST NOT coverage" {

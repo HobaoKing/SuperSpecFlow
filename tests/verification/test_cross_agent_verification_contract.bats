@@ -2,9 +2,12 @@
 
 load '../lib/test_helper'
 
+setup() {
+  FIXTURE_REPO="$(ssf_make_tmp_repo_fixture)"
+}
+
 teardown() {
-  rm -rf "$REPO_ROOT/.superspecflow/verification/bats-invalid-signoff"
-  rmdir "$REPO_ROOT/.superspecflow/verification" "$REPO_ROOT/.superspecflow" 2>/dev/null || true
+  ssf_cleanup_tmp "$FIXTURE_REPO"
 }
 
 @test "cross-agent verification templates define the handoff files" {
@@ -74,7 +77,7 @@ teardown() {
 }
 
 @test "validate-pack rejects invalid cross-agent verification signoff result" {
-  local signoff_dir="$REPO_ROOT/.superspecflow/verification/bats-invalid-signoff"
+  local signoff_dir="$FIXTURE_REPO/.superspecflow/verification/bats-invalid-signoff"
   mkdir -p "$signoff_dir"
   cat >"$signoff_dir/signoff.md" <<'SIGNOFF'
 # Cross-Agent Verification Signoff: bats-invalid-signoff
@@ -100,8 +103,9 @@ Reviewed At: 2026-05-24T00:00:00Z
 - none
 SIGNOFF
 
-  run bash "$REPO_ROOT/scripts/validate-pack.sh"
+  run bash "$FIXTURE_REPO/scripts/validate-pack.sh"
 
   [ "$status" -ne 0 ]
   [[ "$output" == *"非法 signoff result"* ]]
+  [ ! -e "$REPO_ROOT/.superspecflow/verification/bats-invalid-signoff" ]
 }

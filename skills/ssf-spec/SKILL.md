@@ -231,9 +231,9 @@ openspec/changes/<change-id>/
 
 ## Step 5.5 — Spec Document Review Loop
 
-Spec Readiness Review 通过后，使用 Agent tool 起 general-purpose 子代理对 spec 产物做独立评审：
+Spec Readiness Review 通过后，使用可用的 Agent tool 或 reviewer prompt 对 spec 产物做独立评审：
 
-- Reviewer prompt：`~/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/brainstorming/spec-document-reviewer-prompt.md`
+- Reviewer prompt：优先使用宿主环境已安装的 Superpowers `spec-document-reviewer-prompt.md`；如果不可定位，不得猜测固定 Claude plugin cache path。
 - 传给子代理：
   - 待审：`openspec/changes/<change-id>/proposal.md`、`openspec/changes/<change-id>/specs/*.md`、`openspec/changes/<change-id>/design.md`
   - 上游：ssf-think 输出的 `design.md`（产品决策）
@@ -244,7 +244,7 @@ Spec Readiness Review 通过后，使用 Agent tool 起 general-purpose 子代�
 
 注意：reviewer prompt 是英文 + 针对 superpowers 单一 design.md 结构。读 SuperSpecFlow 多文件结构（proposal/specs/design/tasks）和中文 SPEC-ID 时可能给出偏向通用结构的反馈。如果连续两轮出现明显不适配（例如要求把多文件合并、不识别 MUST NOT 语义），记录 follow-up，跳过本步并恢复纯人工 Spec Readiness Review。
 
-如果 reviewer prompt、Agent tool 或宿主环境不可用，不得静默跳过；必须在 Spec Readiness Review 的 `Blocked / Waived Evidence` 记录原因、残余风险和人工替代检查。
+如果 reviewer prompt、Agent tool 或宿主环境不可用，不得静默跳过；必须在 Spec Readiness Review 的 `Blocked / Waived Evidence` 记录 `Reviewer prompt unavailable`、原因、残余风险和人工替代检查。
 
 ## Step 6 — 自动续接
 

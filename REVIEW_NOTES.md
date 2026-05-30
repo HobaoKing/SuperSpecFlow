@@ -77,10 +77,16 @@
 ## 建议继续增强的方向
 
 1. 为不同技术栈增加测试命令探测，例如 Next.js、Rails、Django、Go、Rust。
-2. 增加 CI gate 模板，把 `/ssf-qa` 和 `/ssf-ship` 的检查转成 GitHub Actions。
-3. 增加 MCP / 浏览器 QA 适配，让 `ssf-qa` 能自动跑真实用户路径。已由 `workflow-scale-architecture` 拆出 `browser-mcp-qa-adapter` child OpenSpec。
-4. 增加安全专用 agent，用于 auth、payment、webhook、secret、PII 等高风险场景。
-5. 增加多 worktree 并行开发规则，让大 change 拆成多个 Spec cluster。已由 `workflow-scale-architecture` 拆出 `parallel-worktree-spec-clusters` child OpenSpec。
+2. 增加 MCP / 浏览器 QA 适配，让 `ssf-qa` 能自动跑真实用户路径。已由 `workflow-scale-architecture` 拆出 `browser-mcp-qa-adapter` child OpenSpec。
+3. 增加安全专用 agent，用于 auth、payment、webhook、secret、PII 等高风险场景。
+4. 增加多 worktree 并行开发规则，让大 change 拆成多个 Spec cluster。已由 `workflow-scale-architecture` 拆出 `parallel-worktree-spec-clusters` child OpenSpec。
+
+## 已接入的自动化门禁
+
+- GitHub Actions workflow：`.github/workflows/validate.yml`
+- CI 运行 `bash scripts/validate-pack.sh`
+- CI 运行 `bash scripts/test.sh`
+- CI 运行 `shellcheck` 覆盖核心脚本、hook 和测试 helper
 
 ## Workflow scale 已形成的路线
 
