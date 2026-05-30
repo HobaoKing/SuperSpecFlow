@@ -2,6 +2,23 @@
 
 All notable SuperSpecFlow package changes are recorded here.
 
+## [1.2.2] - 2026-05-31
+
+### Added
+
+- Added install discoverability onboarding guidance: global install now tells users to restart Claude Code, run `/ssf-init` after commands are discoverable, and use terminal opt-in paths when slash commands are unavailable.
+- Added onboarding contract tests for install output, `_ssf_init_apply.sh` output, README, installation docs, and `commands/ssf-init.md`.
+
+### Changed
+
+- Clarified Codex-only install guidance so it no longer implies Claude `/ssf-init` is available when Claude commands were not installed.
+- Completed the comprehensive maintenance hardening batch: canonical routing source, README/install docs drift reduction, template usability guidance, test filtering, new-change scaffolding, validator diagnostics, and workflow evidence cleanup.
+
+### Fixed
+
+- Fixed test infrastructure portability under non-default `TMPDIR` and isolated artifact-path tests from the real repository root.
+- Fixed the `scripts/test.sh` ShellCheck SC2295 warning in ROOT_DIR prefix removal and added a regression guard.
+
 ## [1.2.1] - 2026-05-30
 
 ### Changed

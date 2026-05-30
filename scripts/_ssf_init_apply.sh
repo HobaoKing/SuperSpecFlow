@@ -30,12 +30,8 @@ done
 cat <<MSG
 SuperSpecFlow 项目 opt-in 已生效：$project/.superspecflow/enabled
 
-下一步（仅在尚未做过全局安装时）：
-  bash <pack>/scripts/install-global.sh
-
-如果你只想给本项目使用而不做全局安装，可手动在 $project/CLAUDE.md 中加入：
-  @<pack>/routing/CLAUDE.routing.md
-或在 $project/AGENTS.md 中加入：
-  @<pack>/routing/AGENTS.routing.md
-（这一行为可选；不加也不影响 /ssf-* 显式命令）
+提示：
+- 如本会话此前已判定 SSF 状态为 disabled，请新开或重启会话；自然语言 Intake Gate 才会稳定启用（routing 在每个会话只探测一次 opt-in 状态）。
+- 显式 /ssf-* 命令由全局安装（bash <pack>/scripts/install-global.sh）注册到 Claude Code，重启会话后进入斜杠补全；本脚本只做项目 opt-in，不注册命令。
+- 如果只想给本项目启用自然语言路由而不做全局安装，可手动在 $project/CLAUDE.md 加入 @<pack>/routing/CLAUDE.routing.md（或在 $project/AGENTS.md 加入 @<pack>/routing/AGENTS.routing.md）。手动 include 只启用自然语言路由主体，不会把 /ssf-* 注册为 Claude Code slash 命令；两者相互独立。
 MSG

@@ -290,5 +290,15 @@ MSG
 fi
 
 echo
+if [ "$INSTALL_CLAUDE" -eq 1 ]; then
+  echo "下一步："
+  echo "  1. 重启 Claude Code 会话，以确保新安装的 /ssf-* 命令（含 /ssf-init）进入斜杠补全。"
+  echo "  2. 重启后，在目标项目目录运行 /ssf-init 完成项目 opt-in。"
+else
+  echo "下一步（Codex-only：已同步 Codex skills 与 wrapper，未安装 Claude commands，不依赖 /ssf-init）："
+  echo "  在目标项目用终端完成 opt-in：bash \"$REPO_ROOT/scripts/_ssf_init_apply.sh\""
+fi
+echo "  注意：若上面出现 \"skipped\" 警告，请确认对应文件，避免看到的并非 SuperSpecFlow 命令。"
+echo
 echo "Done."
 exit 0

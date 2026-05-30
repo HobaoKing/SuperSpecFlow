@@ -142,6 +142,8 @@ bash <pack>/scripts/_ssf_init_apply.sh
 
 `/ssf-init` **不**修改宿主项目的 `CLAUDE.md` / `AGENTS.md`。
 
+入口层次与可发现性：`/ssf-init` 是 Claude Code slash 命令，需先完成 §3.1 全局安装、并**重启 Claude Code 会话**后才会出现在斜杠补全里——安装入口是 `install-global.sh`（让命令存在），`/ssf-init` 是命令可用后的项目 opt-in 动作。此外，项目 opt-in 后若当前会话此前已判定为 disabled，需新开会话，自然语言 Intake Gate 才稳定启用（routing 每会话只探测一次 opt-in 状态）。命令暂不可见时，可直接用上面的终端等价方式 `bash <pack>/scripts/_ssf_init_apply.sh`，或 `<pack>/update.sh --enable-natural-language <project>`。
+
 ### 3.3 项目级 routing 覆盖（可选）
 
 如果某个项目想覆盖全局默认 routing，可在该项目里手动创建：
@@ -217,10 +219,10 @@ cp -R routing templates <project>/.superspecflow/
 ./scripts/install-global.sh --codex-only
 ```
 
-然后进入宿主项目执行：
+然后给宿主项目做 opt-in。注意：`--codex-only` 只同步 Codex skills 与 wrapper，**不安装 Claude commands**，因此该模式下不依赖 `/ssf-init` 这个 Claude Code slash 命令；用等价终端方式初始化项目：
 
-```text
-/ssf-init
+```bash
+bash <pack>/scripts/_ssf_init_apply.sh
 ```
 
 项目级软连 routing 只作为旧项目兼容路径保留，见附录 A。不要把 SuperSpecFlow 仓库根目录的 `AGENTS.md` 当作宿主项目完整替代品。
@@ -258,6 +260,8 @@ openspec/changes/<change-id>/
 如果宿主项目已有 OpenSpec 目录，沿用现有目录结构，不要移动或重写已有 change。
 
 ## 8. 安装后烟测
+
+> 前置：完成第 3 节全局安装后，请先**重启 Claude Code 会话**，确保新安装的 `/ssf-*` 命令进入斜杠补全，再执行下面的命令类烟测。
 
 ### 8.1 Zero-touch 检查
 

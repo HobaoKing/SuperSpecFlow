@@ -151,9 +151,12 @@ curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scri
 ```bash
 git clone https://github.com/HobaoKing/SuperSpecFlow.git ~/.superspecflow
 ~/.superspecflow/scripts/install-global.sh --both
+# 重启 Claude Code 会话后，/ssf-* 命令（含 /ssf-init）才会进入斜杠补全
 cd <project>
 /ssf-init
 ```
+
+安装入口是 `install-global.sh`（让 `/ssf-*` 命令存在）；安装或项目 opt-in 后需**重启 Claude Code 会话**，`/ssf-init` 等命令才会进入斜杠补全。命令暂不可见时，可用终端方式初始化：`~/.superspecflow/update.sh --enable-natural-language <project>`。
 
 安装需要 `git`、`bash`；一句话安装还需要 `curl`。`bootstrap.sh` 会更新 `~/.superspecflow/` 到官方 `master`，不要在该目录保存未提交的个人改动。详细安装、兼容路径、平台差异和卸载方式见 [docs/installation.md](docs/installation.md) 与 [docs/compatibility.md](docs/compatibility.md)。
 

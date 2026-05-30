@@ -33,4 +33,4 @@ Notes:
 
 - Explicit `/ssf-*` commands work regardless of whether `.superspecflow/` exists; they are one-off actions and do not implicitly create the sentinel.
 - Re-running `/ssf-init` is idempotent: existing subdirectory contents are preserved.
-- For legacy compatibility, `scripts/install-project-symlinks.sh` still works and creates the older symlink-based layout. New users should prefer `/ssf-init` + `scripts/install-global.sh`.
+- For legacy compatibility, `scripts/install-project-symlinks.sh` still works and creates the older symlink-based layout. New users should prefer running `scripts/install-global.sh` first, then restart Claude Code so `/ssf-*` commands appear in the slash menu, then run `/ssf-init` in the project.

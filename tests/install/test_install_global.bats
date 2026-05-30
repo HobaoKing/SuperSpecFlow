@@ -157,3 +157,24 @@ teardown() {
   [ "$(cat "$HOME/.claude/skills/ssf-qa/SKILL.md")" = "LOCAL CLAUDE SKILL EDIT" ]
   [ "$(cat "$HOME/.codex/skills/ssf-qa/SKILL.md")" = "LOCAL CODEX SKILL EDIT" ]
 }
+
+@test "安装成功结尾引导重启会话并运行 /ssf-init（SSF-ONBOARD-001）" {
+  run "$INSTALL" --yes --no-hook
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"重启"* ]]
+  [[ "$output" == *"补全"* ]]
+  [[ "$output" == *"/ssf-init"* ]]
+}
+
+@test "安装结尾提示留意 skipped 警告（SSF-ONBOARD-006）" {
+  run "$INSTALL" --yes --no-hook
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"skipped"* ]]
+}
+
+@test "--codex-only 安装结尾不把 /ssf-init 当作可用 Claude 命令（SSF-ONBOARD-005）" {
+  run "$INSTALL" --codex-only --yes --no-hook
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"运行 /ssf-init 完成项目 opt-in"* ]]
+  [[ "$output" == *"_ssf_init_apply.sh"* ]]
+}
