@@ -2,6 +2,19 @@
 
 All notable SuperSpecFlow package changes are recorded here.
 
+## [1.2.1] - 2026-05-30
+
+### Changed
+
+- Clarified the layer boundary: OpenSpec 合同层, Superpowers 执行纪律层, and SuperSpecFlow 路由与适配层.
+- Replaced proprietary role-gate framing in runtime guidance with routing and stage-check language.
+- Added routing input/output and Superpowers discipline traceability requirements.
+
+### Fixed
+
+- Prevented pack validation from requiring the superseded `SuperSpecFlow 角色门禁` wording.
+- Preserved gstack source attribution while keeping runtime guidance free of gstack execution-style recommendations.
+
 ## [1.2.0] - 2026-05-30
 
 ### Added
