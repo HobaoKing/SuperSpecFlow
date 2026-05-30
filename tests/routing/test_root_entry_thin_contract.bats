@@ -18,3 +18,18 @@ load '../lib/test_helper'
 @test "validate-pack enforces thin root instruction entries" {
   grep -q 'check_root_instruction_files_thin' "$REPO_ROOT/scripts/validate-pack.sh"
 }
+
+@test "public routing files are materialized from canonical routing source" {
+  [ -f "$REPO_ROOT/routing/default.routing.md" ]
+  [ ! -L "$REPO_ROOT/routing/default.routing.md" ]
+  [ ! -L "$REPO_ROOT/routing/AGENTS.routing.md" ]
+  [ ! -L "$REPO_ROOT/routing/CLAUDE.routing.md" ]
+
+  cmp -s "$REPO_ROOT/routing/default.routing.md" "$REPO_ROOT/routing/AGENTS.routing.md"
+  cmp -s "$REPO_ROOT/routing/default.routing.md" "$REPO_ROOT/routing/CLAUDE.routing.md"
+}
+
+@test "validate-pack enforces canonical routing drift guard" {
+  grep -q 'routing/default.routing.md' "$REPO_ROOT/scripts/validate-pack.sh"
+  grep -q 'public routing files match canonical' "$REPO_ROOT/scripts/validate-pack.sh"
+}

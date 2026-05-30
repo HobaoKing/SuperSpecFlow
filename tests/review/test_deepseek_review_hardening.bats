@@ -63,9 +63,56 @@ load '../lib/test_helper'
 }
 
 @test "change ledger no longer leaves completed implementation contracts active" {
-  ! grep -Eq '^\| [^|]+ \| active \|' "$REPO_ROOT/openspec/change-ledger.md"
+  run grep -Eq '^\| (deepseek-review-hardening|workflow-hardening-program|comprehensive-maintenance-hardening) \| active \|' "$REPO_ROOT/openspec/change-ledger.md"
+  [ "$status" -ne 0 ]
   grep -q '| deepseek-review-hardening | complete |' "$REPO_ROOT/openspec/change-ledger.md"
+  grep -q '| comprehensive-maintenance-hardening | complete |' "$REPO_ROOT/openspec/change-ledger.md"
   grep -q 'Historical final evidence gap' "$REPO_ROOT/openspec/change-ledger.md"
+}
+
+@test "validate-pack accepts active rows with concrete pending evidence" {
+  fixture="$(ssf_make_tmp_repo_fixture)"
+
+  run bash "$fixture/scripts/new-change.sh" fixture-active-change
+  [ "$status" -eq 0 ]
+
+  run bash "$fixture/scripts/validate-pack.sh"
+
+  [ "$status" -eq 0 ]
+  ssf_cleanup_tmp "$fixture"
+}
+
+@test "validate-pack rejects active rows with placeholder evidence" {
+  fixture="$(ssf_make_tmp_repo_fixture)"
+  run bash "$fixture/scripts/new-change.sh" fixture-placeholder-change
+  [ "$status" -eq 0 ]
+
+  sed 's/| fixture-placeholder-change | active |.*|.*|/| fixture-placeholder-change | active | - | TBD |/' \
+    "$fixture/openspec/change-ledger.md" > "$fixture/openspec/change-ledger.md.tmp"
+  mv "$fixture/openspec/change-ledger.md.tmp" "$fixture/openspec/change-ledger.md"
+
+  run bash "$fixture/scripts/validate-pack.sh"
+
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"stale active"* ]] || [[ "$output" == *"active"* ]]
+  ssf_cleanup_tmp "$fixture"
+}
+
+@test "validate-pack rejects active rows whose tasks are all complete" {
+  fixture="$(ssf_make_tmp_repo_fixture)"
+  run bash "$fixture/scripts/new-change.sh" fixture-complete-active-change
+  [ "$status" -eq 0 ]
+
+  sed -e 's/- \[ \]/- [x]/g' "$fixture/openspec/changes/fixture-complete-active-change/tasks.md" \
+    > "$fixture/openspec/changes/fixture-complete-active-change/tasks.md.tmp"
+  mv "$fixture/openspec/changes/fixture-complete-active-change/tasks.md.tmp" \
+    "$fixture/openspec/changes/fixture-complete-active-change/tasks.md"
+
+  run bash "$fixture/scripts/validate-pack.sh"
+
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"completed tasks"* ]] || [[ "$output" == *"active"* ]]
+  ssf_cleanup_tmp "$fixture"
 }
 
 @test "validate-pack enforces DeepSeek review hardening contract" {

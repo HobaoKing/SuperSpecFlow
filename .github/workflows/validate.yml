@@ -22,6 +22,13 @@ jobs:
       - name: Test suite
         run: bash scripts/test.sh
 
+      - name: Non-default TMPDIR validation
+        run: |
+          tmpdir="$RUNNER_TEMP/superspecflow tmp"
+          mkdir -p "$tmpdir"
+          TMPDIR="$tmpdir/" bash scripts/validate-pack.sh
+          TMPDIR="$tmpdir/" bash scripts/test.sh
+
       - name: Shellcheck
         run: |
           shellcheck -x \

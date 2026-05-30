@@ -293,33 +293,18 @@ Tests: [运行结果]
 
 ## Karpathy Integration — 编码纪律门禁
 
-在 Step 1 前，必须运行轻量 Karpathy preflight：
+详细纪律见 `skills/ssf-karpathy/SKILL.md`；本阶段只保留 build 必须执行的本地门禁：
 
-```markdown
-# Karpathy Preflight
-
-## 我理解的目标
-
-## 明确假设
-
-## 可能的歧义
-
-## 更简单的方案
-
-## 本次最小可行改动
-```
-
-执行时遵守：
-
-- 不做无关重构。
-- 不修改与 Spec ID 无关的文件。
-- 不为了未来扩展写抽象。
+- Step 1 前写明目标、假设、歧义、更简单方案和本次最小可行改动。
+- 不做无关重构，不修改与 Spec ID 无关的文件，不为了未来扩展写抽象。
 - 每个变更行都应能追溯到 Spec ID、测试或 bug 复现。
 - 发现无关坏味道，记录到 follow-up，不直接改。
 
 ## Git Integration — 小步中文提交
 
-每完成一个可验证 task，建议进入：
+详细提交纪律见 `skills/ssf-git/SKILL.md`；build 阶段只准备 Git gate，不直接替代 `/ssf-commit`。
+
+每完成一个可验证 task，进入：
 
 ```text
 /ssf-commit [change-id]

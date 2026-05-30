@@ -91,13 +91,13 @@ openspec/changes/[change-id]
 1. ...
 ```
 
-## Step 5 — 结束
+## Step 5 — Completion Summary
 
 输出：
 
 ```text
-✅ [change-id] cycle complete.
-下一步：/ssf-retro 或 /ssf-think [next idea]
+✅ [change-id] archive artifacts complete.
+继续 Step 6 记录 Git / PR archive，再进入自动续接。
 ```
 
 ## Step 6 — Git / PR Archive
@@ -121,3 +121,13 @@ openspec/changes/[change-id]
 ```
 
 如果 commit 或 PR 没有中文内容，标记为流程缺口，并在 `ssf-retro` 中提出修复建议。
+
+## Step 7 — 自动续接
+
+归档、ledger、文档覆盖和 Git / PR archive 都完成后，进入：
+
+```text
+/ssf-retro [change-id]
+```
+
+如果用户明确结束本轮，不继续 `/ssf-retro`，记录该决定和原因；否则不得在 Step 6 前宣布 cycle complete。

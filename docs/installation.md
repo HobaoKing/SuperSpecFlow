@@ -161,60 +161,19 @@ bash <pack>/scripts/_ssf_init_apply.sh
 - 状态 = enabled：启用 Intake Gate。
 - 状态 = disabled：不接管自然语言，但 `/ssf-*` 显式命令始终可用。
 
-## 4. 兼容方案：项目软连接入
+## 4. 兼容路径索引
 
-> 老用户兼容路径。新用户优先使用上一节方案 C。
+新用户优先使用第 3 节方案 C：全局安装 + 项目 `/ssf-init`，不修改宿主项目 `AGENTS.md` / `CLAUDE.md`。
 
-软连安装让宿主项目引用 SuperSpecFlow 的集中路由和能力文件。升级 SuperSpecFlow 后，宿主项目不需要手动同步大段文本。
+旧版项目软连接入仍受支持，但只作为兼容路径保留。需要继续维护旧项目时，使用附录 A 的 `install-project-symlinks.sh` 流程；新项目不要再手工 `ln -sfn` routing 文件。
 
-在 SuperSpecFlow 仓库中执行：
-
-```bash
-./scripts/install-project-symlinks.sh <project>
-```
-
-该脚本会在宿主项目中创建：
-
-```text
-.superspecflow/
-  AGENTS.routing.md -> <SuperSpecFlow>/routing/AGENTS.routing.md
-  CLAUDE.routing.md -> <SuperSpecFlow>/routing/CLAUDE.routing.md
-  templates -> <SuperSpecFlow>/templates
-.claude/
-  agents/* -> <SuperSpecFlow>/agents/*
-  commands/ssf-*.md -> <SuperSpecFlow>/commands/ssf-*.md
-  skills/ssf-* -> <SuperSpecFlow>/skills/ssf-*
-```
-
-然后在宿主项目已有 `AGENTS.md` / `CLAUDE.md` 中只保留极薄入口。不要复制完整 routing 文件。
-
-`AGENTS.md` 示例：
-
-```markdown
-@./.superspecflow/AGENTS.routing.md
-```
-
-`CLAUDE.md` 示例：
-
-```markdown
-@./.superspecflow/CLAUDE.routing.md
-```
-
-这种方式仍会修改宿主项目指令文件，但只增加一行 include，不复制 SuperSpecFlow 规则正文。如果当前环境不支持 `@` include，再使用 `templates/integration/*.snippet.md` 中的极薄文字入口作为 fallback。
-
-也可以在支持 slash command 的环境中，在宿主项目里执行：
-
-```text
-/ssf-init
-```
-
-`/ssf-init` 是项目初始化动作：它创建 `.superspecflow/enabled` sentinel 和标准运行产物子目录，不修改宿主项目指令文件。其他 `/ssf-*` 命令只是一次性调用，不会自动创建 `.superspecflow/`。
+如果当前环境不支持 `@` include，使用 `templates/integration/*.snippet.md` 的极薄文字入口作为 fallback，不要复制完整 routing 正文。
 
 ## 5. Claude Code 安装
 
 ### 5.1 项目级安装
 
-优先使用第 4 节的软连脚本。
+优先使用第 3 节方案 C 的全局安装与项目 `/ssf-init`。旧项目如需保留软连接入，见附录 A。
 
 如果团队不允许 symlink，可以复制能力文件，但仍不要覆盖宿主项目指令文件：
 
@@ -252,22 +211,19 @@ cp -R routing templates <project>/.superspecflow/
 
 ## 6. Codex CLI 安装
 
-推荐全局安装 skills：
+推荐使用全局安装脚本同步 Codex skills 与 wrapper：
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R skills/* ~/.codex/skills/
+./scripts/install-global.sh --codex-only
 ```
 
-然后在宿主项目中软连 routing 文件：
+然后进入宿主项目执行：
 
-```bash
-mkdir -p <project>/.superspecflow
-ln -sfn <SuperSpecFlow>/routing/AGENTS.routing.md <project>/.superspecflow/AGENTS.routing.md
-ln -sfn <SuperSpecFlow>/templates <project>/.superspecflow/templates
+```text
+/ssf-init
 ```
 
-再在宿主项目 `AGENTS.md` 中加入 `@./.superspecflow/AGENTS.routing.md`。如果宿主项目没有 `AGENTS.md`，可以新建一个，但内容应包含宿主项目自身约束和该 include。不要把 SuperSpecFlow 仓库根目录的 `AGENTS.md` 当作宿主项目完整替代品。
+项目级软连 routing 只作为旧项目兼容路径保留，见附录 A。不要把 SuperSpecFlow 仓库根目录的 `AGENTS.md` 当作宿主项目完整替代品。
 
 ## 7. 可选安装项
 
@@ -480,3 +436,37 @@ rm -f <project>/.claude/skills/ssf-*
 ```
 
 然后从宿主项目 `AGENTS.md` / `CLAUDE.md` 中移除 `@./.superspecflow/*.routing.md` include 或 fallback 极薄入口。
+
+## 附录 A：项目软连接入兼容路径
+
+> 旧用户兼容路径。新项目优先使用第 3 节方案 C。
+
+软连安装让宿主项目引用 SuperSpecFlow 的集中路由和能力文件。升级 SuperSpecFlow 后，宿主项目不需要手动同步大段文本。
+
+在 SuperSpecFlow 仓库中执行：
+
+```bash
+./scripts/install-project-symlinks.sh <project>
+```
+
+该脚本会在宿主项目中创建：
+
+```text
+.superspecflow/
+  AGENTS.routing.md -> <SuperSpecFlow>/routing/AGENTS.routing.md
+  CLAUDE.routing.md -> <SuperSpecFlow>/routing/CLAUDE.routing.md
+  templates -> <SuperSpecFlow>/templates
+.claude/
+  agents/* -> <SuperSpecFlow>/agents/*
+  commands/ssf-*.md -> <SuperSpecFlow>/commands/ssf-*.md
+  skills/ssf-* -> <SuperSpecFlow>/skills/ssf-*
+```
+
+然后在宿主项目已有 `AGENTS.md` / `CLAUDE.md` 中只保留极薄入口。不要复制完整 routing 文件。
+
+```markdown
+@./.superspecflow/AGENTS.routing.md
+@./.superspecflow/CLAUDE.routing.md
+```
+
+这种方式仍会修改宿主项目指令文件，但只增加一行 include，不复制 SuperSpecFlow 规则正文。如果当前环境不支持 `@` include，再使用 `templates/integration/*.snippet.md` 中的极薄文字入口作为 fallback。

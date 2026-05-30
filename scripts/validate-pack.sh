@@ -18,6 +18,38 @@ fail() {
   FAILED=1
 }
 
+require_file() {
+  local file="$1"
+  local message="$2"
+
+  if [ ! -f "$file" ]; then
+    fail "$message"
+    return 1
+  fi
+}
+
+require_grep() {
+  local pattern="$1"
+  local file="$2"
+  local message="$3"
+
+  if ! grep -q -- "$pattern" "$file"; then
+    fail "$message"
+    return 1
+  fi
+}
+
+reject_grep() {
+  local pattern="$1"
+  local file="$2"
+  local message="$3"
+
+  if grep -q -- "$pattern" "$file"; then
+    fail "$message"
+    return 1
+  fi
+}
+
 tmp_file() {
   mktemp "${TMPDIR:-/tmp}/ssf-validate.XXXXXX"
 }
@@ -221,7 +253,7 @@ check_command_docs_consistency() {
     | sed 's#^#/#' \
     | sort -u >"$expected_file"
 
-  for doc in README.md routing/AGENTS.routing.md routing/CLAUDE.routing.md; do
+  for doc in README.md routing/default.routing.md routing/AGENTS.routing.md routing/CLAUDE.routing.md; do
     grep -Eo '/ssf-[a-z]+' "$doc" | sort -u >"$actual_file" || true
 
     if diff -u "$expected_file" "$actual_file" >"$command_diff_file"; then
@@ -329,82 +361,166 @@ check_recursive_test_runner() {
   fi
 }
 
-check_browser_mcp_qa_contract() {
-  for f in templates/qa-execution-plan.md templates/browser-run-report.md; do
-    if [ ! -f "$f" ]; then
-      fail "$f 不存在"
-    fi
+check_developer_tooling_contract() {
+  local contract_failed=0
+
+  if [ ! -x scripts/new-change.sh ]; then
+    fail "scripts/new-change.sh missing or not executable"
+    contract_failed=1
+  fi
+
+  require_grep '--filter' scripts/test.sh "scripts/test.sh 缺少 --filter 支持" || contract_failed=1
+  require_grep 'no bats tests matched selection' scripts/test.sh "scripts/test.sh 缺少 no-match 错误" || contract_failed=1
+  require_grep 'openspec/change-ledger.md' scripts/new-change.sh "scripts/new-change.sh 缺少 ledger 更新" || contract_failed=1
+  require_grep 'Scaffold created by scripts/new-change.sh' scripts/new-change.sh "scripts/new-change.sh 缺少 validate-ready evidence" || contract_failed=1
+  require_grep 'require_grep' scripts/validate-pack.sh "validate-pack.sh 缺少 granular grep helper" || contract_failed=1
+
+  if [ "$contract_failed" -eq 0 ]; then
+    pass "developer tooling contract 已接入 test filter、new-change scaffold 和 granular diagnostics"
+  fi
+}
+
+check_template_skill_usability_contract() {
+  local template contract_failed=0
+
+  for template in \
+    templates/acceptance-matrix.md \
+    templates/proposal.md \
+    templates/design.md \
+    templates/risk-matrix.md \
+    templates/negative-test-matrix.md \
+    templates/spec-to-code-map.md \
+    templates/sync-check.md \
+    templates/tasks.md; do
+    require_grep 'Fill guidance:' "$template" "$template 缺少 Fill guidance" || contract_failed=1
+    require_grep 'Example:' "$template" "$template 缺少 Example" || contract_failed=1
   done
 
-  if ! grep -q '.superspecflow/qa/\[change-id\]/qa-execution-plan.md' templates/qa-execution-plan.md; then
-    fail "qa-execution-plan template 缺少 runtime 路径"
-  elif ! grep -q '.superspecflow/qa/\[change-id\]/browser-run-report.md' templates/browser-run-report.md; then
-    fail "browser-run-report template 缺少 runtime 路径"
-  elif ! grep -q 'qa-evidence' templates/browser-run-report.md; then
-    fail "browser-run-report template 缺少 qa-evidence 引用"
-  elif ! grep -q 'Automated Browser Passed' templates/qa-signoff.md; then
-    fail "qa-signoff template 缺少 browser QA 状态枚举"
-  elif grep -q 'Status: Pending' templates/qa-signoff.md; then
-    fail "qa-signoff template 不得使用 Pending 作为最终 Browser/MCP 状态"
-  elif ! grep -q 'Blocked: No runnable target' skills/ssf-qa/SKILL.md; then
-    fail "ssf-qa 缺少 no runnable target blocked 规则"
-  elif ! grep -q 'Blocked: Tool unavailable' skills/ssf-qa/SKILL.md; then
-    fail "ssf-qa 缺少 tool unavailable blocked 规则"
-  elif ! grep -q 'qa-execution-plan.md' commands/ssf-qa.md; then
-    fail "ssf-qa command 缺少 execution plan"
-  elif ! grep -q 'qa-execution-plan.md' agents/qa-gatekeeper.md ||
-       ! grep -q 'browser-run-report.md' agents/qa-gatekeeper.md ||
-       ! grep -q 'Blocked: No runnable target' agents/qa-gatekeeper.md ||
-       ! grep -q 'Blocked: Tool unavailable' agents/qa-gatekeeper.md; then
-    fail "qa-gatekeeper agent 缺少 Browser/MCP QA 门禁规则"
+  require_grep 'skills/ssf-karpathy/SKILL.md' skills/ssf-build/SKILL.md "ssf-build 缺少 ssf-karpathy cross-reference" || contract_failed=1
+  require_grep 'skills/ssf-git/SKILL.md' skills/ssf-build/SKILL.md "ssf-build 缺少 ssf-git cross-reference" || contract_failed=1
+  require_grep '/ssf-commit \[change-id\]' skills/ssf-build/SKILL.md "ssf-build 缺少 /ssf-commit handoff" || contract_failed=1
+  require_grep 'git diff --check' skills/ssf-build/SKILL.md "ssf-build 缺少 git diff --check gate" || contract_failed=1
+  require_grep '.superspecflow/progress/<change-id>/' skills/ssf-build/SKILL.md "ssf-build 缺少 progress 路径规则" || contract_failed=1
+  require_grep 'fresh verification' skills/ssf-build/SKILL.md "ssf-build 缺少 fresh verification 规则" || contract_failed=1
+  require_grep 'Reviewer prompt unavailable' skills/ssf-build/SKILL.md "ssf-build 缺少 reviewer unavailable 记录" || contract_failed=1
+  require_grep 'cluster-plan.md' skills/ssf-build/SKILL.md "ssf-build 缺少 cluster-plan.md" || contract_failed=1
+  require_grep 'cluster-status.md' skills/ssf-build/SKILL.md "ssf-build 缺少 cluster-status.md" || contract_failed=1
+
+  require_grep '## Probing Questions' skills/ssf-retro/SKILL.md "ssf-retro 缺少 probing questions" || contract_failed=1
+  require_grep 'Evidence:' skills/ssf-retro/SKILL.md "ssf-retro 缺少 evidence probing question" || contract_failed=1
+  require_grep 'Gates:' skills/ssf-retro/SKILL.md "ssf-retro 缺少 gates probing question" || contract_failed=1
+  require_grep 'Scope:' skills/ssf-retro/SKILL.md "ssf-retro 缺少 scope probing question" || contract_failed=1
+  require_grep 'Handoff:' skills/ssf-retro/SKILL.md "ssf-retro 缺少 handoff probing question" || contract_failed=1
+
+  require_grep '## Step 7 — 自动续接' skills/ssf-archive/SKILL.md "ssf-archive 缺少 Step 7 自动续接" || contract_failed=1
+  require_grep '/ssf-retro' skills/ssf-archive/SKILL.md "ssf-archive 缺少 /ssf-retro 续接" || contract_failed=1
+
+  if [ "$contract_failed" -eq 0 ]; then
+    pass "template and skill usability contract 已接入"
+  fi
+}
+
+check_docs_drift_reduction_contract() {
+  local main_install_doc
+  main_install_doc="$(tmp_file)"
+
+  if ! grep -q 'docs/installation.md' README.md ||
+     ! grep -q 'docs/compatibility.md' README.md ||
+     ! grep -q '/ssf-init' README.md ||
+     ! grep -q 'uninstall-global.sh' README.md; then
+    fail "README.md 快速接入缺少安装、opt-in、卸载或详情链接"
+  elif grep -q '让 AI 帮你装' README.md ||
+       grep -q '平台差异速查' README.md; then
+    fail "README.md 仍保留长安装指南正文"
   else
+    pass "README.md 快速接入保持摘要和详情链接"
+  fi
+
+  awk '
+    /^## 附录 A：项目软连接入兼容路径/ { exit }
+    { print }
+  ' docs/installation.md >"$main_install_doc"
+
+  if ! grep -q '## 4. 兼容路径索引' docs/installation.md ||
+     ! grep -q '## 附录 A：项目软连接入兼容路径' docs/installation.md ||
+     ! grep -q './scripts/install-project-symlinks.sh <project>' docs/installation.md; then
+    fail "docs/installation.md 缺少兼容索引或软连接入附录"
+  elif grep -q 'ln -sfn <SuperSpecFlow>/routing' "$main_install_doc" ||
+       grep -q '优先使用第 4 节的软连脚本' "$main_install_doc"; then
+    fail "docs/installation.md 主安装路径仍推广软连接入"
+  else
+    pass "docs/installation.md 将软连接入降级为兼容附录"
+  fi
+
+  rm -f "$main_install_doc"
+
+  if grep -q 'Child OpenSpec drafted' engineering/workflow-scale-architecture/spec-to-code-map.md ||
+     grep -q '后续 child contract tests' engineering/workflow-scale-architecture/spec-to-code-map.md; then
+    fail "workflow-scale-architecture spec-to-code map 仍包含 stale child draft/future wording"
+  else
+    pass "workflow-scale-architecture evidence wording 已刷新"
+  fi
+}
+
+check_browser_mcp_qa_contract() {
+  local contract_failed=0
+
+  require_file templates/qa-execution-plan.md "templates/qa-execution-plan.md 不存在" || contract_failed=1
+  require_file templates/browser-run-report.md "templates/browser-run-report.md 不存在" || contract_failed=1
+
+  require_grep '.superspecflow/qa/\[change-id\]/qa-execution-plan.md' templates/qa-execution-plan.md "qa-execution-plan template 缺少 runtime 路径" || contract_failed=1
+  require_grep '.superspecflow/qa/\[change-id\]/browser-run-report.md' templates/browser-run-report.md "browser-run-report template 缺少 runtime 路径" || contract_failed=1
+  require_grep 'qa-evidence' templates/browser-run-report.md "browser-run-report template 缺少 qa-evidence 引用" || contract_failed=1
+  require_grep 'Automated Browser Passed' templates/qa-signoff.md "qa-signoff template 缺少 browser QA 状态枚举" || contract_failed=1
+  reject_grep 'Status: Pending' templates/qa-signoff.md "qa-signoff template 不得使用 Pending 作为最终 Browser/MCP 状态" || contract_failed=1
+  require_grep 'Blocked: No runnable target' skills/ssf-qa/SKILL.md "ssf-qa 缺少 no runnable target blocked 规则" || contract_failed=1
+  require_grep 'Blocked: Tool unavailable' skills/ssf-qa/SKILL.md "ssf-qa 缺少 tool unavailable blocked 规则" || contract_failed=1
+  require_grep 'qa-execution-plan.md' commands/ssf-qa.md "ssf-qa command 缺少 execution plan" || contract_failed=1
+  require_grep 'qa-execution-plan.md' agents/qa-gatekeeper.md "qa-gatekeeper agent 缺少 qa-execution-plan.md" || contract_failed=1
+  require_grep 'browser-run-report.md' agents/qa-gatekeeper.md "qa-gatekeeper agent 缺少 browser-run-report.md" || contract_failed=1
+  require_grep 'Blocked: No runnable target' agents/qa-gatekeeper.md "qa-gatekeeper agent 缺少 no runnable target blocked 规则" || contract_failed=1
+  require_grep 'Blocked: Tool unavailable' agents/qa-gatekeeper.md "qa-gatekeeper agent 缺少 tool unavailable blocked 规则" || contract_failed=1
+
+  if [ "$contract_failed" -eq 0 ]; then
     pass "browser/MCP QA contract 已接入模板、skill、command 和 agent"
   fi
 }
 
 check_visual_ui_qa_contract() {
-  for f in templates/visual-execution-plan.md templates/visual-comparison-report.md; do
-    if [ ! -f "$f" ]; then
-      fail "$f 不存在"
-    fi
-  done
+  local contract_failed=0
 
-  if ! grep -q '.superspecflow/qa/\[change-id\]/visual-execution-plan.md' templates/visual-execution-plan.md; then
-    fail "visual-execution-plan template 缺少 runtime 路径"
-  elif ! grep -q '.superspecflow/qa/\[change-id\]/visual-comparison-report.md' templates/visual-comparison-report.md; then
-    fail "visual-comparison-report template 缺少 runtime 路径"
-  elif ! grep -q '.superspecflow/qa/\[change-id\]/qa-evidence/visual/' templates/visual-comparison-report.md; then
-    fail "visual-comparison-report template 缺少 visual evidence 路径"
-  elif ! grep -q 'Platform: web | mini-program' templates/visual-execution-plan.md; then
-    fail "visual-execution-plan template 缺少 Web/小程序 platform 枚举"
-  elif ! grep -q 'Optional Reference' templates/visual-execution-plan.md; then
-    fail "visual-execution-plan template 缺少 optional reference 字段"
-  elif ! grep -q 'Visual Passed' templates/qa-signoff.md ||
-       ! grep -q 'Manual Visual Verified' templates/qa-signoff.md ||
-       ! grep -q 'Blocked: Missing baseline' templates/qa-signoff.md ||
-       ! grep -q 'Blocked: Missing actual screenshot' templates/qa-signoff.md ||
-       ! grep -q 'Blocked: Diff tool unavailable' templates/qa-signoff.md; then
-    fail "qa-signoff template 缺少 visual QA 状态枚举"
-  elif ! grep -q 'visual-execution-plan.md' skills/ssf-qa/SKILL.md ||
-       ! grep -q 'visual-comparison-report.md' skills/ssf-qa/SKILL.md ||
-       ! grep -q 'platform: web | mini-program' skills/ssf-qa/SKILL.md ||
-       ! grep -q 'actual screenshot 自动提升为 baseline' skills/ssf-qa/SKILL.md; then
-    fail "ssf-qa 缺少 visual UI QA 门禁规则"
-  elif ! grep -q 'visual-execution-plan.md' commands/ssf-qa.md ||
-       ! grep -q 'visual-comparison-report.md' commands/ssf-qa.md; then
-    fail "ssf-qa command 缺少 visual QA 输出"
-  elif ! grep -q 'visual-execution-plan.md' agents/qa-gatekeeper.md ||
-       ! grep -q 'visual-comparison-report.md' agents/qa-gatekeeper.md ||
-       ! grep -q 'Manual Visual Verified' agents/qa-gatekeeper.md ||
-       ! grep -q 'qa-evidence/visual' agents/qa-gatekeeper.md; then
-    fail "qa-gatekeeper agent 缺少 visual UI QA 门禁规则"
-  elif ! grep -q 'visual-execution-plan.md' routing/AGENTS.routing.md ||
-       ! grep -q 'visual-comparison-report.md' routing/CLAUDE.routing.md ||
-       ! grep -q 'qa-evidence/visual' README.md; then
-    fail "routing 或 README 缺少 visual UI QA 协议说明"
-  elif grep -q 'WeChat DevTools' skills/ssf-qa/SKILL.md agents/qa-gatekeeper.md templates/visual-execution-plan.md templates/visual-comparison-report.md; then
+  require_file templates/visual-execution-plan.md "templates/visual-execution-plan.md 不存在" || contract_failed=1
+  require_file templates/visual-comparison-report.md "templates/visual-comparison-report.md 不存在" || contract_failed=1
+
+  require_grep '.superspecflow/qa/\[change-id\]/visual-execution-plan.md' templates/visual-execution-plan.md "visual-execution-plan template 缺少 runtime 路径" || contract_failed=1
+  require_grep '.superspecflow/qa/\[change-id\]/visual-comparison-report.md' templates/visual-comparison-report.md "visual-comparison-report template 缺少 runtime 路径" || contract_failed=1
+  require_grep '.superspecflow/qa/\[change-id\]/qa-evidence/visual/' templates/visual-comparison-report.md "visual-comparison-report template 缺少 visual evidence 路径" || contract_failed=1
+  require_grep 'Platform: web | mini-program' templates/visual-execution-plan.md "visual-execution-plan template 缺少 Web/小程序 platform 枚举" || contract_failed=1
+  require_grep 'Optional Reference' templates/visual-execution-plan.md "visual-execution-plan template 缺少 optional reference 字段" || contract_failed=1
+  require_grep 'Visual Passed' templates/qa-signoff.md "qa-signoff template 缺少 visual QA 状态枚举" || contract_failed=1
+  require_grep 'Manual Visual Verified' templates/qa-signoff.md "qa-signoff template 缺少 Manual Visual Verified 状态" || contract_failed=1
+  require_grep 'Blocked: Missing baseline' templates/qa-signoff.md "qa-signoff template 缺少 Missing baseline 阻断状态" || contract_failed=1
+  require_grep 'Blocked: Missing actual screenshot' templates/qa-signoff.md "qa-signoff template 缺少 Missing actual screenshot 阻断状态" || contract_failed=1
+  require_grep 'Blocked: Diff tool unavailable' templates/qa-signoff.md "qa-signoff template 缺少 Diff tool unavailable 阻断状态" || contract_failed=1
+  require_grep 'visual-execution-plan.md' skills/ssf-qa/SKILL.md "ssf-qa 缺少 visual-execution-plan.md" || contract_failed=1
+  require_grep 'visual-comparison-report.md' skills/ssf-qa/SKILL.md "ssf-qa 缺少 visual-comparison-report.md" || contract_failed=1
+  require_grep 'platform: web | mini-program' skills/ssf-qa/SKILL.md "ssf-qa 缺少 visual platform 枚举" || contract_failed=1
+  require_grep 'actual screenshot 自动提升为 baseline' skills/ssf-qa/SKILL.md "ssf-qa 缺少 baseline 提升限制" || contract_failed=1
+  require_grep 'visual-execution-plan.md' commands/ssf-qa.md "ssf-qa command 缺少 visual-execution-plan.md" || contract_failed=1
+  require_grep 'visual-comparison-report.md' commands/ssf-qa.md "ssf-qa command 缺少 visual-comparison-report.md" || contract_failed=1
+  require_grep 'visual-execution-plan.md' agents/qa-gatekeeper.md "qa-gatekeeper agent 缺少 visual-execution-plan.md" || contract_failed=1
+  require_grep 'visual-comparison-report.md' agents/qa-gatekeeper.md "qa-gatekeeper agent 缺少 visual-comparison-report.md" || contract_failed=1
+  require_grep 'Manual Visual Verified' agents/qa-gatekeeper.md "qa-gatekeeper agent 缺少 Manual Visual Verified" || contract_failed=1
+  require_grep 'qa-evidence/visual' agents/qa-gatekeeper.md "qa-gatekeeper agent 缺少 visual evidence 路径" || contract_failed=1
+  require_grep 'visual-execution-plan.md' routing/AGENTS.routing.md "routing/AGENTS.routing.md 缺少 visual-execution-plan.md" || contract_failed=1
+  require_grep 'visual-comparison-report.md' routing/CLAUDE.routing.md "routing/CLAUDE.routing.md 缺少 visual-comparison-report.md" || contract_failed=1
+  require_grep 'qa-evidence/visual' README.md "README.md 缺少 visual evidence 路径" || contract_failed=1
+  if grep -q 'WeChat DevTools' skills/ssf-qa/SKILL.md agents/qa-gatekeeper.md templates/visual-execution-plan.md templates/visual-comparison-report.md; then
     fail "visual UI QA 第一版不得绑定具体小程序 runner"
-  else
+    contract_failed=1
+  fi
+
+  if [ "$contract_failed" -eq 0 ]; then
     pass "Visual UI QA contract 已接入模板、skill、command、agent 和 routing"
   fi
 }
@@ -617,13 +733,25 @@ check_command_file_names() {
 check_routing_files() {
   local routing_file
 
+  if [ ! -f routing/default.routing.md ]; then
+    fail "routing/default.routing.md 不存在"
+  elif [ -L routing/default.routing.md ]; then
+    fail "routing/default.routing.md 必须是可移植的普通文件"
+  elif ! grep -q 'Intake Gate' routing/default.routing.md; then
+    fail "routing/default.routing.md 缺少 Intake Gate"
+  else
+    pass "routing/default.routing.md 是 canonical routing source"
+  fi
+
   for routing_file in routing/AGENTS.routing.md routing/CLAUDE.routing.md; do
     if [ ! -f "$routing_file" ]; then
       fail "$routing_file 不存在"
       continue
     fi
 
-    if ! grep -q 'Intake Gate' "$routing_file"; then
+    if [ -L "$routing_file" ]; then
+      fail "$routing_file 必须是可移植的普通文件"
+    elif ! grep -q 'Intake Gate' "$routing_file"; then
       fail "$routing_file 缺少 Intake Gate"
     elif ! grep -q '轻量任务' "$routing_file"; then
       fail "$routing_file 缺少轻量任务边界"
@@ -662,10 +790,12 @@ check_routing_files() {
     pass "routing/CLAUDE.routing.md 保留完整路由契约"
   fi
 
-  if cmp -s routing/AGENTS.routing.md routing/CLAUDE.routing.md; then
-    pass "AGENTS 与 CLAUDE routing 内容一致"
+  if ! cmp -s routing/default.routing.md routing/AGENTS.routing.md; then
+    fail "routing/AGENTS.routing.md 与 canonical routing/default.routing.md 不一致"
+  elif ! cmp -s routing/default.routing.md routing/CLAUDE.routing.md; then
+    fail "routing/CLAUDE.routing.md 与 canonical routing/default.routing.md 不一致"
   else
-    fail "AGENTS 与 CLAUDE routing 内容不一致"
+    pass "public routing files match canonical routing/default.routing.md"
   fi
 }
 
@@ -945,7 +1075,59 @@ check_deepseek_review_hardening_contract() {
     pass "ssf-branch / ssf-decision / ssf-map 命令合同合法"
   fi
 
-  if grep -Eq '^\| [^|]+ \| active \|' openspec/change-ledger.md; then
+  local stale_active
+  stale_active="$(awk -F '|' '
+    function trim(value) {
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+      return value
+    }
+    function missing(value) {
+      value = trim(value)
+      return value == "" || value == "-" || value == "N/A" || value == "n/a" || value == "TBD" || value == "tbd"
+    }
+    NR > 1 {
+      change = trim($2)
+      status = trim($3)
+      evidence = trim($4)
+      gaps = trim($5)
+      if (change != "" && change != "---" && change != "Change ID" && status == "active") {
+        notes = tolower(evidence " " gaps)
+        if (missing(evidence) || missing(gaps) || notes ~ /historical final evidence gap|generic active follow-up|stale follow-up/) {
+          print change ": missing or stale active evidence"
+        }
+      }
+    }
+  ' openspec/change-ledger.md)"
+
+  while IFS= read -r active_change; do
+    [ -n "$active_change" ] || continue
+    local change_id tasks_file checked_count unchecked_count
+    change_id="${active_change%%:*}"
+    tasks_file="openspec/changes/$change_id/tasks.md"
+    if [ -f "$tasks_file" ]; then
+      checked_count="$(grep -Ec '^[[:space:]]*-[[:space:]]+\[x\]' "$tasks_file" || true)"
+      unchecked_count="$(grep -Ec '^[[:space:]]*-[[:space:]]+\[ \]' "$tasks_file" || true)"
+      if [ "$checked_count" -gt 0 ] && [ "$unchecked_count" -eq 0 ]; then
+        stale_active="${stale_active}${stale_active:+
+}$change_id: active row has completed tasks"
+      fi
+    fi
+  done < <(awk -F '|' '
+    function trim(value) {
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+      return value
+    }
+    NR > 1 {
+      change = trim($2)
+      status = trim($3)
+      if (change != "" && change != "---" && change != "Change ID" && status == "active") {
+        print change ": active"
+      }
+    }
+  ' openspec/change-ledger.md)
+
+  if [ -n "$stale_active" ]; then
+    printf '%s\n' "$stale_active" >&2
     fail "openspec/change-ledger.md 不得保留 stale active rows"
   else
     pass "openspec/change-ledger.md 无 stale active rows"
@@ -1170,6 +1352,9 @@ check_command_docs_consistency
 check_zero_touch_artifacts
 check_install_global_contract
 check_recursive_test_runner
+check_developer_tooling_contract
+check_template_skill_usability_contract
+check_docs_drift_reduction_contract
 check_change_ledger_contract
 check_host_portability_contract
 check_runtime_gate_validators

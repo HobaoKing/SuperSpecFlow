@@ -135,136 +135,40 @@ SuperSpecFlow 使用 SemVer。当前包版本记录在 `VERSION`，发布记录�
 
 ## 快速接入
 
-SuperSpecFlow 同时支持 Claude Code 和 Codex CLI。默认会同时准备两个宿主的 global wrapper；只装其中一个用 `--claude-only` 或 `--codex-only` 收窄。
-
-全局安装脚本会生成 wrapper 和同步能力文件；如果 `~/.claude/CLAUDE.md` 或 `~/.codex/AGENTS.md` 不存在，脚本会创建并写入 include 行。如果这些全局指令文件已存在，脚本只打印应手动追加的 include 行，不擅自改写用户已有规则。
-
-安装前确认：
-
-- 本机需要 `git` 和 `bash`；使用一句话命令时还需要 `curl`。
-- 发布或同步前建议安装 `bats` 以运行完整测试；没有 `bats` 时仍可运行 `./scripts/validate-pack.sh`。
-- `rg` 是可选加速工具；缺失时验证脚本会退化到 `grep`。
-- `bootstrap.sh` 会把 `~/.superspecflow/` 更新到官方 `master`，已存在 checkout 时会执行 `fetch + reset --hard origin/master`。不要在该安装目录保存未提交的个人改动。
-
-### 方式 1：让 AI 帮你装（推荐）
-
-打开你的 Claude Code 或 Codex CLI，把下面整段中文粘贴进去，AI 会自己完成 clone、安装和校验：
-
-```text
-请把 SuperSpecFlow 安装到本机：
-
-1. 如果 ~/.superspecflow/ 不存在，执行：
-   git clone --depth=1 https://github.com/HobaoKing/SuperSpecFlow.git ~/.superspecflow
-   如果已存在，执行：
-   git -C ~/.superspecflow fetch --depth=1 origin master && git -C ~/.superspecflow reset --hard origin/master
-2. 检测我在用哪个 CLI：
-   - 只有 ~/.claude/ 存在 → 运行 ~/.superspecflow/scripts/install-global.sh --claude-only
-   - 只有 ~/.codex/ 存在 → 运行 ~/.superspecflow/scripts/install-global.sh --codex-only
-   - 两个都存在 → 运行 ~/.superspecflow/scripts/install-global.sh --both
-   - 两个都不存在 → 停下来问我应该装哪一个，不要擅自创建目录
-3. 校验：grep "SuperSpecFlow" 对应的 ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md，确认 include 行已写入；如果全局指令文件已存在且脚本提示要手动追加，把那一行原文展示给我。
-4. 简要报告每一步结果。
-```
-
-### 方式 2：一句话命令
+SuperSpecFlow 支持 Claude Code 和 Codex CLI。全局安装准备 wrapper 与能力文件；项目内执行 `/ssf-init` 后才启用自然语言 Intake Gate。
 
 ```bash
-# 两个 CLI 都装（默认）
+# 默认同时准备 Claude Code 与 Codex CLI
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash
 
-# 只装 Claude Code
+# 只装其中一个宿主
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --claude-only
-
-# 只装 Codex CLI
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --codex-only
 ```
 
-bootstrap 会把仓库 clone 到 `~/.superspecflow/`（可用环境变量 `SUPERSPECFLOW_HOME` 覆盖），然后调用 `install-global.sh` 并透传参数。已存在 checkout 时会 `fetch + reset --hard origin/master` 更新到最新。一句话命令需要的 raw URL 始终指向 `master` 分支，开发分支上的改动合入 master 后才会被一句话安装拿到。
-
-### 方式 3：手动 clone
+手动安装和项目 opt-in：
 
 ```bash
 git clone https://github.com/HobaoKing/SuperSpecFlow.git ~/.superspecflow
-~/.superspecflow/scripts/install-global.sh --both     # 或 --claude-only / --codex-only
-```
-
-### 项目 opt-in
-
-任意一种方式装完后，进入要启用的宿主项目，执行：
-
-```text
+~/.superspecflow/scripts/install-global.sh --both
+cd <project>
 /ssf-init
 ```
 
-`/ssf-init` 只创建 `.superspecflow/enabled` sentinel 和标准运行产物目录，不修改宿主项目的 `AGENTS.md` 或 `CLAUDE.md`。
-
-### 平台差异速查
-
-| 宿主 | 全局安装同步内容 | 说明 |
-|---|---|---|
-| Claude Code | `~/.claude/skills/`、`~/.claude/agents/`、`~/.claude/commands/`、`~/.claude/superspecflow/CLAUDE.global.md` | 支持显式 `/ssf-*` 命令文件；可选 SessionStart hook 用于更快检测项目 opt-in。 |
-| Codex CLI | `~/.codex/skills/`、`~/.codex/superspecflow/AGENTS.global.md` | 主要依赖 `AGENTS.md` routing 和 skills；显式 slash command 是否注册取决于当前 Codex 运行环境。 |
-| 两端共同点 | global wrapper + 项目 `.superspecflow/enabled` sentinel | 全局安装只提供能力；项目 opt-in 后才接管自然语言 Intake Gate。 |
-
-详细安装、兼容路径和卸载方式见 [docs/installation.md](docs/installation.md)。Claude Code / Codex 差异见 [docs/compatibility.md](docs/compatibility.md)。
+安装需要 `git`、`bash`；一句话安装还需要 `curl`。`bootstrap.sh` 会更新 `~/.superspecflow/` 到官方 `master`，不要在该目录保存未提交的个人改动。详细安装、兼容路径、平台差异和卸载方式见 [docs/installation.md](docs/installation.md) 与 [docs/compatibility.md](docs/compatibility.md)。
 
 ## 卸载
 
-与安装一对一对称，三种方式任选其一。卸载只移除 SuperSpecFlow 自己写入的 include 行、generated wrappers 和能力文件，绝不改动用户在 `CLAUDE.md` / `AGENTS.md` 里的其他内容。
-
-### 方式 1：让 AI 帮你卸（推荐）
-
-打开你的 Claude Code 或 Codex CLI，把下面整段粘贴进去：
-
-```text
-请把 SuperSpecFlow 从本机卸载：
-
-1. 如果 ~/.superspecflow/scripts/uninstall-global.sh 存在，执行：
-   ~/.superspecflow/scripts/uninstall-global.sh --both --purge
-   该脚本会精确移除 ~/.claude/CLAUDE.md 和 ~/.codex/AGENTS.md 里的 SuperSpecFlow include 行（其他内容保留），清理 generated wrappers 与 manifest 中记录且未被用户修改的能力文件，并删除 ~/.superspecflow/ 目录。
-2. 如果 ~/.superspecflow/ 不存在，但 ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md 里还有 SuperSpecFlow include 行：
-   找出形如 "@~/.claude/superspecflow/CLAUDE.global.md"、"@~/.codex/superspecflow/AGENTS.global.md" 或旧版 "@/path/to/SuperSpecFlow/routing/*.global.md" 的行，把那一行（且只有那一行）删除。如果文件因此变空，把文件本身也删除。
-3. 如果之前在 ~/.claude/settings.json 中合并过 SuperSpecFlow 的 SessionStart hook（command 指向 .../scripts/hooks/session-start-detect.sh），手动移除该 hook 条目。
-4. 简要报告每一步结果。
-```
-
-### 方式 2：本地脚本
+卸载只移除 SuperSpecFlow 自己写入的 include 行、generated wrappers 和能力文件，不改动用户在 `CLAUDE.md` / `AGENTS.md` 里的其他内容。
 
 ```bash
-# 同时移除两个宿主的 include，并删除 pack 目录
 ~/.superspecflow/scripts/uninstall-global.sh --both --purge
-
-# 只清 Claude Code，保留 pack 目录
 ~/.superspecflow/scripts/uninstall-global.sh --claude-only
-
-# 只清 Codex CLI，保留 pack 目录
 ~/.superspecflow/scripts/uninstall-global.sh --codex-only
-```
-
-`--purge` 会删除 pack 目录所在路径（`~/.superspecflow/` 或你手动 clone 的位置），如果当前工作目录在 pack 内部会拒绝执行，避免 `rm -rf` 掉运行中的脚本。`settings.json` 里的 SessionStart hook 由脚本提示你手动清理，不擅自改写。
-
-### 方式 3：手动
-
-```bash
-# 1. 找出 include 行（形如 @~/.claude/superspecflow/CLAUDE.global.md）
-grep SuperSpecFlow ~/.claude/CLAUDE.md ~/.codex/AGENTS.md 2>/dev/null
-
-# 2. 用编辑器删除这些 include 行；如果文件因此变空，删除整个文件
-# 3. 删除 pack 目录
-rm -rf ~/.superspecflow
-
-# 4. 如有 SessionStart hook，从 ~/.claude/settings.json 中移除指向 .../session-start-detect.sh 的条目
-```
-
-### 项目级卸载
-
-宿主项目内的 SuperSpecFlow 运行时仅一个目录：
-
-```bash
 rm -rf <project>/.superspecflow
 ```
 
-不会影响全局安装。`~/.superspecflow/`（家目录的装包路径）与 `<project>/.superspecflow/`（项目运行时）是两个互不依赖的目录。
+`--purge` 删除 pack 目录；项目级卸载只删除项目运行时目录，不影响全局安装。完整卸载细节和旧 include 清理见 [docs/installation.md#10-卸载流程](docs/installation.md#10-卸载流程)。
 
 ## 使用方式
 
@@ -369,8 +273,9 @@ SuperSpecFlow 应先判断这是非平凡行为变更，然后进入产品思考
 |---|---|
 | `AGENTS.md` | Codex / generic agents 的项目入口，引用本仓库规则并声明 SuperSpecFlow routing |
 | `CLAUDE.md` | Claude Code 的项目入口，语义与 `AGENTS.md` 对齐 |
-| `routing/AGENTS.routing.md` | Codex / generic agents 的完整默认路由规则 |
-| `routing/CLAUDE.routing.md` | Claude Code 的完整默认路由规则 |
+| `routing/default.routing.md` | 完整默认路由 canonical source |
+| `routing/AGENTS.routing.md` | Codex / generic agents 的 materialized 默认路由规则 |
+| `routing/CLAUDE.routing.md` | Claude Code 的 materialized 默认路由规则 |
 | `routing/AGENTS.global.md` | Codex 全局薄壳，检测宿主项目是否 opt-in，再决定是否读取默认路由 |
 | `routing/CLAUDE.global.md` | Claude Code 全局薄壳，结合 SessionStart hook 或 sentinel 检测 opt-in |
 | `templates/integration/AGENTS.snippet.md` | 不支持 `@` include 时，给宿主 `AGENTS.md` 使用的极薄入口文本 |
