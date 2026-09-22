@@ -2,6 +2,13 @@
 
 All notable SuperSpecFlow package changes are recorded here.
 
+## [2.0.1] - 2026-09-22
+
+### Changed
+
+- README 与安装文档把 `curl -fsSL .../scripts/bootstrap.sh | bash` 作为推荐的远端一句话安装方式清晰呈现，并与本地源码安装区分。
+- 文档说明全局安装后默认对所有项目开启轻量自然语言路由，无需逐项目执行 init；需要单独禁用某项目时在其根目录放置 `.superspecflow/disabled`，恢复时运行 `/ssf-init`。该禁用与恢复机制在本版之前已由 `session-start-detect.sh` 和 `_ssf_init_apply.sh` 实现，本版补齐文档。
+
 ## [2.0.0] - 2026-09-22
 
 破坏性变更：本版移除 OpenSpec / Superpowers 强依赖、旧命令别名、角色转接层和大部分模板，安装接入方式随之改变。升级前请确认没有依赖已移除的 `/ssf-*` 命令或模板路径。
