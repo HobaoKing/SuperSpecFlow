@@ -17,15 +17,19 @@ bash scripts/install-global.sh --codex-only
 
 ## 项目启用
 
-Claude 安装后重启会话，使 `/ssf-init` 进入补全，然后在目标项目调用。Codex-only 不安装 Claude commands，在目标目录执行：
+全局安装默认已开启轻量自然语言路由，所有项目开箱即用，无需在每个项目中自己执行 init。
+
+Claude 安装后重启会话即可加载全局指令并使 `/ssf-*` 进入命令补全。Codex-only 同步 skills 与 wrapper 后在新会话中自动生效。
+
+若某个项目需要单独禁用 SuperSpecFlow，可在该项目根目录下放置 `.superspecflow/disabled` 文件。需要恢复或显式确认启用时，可在 Claude 中运行 `/ssf-init`，或在终端执行：
 
 ```bash
 bash <pack>/scripts/_ssf_init_apply.sh
 ```
 
-只创建 `.superspecflow/enabled`，不预建阶段目录或改写宿主 AGENTS.md / CLAUDE.md。显式 init 后更新本会话状态；宿主未重新读取时新开会话。
+该命令仅确保 `.superspecflow/enabled` 存在并清除 `.superspecflow/disabled`，不预建阶段目录或改写宿主 AGENTS.md / CLAUDE.md。
 
-全局安装只提供能力，未 opt-in 项目按宿主默认方式工作。项目可用显式 routing include 接入，或通过自己的 `.superspecflow/AGENTS.routing.md` / `CLAUDE.routing.md` 定义规则；这些项目文件由项目自己维护。
+项目可通过自己的 `.superspecflow/AGENTS.routing.md` / `CLAUDE.routing.md` 定义规则覆盖默认路由；显式 routing include 也可接入；这些项目文件由项目自己维护。
 
 ## 验证与卸载
 

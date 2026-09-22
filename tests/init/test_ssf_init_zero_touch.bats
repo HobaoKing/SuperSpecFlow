@@ -18,6 +18,16 @@ teardown() {
   [ -f "$PROJECT/.superspecflow/enabled" ]
 }
 
+@test "_ssf_init_apply 清除可能存在的 .superspecflow/disabled 恢复启用" {
+  cd "$PROJECT"
+  mkdir -p "$PROJECT/.superspecflow"
+  touch "$PROJECT/.superspecflow/disabled"
+  run "$APPLY"
+  [ "$status" -eq 0 ]
+  [ ! -e "$PROJECT/.superspecflow/disabled" ]
+  [ -f "$PROJECT/.superspecflow/enabled" ]
+}
+
 @test "初始化只创建启用标记，不预建阶段产物" {
   cd "$PROJECT"
   run "$APPLY"

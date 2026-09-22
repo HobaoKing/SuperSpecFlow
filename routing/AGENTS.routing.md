@@ -43,4 +43,4 @@
 
 ## 接入
 
-全局安装只提供能力；自然语言路由由 `.superspecflow/enabled` 或项目显式 routing include 启用。`/ssf-init` 只创建启用标记，不预建阶段目录；显式命令不隐式 opt-in。不覆盖宿主 AGENTS.md / CLAUDE.md。
+全局安装默认全局开启轻量自然语言路由，无需在每个项目中执行 init。若项目需要单独禁用，可在项目根目录放置 `.superspecflow/disabled`。项目可通过自己的 `.superspecflow/AGENTS.routing.md` / `CLAUDE.routing.md` 自定义规则覆盖默认路由；显式 include 也可接入。`/ssf-init` 可用于显式确认启用或恢复已禁用的项目。不覆盖宿主 AGENTS.md / CLAUDE.md。

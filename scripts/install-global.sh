@@ -290,11 +290,13 @@ fi
 echo
 if [ "$INSTALL_CLAUDE" -eq 1 ]; then
   echo "下一步："
-  echo "  1. 重启 Claude Code 会话，以确保新安装的 /ssf-* 命令（含 /ssf-init）进入斜杠补全。"
-  echo "  2. 重启后，在目标项目目录运行 /ssf-init 完成项目 opt-in。"
+  echo "  1. 重启 Claude Code 会话，以确保新安装的 /ssf-* 命令进入斜杠补全。"
+  echo "  2. 默认安装已全局开启轻量自然语言路由，所有项目开箱即用，无需在每个项目中自己执行 /ssf-init。"
+  echo "     （若需单独禁用某项目，可在该项目根目录放置 .superspecflow/disabled；需恢复时运行 /ssf-init）"
 else
   echo "下一步（Codex-only：已同步 Codex skills 与 wrapper，未安装 Claude commands，不依赖 /ssf-init）："
-  echo "  在目标项目用终端完成 opt-in：bash \"$REPO_ROOT/scripts/_ssf_init_apply.sh\""
+  echo "  默认安装已全局开启轻量自然语言路由，所有项目开箱即用，无需在每个项目中自己执行 init。"
+  echo "  （若需显式恢复已禁用项目，可在目标项目执行：bash \"$REPO_ROOT/scripts/_ssf_init_apply.sh\"）"
 fi
 echo "  注意：若上面出现 \"skipped\" 警告，请确认对应文件，避免看到的并非 SuperSpecFlow 命令。"
 echo

@@ -25,7 +25,7 @@ bash scripts/install-global.sh --codex-only
 # 或 --claude-only / --both
 ```
 
-Claude 安装后重启会话，使 `/ssf-*` 进入命令补全，在目标项目运行 `/ssf-init`。Codex-only 在目标目录运行 `bash <pack>/scripts/_ssf_init_apply.sh`。仅创建 `.superspecflow/enabled`。
+全局安装后默认已对所有项目开启轻量自然语言路由，无需在每个项目中自己执行 init。Claude 重启会话后使 `/ssf-*` 进入命令补全。若需单独禁用某项目，可在其根目录放置 `.superspecflow/disabled`；恢复或显式确认启用可运行 `/ssf-init`（Codex 使用 `bash <pack>/scripts/_ssf_init_apply.sh`）。
 
 见 [安装说明](docs/installation.md) 和 [运行环境](docs/compatibility.md)。卸载使用 `scripts/uninstall-global.sh`。
 
@@ -40,7 +40,7 @@ Claude 安装后重启会话，使 `/ssf-*` 进入命令补全，在目标项目
 | `/ssf-qa` | 测试、浏览器或视觉验收，明确证据边界 |
 | `/ssf-git` | 按请求处理分支、提交、PR 等 Git 操作 |
 | `/ssf-ship` | 发布评估与已授权发布 |
-| `/ssf-init` | 启用当前项目 |
+| `/ssf-init` | 确认或恢复启用当前项目 |
 
 已接入项目可直接使用自然语言。各能力独立执行，不自动串联阶段。
 

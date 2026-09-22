@@ -4,7 +4,7 @@
 
 Claude 使用 commands 和 skills；Codex 使用 skills 和项目指令，不假定支持 Claude 的 slash 注册。方法参考文件随 skill 目录安装，运行时无需访问上游或 issue tracker。
 
-全局 wrapper 只在 `.superspecflow/enabled` 存在时读取 routing。在本包内部，项目 `.superspecflow/<宿主>.routing.md` 存在时替代包内默认 routing；普通初始化只创建启用标记，不生成项目覆盖文件。显式 include 也可接入。
+全局 wrapper 默认开启轻量自然语言路由，仅在项目根目录存在 `.superspecflow/disabled` 时禁用。在本包内部，项目 `.superspecflow/<宿主>.routing.md` 存在时替代包内默认 routing；普通初始化只创建启用标记，不生成项目覆盖文件。显式 include 也可接入。
 
 不支持 include 的宿主可手动将 `templates/integration/` 对应 snippet 追加到已有项目指令中，将 `<pack>` 替换为实际安装目录的绝对路径；不要覆盖宿主文件。snippet 先读取存在的项目覆盖文件，否则回退到包内 routing，不自动复制或同步整份规则。
 
