@@ -15,6 +15,8 @@ load '../lib/test_helper'
   for skill in ssf-build ssf-review; do
     grep -q 'Copyright (c) 2026 Matt Pocock' "$REPO_ROOT/skills/$skill/references/mattpocock-LICENSE.txt"
   done
+  [ -s "$REPO_ROOT/skills/ssf-build/references/karpathy.md" ]
+  grep -q 'multica-ai/andrej-karpathy-skills' "$REPO_ROOT/skills/ssf-build/references/karpathy.md"
 }
 
 @test "包不提供旧命令别名或历史模板兼容层" {

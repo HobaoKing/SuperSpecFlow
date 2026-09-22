@@ -46,7 +46,7 @@ Claude 安装后重启会话，使 `/ssf-*` 进入命令补全，在目标项目
 
 ## 方法来源
 
-采用 [mattpocock/skills](https://github.com/mattpocock/skills) 的 TDD、调试和代码审查方法，随包提供精简适配版，固定来源修订，不自动拉取整个上游。取消逐项测试确认、强制双 agent、issue tracker 和自动提交。授权见 [NOTICE](NOTICE.md)。
+采用 [mattpocock/skills](https://github.com/mattpocock/skills)（TDD、缺陷定位、代码审查）与 [multica-ai/andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)（编码前思考、简单优先、外科手术式修改、目标驱动执行）作为底层工程实践，随包提供精简适配版。取消逐项测试确认、强制双 agent、issue tracker 和自动提交。授权见 [NOTICE](NOTICE.md)。
 
 ## 维护
 
