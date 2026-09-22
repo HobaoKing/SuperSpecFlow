@@ -29,13 +29,19 @@ teardown() {
   grep -q ".codex/superspecflow/AGENTS.global.md" "$HOME/.codex/AGENTS.md"
 }
 
-@test "首次运行：安装 Claude commands skills agents 和 Codex skills" {
+@test "首次运行：安装 Claude commands skills 和 Codex skills，不创建角色目录" {
   run "$INSTALL" --yes --no-hook
   [ "$status" -eq 0 ]
   [ -f "$HOME/.claude/commands/ssf-init.md" ]
   [ -f "$HOME/.claude/skills/ssf-qa/SKILL.md" ]
-  [ -f "$HOME/.claude/agents/qa-gatekeeper.md" ]
+  [ ! -e "$HOME/.claude/agents" ]
   [ -f "$HOME/.codex/skills/ssf-qa/SKILL.md" ]
+  [ -f "$HOME/.claude/commands/ssf-plan.md" ]
+  [ -f "$HOME/.codex/skills/ssf-plan/SKILL.md" ]
+  for name in spec archive retro karpathy; do
+    [ ! -e "$HOME/.codex/skills/ssf-$name" ]
+    [ ! -e "$HOME/.claude/commands/ssf-$name.md" ]
+  done
 }
 
 @test "首次运行：生成不含 <repo> 占位符的 global wrapper" {
@@ -111,7 +117,6 @@ teardown() {
   [ ! -e "$HOME/.codex/superspecflow/AGENTS.global.md" ]
   [ ! -e "$HOME/.claude/commands/ssf-init.md" ]
   [ ! -e "$HOME/.claude/skills/ssf-qa" ]
-  [ ! -e "$HOME/.claude/agents/qa-gatekeeper.md" ]
   [ ! -e "$HOME/.codex/skills/ssf-qa" ]
 }
 
@@ -177,4 +182,27 @@ teardown() {
   [ "$status" -eq 0 ]
   [[ "$output" != *"运行 /ssf-init 完成项目 opt-in"* ]]
   [[ "$output" == *"_ssf_init_apply.sh"* ]]
+}
+
+@test "精简版安装包含自包含参考和授权，Codex-only 不写 Claude" {
+  run "$INSTALL" --codex-only --no-hook
+  [ "$status" -eq 0 ]
+  for ref in tdd.md diagnosing-bugs.md mattpocock-LICENSE.txt; do
+    [ -s "$HOME/.codex/skills/ssf-build/references/$ref" ]
+  done
+  [ -s "$HOME/.codex/skills/ssf-review/references/code-review.md" ]
+  [ ! -e "$HOME/.claude" ]
+}
+
+@test "参考文件的用户修改受到重装和卸载保护" {
+  "$INSTALL" --codex-only --no-hook
+  printf 'LOCAL REFERENCE\n' >> "$HOME/.codex/skills/ssf-build/references/tdd.md"
+  before="$(cat "$HOME/.codex/skills/ssf-build/references/tdd.md")"
+  run "$INSTALL" --codex-only --no-hook
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"skipped"* ]]
+  [ "$(cat "$HOME/.codex/skills/ssf-build/references/tdd.md")" = "$before" ]
+  run "$UNINSTALL" --codex-only
+  [ "$status" -eq 0 ]
+  [ "$(cat "$HOME/.codex/skills/ssf-build/references/tdd.md")" = "$before" ]
 }

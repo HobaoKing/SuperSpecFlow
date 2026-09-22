@@ -1,59 +1,30 @@
-# QA Signoff: [change-id]
+# 验证记录：<主题>
 
-Path: `.superspecflow/qa/[change-id]/qa-signoff.md`
+按实际场景选用字段，不必复制全部章节。没有执行就写未验证或具体阻塞；本记录不授予发布权限。
 
-## Test Summary
+## 范围与结果
 
-## Passed
+- 验证目标、环境、实际操作、预期与实际结果、相关回归：
 
-## Failed
+## Browser / MCP QA Status（适用时）
 
-## Release Blockers
+- Status: Not run
+- Browser Run Report:
+- Evidence:
 
-## Non-blocking Issues
+实际执行且有报告和证据才可写 `Automated Browser Passed`；缺少运行目标写 `Blocked: No runnable target`，缺少工具写 `Blocked: Tool unavailable`；失败旅程写失败。
 
-## Residual Risk
+## Visual QA（适用时）
 
-## Browser / MCP QA Status
-- Status: Automated Browser Passed | Manual Verified | Blocked: No runnable target | Blocked: Tool unavailable | Failed
-- Execution Plan: `.superspecflow/qa/[change-id]/qa-execution-plan.md`
-- Browser Run Report: `.superspecflow/qa/[change-id]/browser-run-report.md`
-- Evidence: `.superspecflow/qa/[change-id]/qa-evidence/`
-- Manual Verification Notes:
-
-### Pass Consistency Check
-- [ ] `Automated Browser Passed` has `browser-run-report.md`.
-- [ ] `Automated Browser Passed` has `qa-evidence/` or complete Manual Verification Notes.
-- [ ] Missing target requires `Blocked: No runnable target`.
-- [ ] Tool unavailable requires `Blocked: Tool unavailable`.
-- [ ] Failed journey forbids `Automated Browser Passed`.
-
-## Visual UI QA Status
-- Status: Visual Passed | Manual Visual Verified | Visual Failed | Blocked: Missing baseline | Blocked: Missing actual screenshot | Blocked: Diff tool unavailable
-- Visual Execution Plan: `.superspecflow/qa/[change-id]/visual-execution-plan.md`
-- Visual Comparison Report: `.superspecflow/qa/[change-id]/visual-comparison-report.md`
-- Evidence: `.superspecflow/qa/[change-id]/qa-evidence/visual/`
+- Status: Not run
 - Baseline:
 - Actual Screenshot:
-- Diff Output:
-- Manual Reviewer:
-- Residual Risk:
+- Diff Result:
+- Reviewer:
+- Accepted Differences:
 
-### Visual Pass Consistency Check
-- [ ] `Visual Passed` has baseline path and baseline approval / reviewer.
-- [ ] `Visual Passed` has actual screenshot.
-- [ ] `Visual Passed` has visual comparison report.
-- [ ] `Visual Passed` has diff output or threshold result.
-- [ ] `Visual Passed` has `qa-evidence/visual/`.
+`Visual Passed` 要有可比且认可的基线、实际截图和差异结果。人工验收使用 `Manual Visual Verified` 并记录 reviewer 和接受差异。
 
-### Manual Visual Verification Check
-- [ ] `Manual Visual Verified` has manual reviewer.
-- [ ] `Manual Visual Verified` has comparison notes.
-- [ ] `Manual Visual Verified` has accepted differences.
-- [ ] `Manual Visual Verified` has residual risk.
-- [ ] `Manual Visual Verified` has evidence path.
+## 剩余问题与建议
 
-## Recommendation
-- Ship
-- Ship with monitoring
-- Do not ship
+结论范围不能超过证据范围。关键验证阻塞不能直接建议发布；如用户接受风险，记录具体授权、理由及剩余风险。

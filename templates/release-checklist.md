@@ -1,15 +1,12 @@
-# Release Checklist: [change-id]
+# 发布检查：<主题>
 
-Path: `.superspecflow/release/[change-id]/release-checklist.md`
+仅在发布请求中使用，可合并到已有计划或发布记录。
 
-- [ ] OpenSpec tasks completed
-- [ ] spec-to-code-map updated
-- [ ] Review has no blockers
-- [ ] QA signoff exists
-- [ ] Tests pass
-- [ ] Negative tests covered
-- [ ] No secrets / unsafe env changes
-- [ ] Migration plan ready or not needed
-- [ ] Rollback plan ready
-- [ ] Monitoring plan ready
-- [ ] CHANGELOG / docs updated or scheduled
+- 目标环境、变更范围和实际授权：
+- 相关测试、失败路径和未解决问题：
+- 数据或配置影响、迁移顺序（适用时）：
+- 回滚或恢复方法、触发条件和不可逆限制：
+- 上线后观测信号、责任人（适用时）：
+- 实际执行结果、读回证据或具体阻塞：
+
+检查通过只是发布建议，不能代替实际操作授权或执行结果。

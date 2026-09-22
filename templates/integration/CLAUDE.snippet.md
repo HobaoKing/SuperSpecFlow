@@ -1,12 +1,3 @@
-# SuperSpecFlow Thin Entry for CLAUDE.md
+# SuperSpecFlow 项目入口
 
-本片段是宿主项目 `CLAUDE.md` 中的极薄入口 fallback。优先使用 `@./.superspecflow/CLAUDE.routing.md`；仅在当前环境不支持 `@` include 时使用本片段。
-
-## SuperSpecFlow
-
-本项目接入 SuperSpecFlow。宿主项目的业务规则、架构事实和本地约束优先。
-
-- 请读取 `.superspecflow/CLAUDE.routing.md`。
-- 所有自然语言请求先进入 SuperSpecFlow Intake Gate。
-- 非平凡行为变更必须走 change-id / Spec ID / QA / Git 中文提交门禁。
-- 纯问答和轻量任务不得被强行升级为完整 Think → Retro 流程。
+仅在宿主不支持 include 时使用：请读取 `.superspecflow/CLAUDE.routing.md`，按当前任务选择轻量方法。宿主业务规则优先，不要求完整阶段、变更编号或额外文件。保留宿主已有指令。

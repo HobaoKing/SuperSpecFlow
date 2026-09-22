@@ -107,12 +107,13 @@ if [ "${#explicit_files[@]}" -eq 0 ] && [ "${#filters[@]}" -eq 0 ]; then
   done < "$list_file"
 fi
 
-for explicit_file in "${explicit_files[@]}"; do
+# Bash 3.2 在 nounset 下会把空数组视作未定义；无显式文件时安全跳过。
+for explicit_file in ${explicit_files[@]+"${explicit_files[@]}"}; do
   normalized_file="$(normalize_test_arg "$explicit_file")"
   append_selected "$normalized_file"
 done
 
-for filter in "${filters[@]}"; do
+for filter in ${filters[@]+"${filters[@]}"}; do
   while IFS= read -r test_file; do
     if printf '%s\n' "$test_file" | grep -Fq -- "$filter"; then
       append_selected "$test_file"
@@ -135,4 +136,5 @@ while IFS= read -r test_file; do
   tests+=("$test_file")
 done < "$selected_file"
 
-bats "${tests[@]}"
+# 固定 Bats 的测试名编码行为，避免 macOS Bash 3.2 在 UTF-8 locale 下无法匹配中文测试名。
+LC_ALL=C bats "${tests[@]}"

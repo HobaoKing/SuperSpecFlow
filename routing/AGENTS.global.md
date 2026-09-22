@@ -1,47 +1,9 @@
-# SuperSpecFlow Global Routing for Codex / Generic Agents
+# SuperSpecFlow 全局入口
 
-本文件是 SuperSpecFlow 的全局薄壳源文件；安装脚本会把它渲染为 `~/.codex/superspecflow/AGENTS.global.md`，再由用户家目录 `~/.codex/AGENTS.md` 引用。
+全局安装提供可选能力，宿主规则优先。每个会话首次需要判断项目接入时，检查 `.superspecflow/enabled` 是否为文件。
 
-## 1. 项目 opt-in 自检测（必须在响应任何非问答类请求前完成）
+- 未启用：按默认方式处理自然语言，不读取包 routing。显式 `/ssf-*` 请求仍可独立执行，不隐式启用项目。
+- 已启用：优先读取项目的 `.superspecflow/AGENTS.routing.md`；没有覆盖时读取 `<repo>/routing/AGENTS.routing.md`。只有启用后才读取，不使用无条件 include。
+- 在本会话显式运行 `/ssf-init` 后采用新的启用状态；其他安装变更可重启会话加载。
 
-在本会话内**只执行一次** Bash：
-
-```bash
-test -f .superspecflow/enabled && echo enabled || echo disabled
-```
-
-将结果作为本会话 SSF 状态使用，后续不重复探测。
-
-## 2. 显式命令始终可用
-
-无论 SSF 状态如何，下列 `/ssf-*` 显式命令都可被用户调用：
-
-```text
-/ssf-think /ssf-spec /ssf-build /ssf-review /ssf-qa /ssf-ship
-/ssf-archive /ssf-retro /ssf-decision /ssf-map /ssf-karpathy
-/ssf-init /ssf-git /ssf-branch /ssf-commit /ssf-pr
-```
-
-## 3. 项目级覆盖判定
-
-当 SSF 状态 = `enabled` 时，按下列顺序决定 routing 主体来源：
-
-- 若当前项目存在 `.superspecflow/AGENTS.routing.md`：用工具读取该文件，作为本会话 routing 主体，不再进入第 4 节。
-- 否则进入第 4 节。
-
-## 4. 条件读取默认 routing 主体（不使用 @ 自动 include）
-
-**重要**：本文件**故意不**使用 `@<repo>/routing/AGENTS.routing.md` 自动展开写法，理由与 CLAUDE.global.md 相同。
-
-替代约束：
-
-- **当且仅当** SSF 状态 = `enabled` 且未命中第 3 节项目级覆盖时，主动读取 `<repo>/routing/AGENTS.routing.md`，并采用其内容作为本会话 routing 主体。
-- 当 SSF 状态 = `disabled` 时，不得读取该文件，也不得应用其中的约束。
-
-## 5. SSF 状态 = disabled 时的行为
-
-不接管自然语言；仅响应 `/ssf-*` 显式命令；按 agent 默认行为处理其他请求；不读取 `<repo>/routing/AGENTS.routing.md`。
-
-## 6. 安装说明
-
-由 `scripts/install-global.sh` 协助引入 `~/.codex/AGENTS.md`。
+按需入口：`/ssf-think`、`/ssf-plan`、`/ssf-build`、`/ssf-review`、`/ssf-qa`、`/ssf-ship`、`/ssf-git`、`/ssf-init`。命令注册取决于宿主能力，可直接使用相应 skill 或自然语言请求。

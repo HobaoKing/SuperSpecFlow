@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+- 清理旧合同、实现映射、研究记录及角色转接层，会员提醒示例改为单计划和可运行测试。
+
+- 默认流程改为明确任务直接执行，大任务一份计划；取消 OpenSpec / Superpowers 强依赖。
+- 按需适配 mattpocock 的 TDD、调试和审查方法，保留来源与授权。
+- 精简初始化、命令、模板和校验；移除旧版兼容入口与模板。
+- 使用 `new-plan.sh` 生成单文件计划，commit 不再强制编号字段。
+
 All notable SuperSpecFlow package changes are recorded here.
 
 ## [1.2.2] - 2026-05-31

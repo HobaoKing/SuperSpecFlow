@@ -10,18 +10,22 @@ teardown() {
   ssf_cleanup_tmp "$TMP_PROJECT"
 }
 
-@test "commit message validator rejects missing traceability fields" {
+@test "commit message validator accepts a Chinese title without traceability fields" {
   msg="$TMP_PROJECT/msg.txt"
-  cat > "$msg" <<'MSG'
-feat(skills:test): 增加测试能力
-
-变更内容：
-- 增加测试。
-MSG
-
+  printf 'fix(skills:build): 修复重试状态\n' > "$msg"
   run "$REPO_ROOT/scripts/validate-commit-message.sh" "$msg"
+  [ "$status" -eq 0 ]
+}
+
+@test "copied commit hook accepts no-ID messages and rejects malformed titles" {
+  cd "$TMP_PROJECT"
+  git init -q
+  printf 'fix(skills:build): 修复重试状态\n' > msg.txt
+  run bash "$REPO_ROOT/templates/git-hooks/commit-msg" msg.txt
+  [ "$status" -eq 0 ]
+  printf 'WIP\n' > msg.txt
+  run bash "$REPO_ROOT/templates/git-hooks/commit-msg" msg.txt
   [ "$status" -ne 0 ]
-  [[ "$output" == *"变更编号"* ]] || [[ "$stderr" == *"变更编号"* ]]
 }
 
 @test "commit message validator accepts complete Chinese traceability body" {

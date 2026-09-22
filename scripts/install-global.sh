@@ -169,21 +169,19 @@ copy_dir_safe() {
   record_manifest "$manifest" "D" "$(dir_checksum "$target")" "$target"
 }
 
+# 同步 Claude 的 skills 和命令，复用文件归属校验保护用户修改，不创建角色目录。
 sync_claude_capabilities() {
   local manifest="$HOME/.claude/superspecflow/install-manifest.tsv"
   local path
 
-  mkdir -p "$HOME/.claude/skills" "$HOME/.claude/agents" "$HOME/.claude/commands"
+  mkdir -p "$HOME/.claude/skills" "$HOME/.claude/commands"
   for path in "$REPO_ROOT/skills/"ssf-*; do
     copy_dir_safe "$path" "$HOME/.claude/skills/$(basename "$path")" "$manifest"
-  done
-  for path in "$REPO_ROOT/agents/"*.md; do
-    copy_file_safe "$path" "$HOME/.claude/agents/$(basename "$path")" "$manifest"
   done
   for path in "$REPO_ROOT/commands/"ssf-*.md; do
     copy_file_safe "$path" "$HOME/.claude/commands/$(basename "$path")" "$manifest"
   done
-  echo "✓ synced Claude Code skills, agents, and commands"
+  echo "✓ synced Claude Code skills and commands"
 }
 
 sync_codex_capabilities() {
@@ -300,5 +298,6 @@ else
 fi
 echo "  注意：若上面出现 \"skipped\" 警告，请确认对应文件，避免看到的并非 SuperSpecFlow 命令。"
 echo
+echo "按需使用工程 skills；项目规则优先。"
 echo "Done."
 exit 0

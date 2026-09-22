@@ -6,7 +6,7 @@ load '../lib/test_helper'
   run "$REPO_ROOT/scripts/test.sh" --list
   [ "$status" -eq 0 ]
   [[ "$output" == *"tests/install/test_install_global.bats"* ]]
-  [[ "$output" == *"tests/verification/test_cross_agent_verification_contract.bats"* ]]
+  [[ "$output" == *"tests/workflow/test_lightweight_flow.bats"* ]]
 }
 
 @test "scripts/test.sh lists explicit file args in caller order without duplicates" {

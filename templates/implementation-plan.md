@@ -1,82 +1,19 @@
-# Implementation Plan: [change-id]
+# 计划：<主题>
 
-Path: `.superspecflow/engineering/[change-id]/implementation-plan.md`
+仅跨模块、跨会话或用户要求时使用；优先复用已有计划，否则保存到 `docs/plans/<topic>.md`。不要求编号或独立交接文件。
 
-**Goal:** [一句话目标]
+## 目标与边界
 
-**Architecture:** [2-3 句架构方向]
+描述交付行为、不包含什么，以及必要的设计决策。
 
-**Spec Contract:** `openspec/changes/[change-id]/specs/`
+## 任务与验收
 
-**Tech Stack:** [关键技术、库、版本]
+- [ ] 修改事项；相关文件；如何确认行为正确。
 
----
+## 验证与进度
 
-## Scope Check
-- In scope:
-- Out of scope:
+记录实际运行的检查、结果、未覆盖范围、剩余事项和下一步。不要预填通过。
 
-## File Structure
-- Create: `path/to/new-file.ext` — [单一职责]
-- Modify: `path/to/existing.ext` — [本次变更职责]
-- Test: `tests/path/file.test.ext` — [测试覆盖范围]
+## 风险与恢复（适用时）
 
-## Bite-Sized Tasks
-
-### Task N: [Component Name]
-
-**Spec:** [SPEC-ID]
-
-**Files:**
-- Create: `path/to/file.ext`
-- Modify: `path/to/existing.ext:line`
-- Test: `tests/path/file.test.ext`
-
-- [ ] **Step 1: 写失败测试**
-
-  ```text
-  [完整测试代码，禁止省略]
-  ```
-
-- [ ] **Step 2: 跑测试确认失败**
-
-  Run: `[具体测试命令]`
-  Expected: FAIL with "[具体失败信息]"
-
-- [ ] **Step 3: 写最小实现**
-
-  ```text
-  [完整最小实现，禁止省略]
-  ```
-
-- [ ] **Step 4: 跑测试确认通过**
-
-  Run: `[同 Step 2 或对应验证命令]`
-  Expected: PASS
-
-- [ ] **Step 5: 准备 Git gate**
-
-  ```bash
-  git status --short
-  git diff --stat
-  git diff --check
-  git add <paths>
-  git diff --staged --stat
-  git diff --staged --check
-  ```
-
-  然后进入 `/ssf-commit [change-id]`，不得在 implementation plan 中直接提交。
-
-## Plan Review Loop
-- Reviewer:
-- Iteration Count:
-- Result: Approved / Changes Requested / Blocked / Waived
-- Evidence:
-- Blocked / Waived Evidence:
-
-## Execution Handoff
-- Mode: Subagent-Driven / Inline
-- Reason:
-- Next Command:
-
-## Risks / Pause Conditions
+记录权限、数据或发布影响、回滚方式及限制、观测信号。不适用可省略。
