@@ -13,7 +13,10 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   usage
   exit 0
 fi
-[ "$#" -ge 1 ] && [ "$#" -le 2 ] || { usage >&2; exit 2; }
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+  usage >&2
+  exit 2
+fi
 topic="$1"
 project="${2:-$PWD}"
 if ! [[ "$topic" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
@@ -22,7 +25,10 @@ if ! [[ "$topic" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
 fi
 [ -d "$project" ] || { echo "error: project directory does not exist: $project" >&2; exit 1; }
 plan="$project/docs/plans/$topic.md"
-[ ! -e "$plan" ] && [ ! -L "$plan" ] || { echo "error: plan already exists: $plan" >&2; exit 1; }
+if [ -e "$plan" ] || [ -L "$plan" ]; then
+  echo "error: plan already exists: $plan" >&2
+  exit 1
+fi
 mkdir -p "$(dirname "$plan")"
 # noclobber 防止并发创建时覆盖用户文件；主题限定为安全 slug。
 (set -o noclobber; sed "s/<主题>/$topic/g" "$PACK_ROOT/templates/implementation-plan.md" > "$plan")
