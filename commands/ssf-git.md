@@ -1,12 +1,3 @@
-Use the `ssf-git` skill.
+# /ssf-git
 
-Argument: $ARGUMENTS
-
-Run Git workflow audit:
-1. Show current branch.
-2. Show working tree status.
-3. Summarize unstaged and staged diff.
-4. Identify unrelated changes.
-5. Identify runtime or install artifacts that must not be committed.
-6. Recommend branch / commit / PR next step.
-7. Enforce Chinese-only commit content when preparing commits.
+使用 `ssf-git` skill，处理当前请求：$ARGUMENTS。复用当前会话授权，不附加阶段门禁。

@@ -12,16 +12,8 @@ load '../lib/test_helper'
   fi
 }
 
-@test "Git gates reject docs/superpowers runtime artifacts" {
-  grep -q 'docs/superpowers' "$REPO_ROOT/templates/git-hooks/commit-msg"
-  grep -q 'docs/superpowers' "$REPO_ROOT/templates/commit-gate.md"
-  grep -q 'docs/superpowers' "$REPO_ROOT/templates/git-checklist.md"
-  grep -q 'docs/superpowers' "$REPO_ROOT/skills/ssf-git/SKILL.md"
-  grep -q 'docs/superpowers' "$REPO_ROOT/commands/ssf-commit.md"
-}
-
-@test "OpenSpec change contracts remain tracked" {
-  run git -C "$REPO_ROOT" ls-files openspec/changes/init-project-routing/proposal.md
-  [ "$status" -eq 0 ]
-  [ "$output" = "openspec/changes/init-project-routing/proposal.md" ]
+@test "可复用技能和路由不携带源码仓库的提交忽略策略" {
+  run grep -REn 'docs/superpowers|本仓库不提交|运行时产物|gitignore' \
+    "$REPO_ROOT/skills" "$REPO_ROOT/commands" "$REPO_ROOT/routing"
+  [ "$status" -eq 1 ]
 }

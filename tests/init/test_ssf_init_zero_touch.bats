@@ -18,31 +18,23 @@ teardown() {
   [ -f "$PROJECT/.superspecflow/enabled" ]
 }
 
-@test "创建标准运行产物子目录" {
+@test "_ssf_init_apply 清除可能存在的 .superspecflow/disabled 恢复启用" {
   cd "$PROJECT"
-  "$APPLY"
-  for sub in intake engineering qa release archive retro decisions maps reviews karpathy; do
-    [ -d "$PROJECT/.superspecflow/$sub" ] || { echo "missing $sub"; return 1; }
-  done
+  mkdir -p "$PROJECT/.superspecflow"
+  touch "$PROJECT/.superspecflow/disabled"
+  run "$APPLY"
+  [ "$status" -eq 0 ]
+  [ ! -e "$PROJECT/.superspecflow/disabled" ]
+  [ -f "$PROJECT/.superspecflow/enabled" ]
 }
 
-@test "创建 progress/ 占位目录" {
+@test "初始化只创建启用标记，不预建阶段产物" {
   cd "$PROJECT"
-  "$APPLY"
-  [ -d "$PROJECT/.superspecflow/progress" ]
-}
-
-@test "创建 verification/ 占位目录" {
-  cd "$PROJECT"
-  "$APPLY"
-  [ -d "$PROJECT/.superspecflow/verification" ]
-}
-
-@test "progress/ 内不写任何占位文件" {
-  cd "$PROJECT"
-  "$APPLY"
-  # 期待为空目录；ls -A 应无输出
-  [ -z "$(ls -A "$PROJECT/.superspecflow/progress")" ]
+  run "$APPLY"
+  [ "$status" -eq 0 ]
+  [ "$(find .superspecflow -mindepth 1 -print)" = ".superspecflow/enabled" ]
+  [ ! -e openspec ]
+  [ ! -e docs ]
 }
 
 @test "不创建任何 routing 软链 / 覆盖文件" {
@@ -65,6 +57,7 @@ teardown() {
 @test "幂等：重复执行不报错也不破坏既有子目录内容" {
   cd "$PROJECT"
   "$APPLY"
+  mkdir -p "$PROJECT/.superspecflow/decisions"
   echo "user-data" > "$PROJECT/.superspecflow/decisions/keep.md"
   run "$APPLY"
   [ "$status" -eq 0 ]
@@ -85,18 +78,4 @@ teardown() {
   [ "$status" -ne 0 ]
   [ ! -e "$missing" ]
   [[ "$output" == *"project directory does not exist"* ]] || [[ "$stderr" == *"project directory does not exist"* ]]
-}
-
-@test "init-project-routing spec describes zero-touch sentinel rather than routing symlinks" {
-  SPEC="$REPO_ROOT/openspec/changes/init-project-routing/specs/routing.md"
-  grep -q '.superspecflow/enabled' "$SPEC"
-  ! grep -q '创建 `.superspecflow/AGENTS.routing.md`' "$SPEC"
-  ! grep -q '创建项目软链' "$SPEC"
-}
-
-@test "init-project-routing spec-to-code map covers all current requirements and MUST NOTs" {
-  MAP="$REPO_ROOT/engineering/init-project-routing/spec-to-code-map.md"
-  for id in SSF-INIT-001 SSF-INIT-002 SSF-INIT-003 SSF-INIT-004 SSF-INIT-005 SSF-INIT-006 SSF-INIT-007 SSF-INIT-N1 SSF-INIT-N2 SSF-INIT-N3 SSF-INIT-N4 SSF-INIT-N5 SSF-INIT-N6; do
-    grep -q "$id" "$MAP" || { echo "missing $id"; return 1; }
-  done
 }

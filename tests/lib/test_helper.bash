@@ -87,3 +87,16 @@ ssf_make_tmp_repo_fixture() {
   git -C "$fixture" add -A
   echo "$fixture"
 }
+
+# 探测测试环境中可正常执行的 python3 命令，规避损坏的 pyenv shim 或架构不兼容。
+# 输入：无；输出：输出可用的 python 命令名或路径（stdout）。
+ssf_python_cmd() {
+  local candidate
+  for candidate in /usr/bin/python3 python3; do
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'exit(0)' >/dev/null 2>&1; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+  done
+  printf 'python3'
+}

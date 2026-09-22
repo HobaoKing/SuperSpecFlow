@@ -1,11 +1,3 @@
-Use the `ssf-ship` skill.
+# /ssf-ship
 
-Change id: $ARGUMENTS
-
-Run release gate under `.superspecflow/release/<change-id>/`:
-1. Release Checklist.
-2. Rollback Plan.
-3. Monitoring Plan.
-4. PR Description.
-5. Spec cluster `integration-gate.md` check when `<change-id>` is a parent change.
-6. Ship Decision.
+使用 `ssf-ship` skill，处理当前请求：$ARGUMENTS。复用当前会话授权，不附加阶段门禁。

@@ -1,25 +1,9 @@
 @./routing/CLAUDE.routing.md
 
-# SuperSpecFlow Repository Entry
+# SuperSpecFlow 仓库入口
 
-This root file is intentionally thin. The complete SuperSpecFlow Intake Gate,
-stage routing, Git rules, QA/Ship gates, and completion criteria live in
-`routing/CLAUDE.routing.md`.
+规则以 `routing/default.routing.md` 为源，两个公开 routing 文件保持相同内容。默认直接执行明确任务；大任务按需使用一份计划，不依赖 OpenSpec 或 Superpowers。
 
-Layer boundary summary:
-
-- OpenSpec 合同层 owns change-id, Spec ID, requirements, tasks, archive, and traceability.
-- Superpowers 执行纪律层 owns thinking, planning, TDD, review handling, and verification-before-completion discipline.
-- SuperSpecFlow 路由与适配层 owns routing natural language requests to the correct OpenSpec contract and Superpowers discipline.
-
-Local source-repository constraints:
-
-- `openspec/` is a committable contract directory for SuperSpecFlow package
-  changes.
-- `engineering/<change-id>/` is a committable package-source delivery directory.
-- `.superspecflow/`, `.claude/`, `.codex/`, `superpowers/`,
-  `docs/superpowers/`, and `.DS_Store` are local runtime, install, or cache
-  artifacts and must not be tracked in this repository.
-- Commit scopes may use root modules such as `openspec`, `routing`, `skills`,
-  `commands`, `agents`, `templates`, `scripts`, `docs`, `tests`, `examples`,
-  and `meta`.
+- `.superspecflow/`、`.claude/`、`.codex/`、`superpowers/`、`docs/superpowers/`、`.DS_Store` 是本地运行时、安装或缓存产物，不得提交。
+- 修改后运行 `scripts/validate-pack.sh`、受影响测试和 `git diff --check`。
+- 本次新增或行为、契约发生变化的函数必须在实现定义处写简体中文函数级注释，说明功能及实际适用的输入输出语义、约束；仅格式调整不补注释，不补写无关历史代码。

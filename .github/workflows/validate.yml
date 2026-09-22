@@ -35,5 +35,4 @@ jobs:
             update.sh \
             scripts/*.sh \
             scripts/hooks/*.sh \
-            tests/lib/*.bash \
-            templates/git-hooks/commit-msg
+            tests/lib/*.bash

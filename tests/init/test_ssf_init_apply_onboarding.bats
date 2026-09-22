@@ -11,13 +11,13 @@ teardown() {
   ssf_cleanup_tmp "$PROJECT_DIR"
 }
 
-@test "opt-in 输出提示已生效且需新会话启用 Intake Gate（SSF-ONBOARD-002）" {
+@test "opt-in 输出提示已生效且需新会话启用 轻量自然语言路由（SSF-ONBOARD-002）" {
   run env SSF_INIT_PROJECT_DIR="$PROJECT_DIR" bash "$APPLY"
   [ "$status" -eq 0 ]
   [ -f "$PROJECT_DIR/.superspecflow/enabled" ]
   [[ "$output" == *"已生效"* ]]
   [[ "$output" == *"会话"* ]]
-  [[ "$output" == *"Intake Gate"* ]]
+  [[ "$output" == *"轻量自然语言路由"* ]]
 }
 
 @test "opt-in 输出不把手动 include 与 slash 命令注册混同（SSF-ONBOARD-002-N1）" {

@@ -1,9 +1,3 @@
-Use the `ssf-review` skill.
+# /ssf-review
 
-Argument: $ARGUMENTS
-
-Perform engineering review under `.superspecflow/reviews/<change-id>/`:
-1. Engineering Manager Review.
-2. Code Review Report with 🔴/🟡/🟢.
-3. Spec / Code / Test Sync.
-4. If no 🔴, proceed to /ssf-qa after confirmation or according to workflow context.
+使用 `ssf-review` skill，处理当前请求：$ARGUMENTS。复用当前会话授权，不附加阶段门禁。

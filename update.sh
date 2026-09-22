@@ -63,8 +63,7 @@ done
 if [ "$ENABLE_NATURAL_LANGUAGE" -eq 1 ]; then
   SSF_INIT_PROJECT_DIR="$PROJECT_DIR" "$SCRIPT_DIR/scripts/_ssf_init_apply.sh"
 else
-  echo "Natural-language routing not enabled for any project. Run /ssf-init in a project, or rerun:"
-  echo "  ./update.sh --enable-natural-language <project>"
+  echo "SuperSpecFlow natural-language routing is enabled globally by default across all projects."
 fi
 
 echo "Done. Restart the session to reload instructions."

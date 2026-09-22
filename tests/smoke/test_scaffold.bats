@@ -133,12 +133,12 @@ load '../lib/test_helper'
   run git -C "$fixture" check-ignore .superspecflow/test-ignore
   [ "$status" -eq 0 ]
 
-  run git -C "$fixture" check-ignore openspec
+  run git -C "$fixture" check-ignore skills/ssf-build/SKILL.md
   [ "$status" -ne 0 ]
 
-  run git -C "$fixture" ls-files engineering/progress-tracking
+  run git -C "$fixture" ls-files skills/ssf-build/SKILL.md
   [ "$status" -eq 0 ]
-  [[ "$output" == *"engineering/progress-tracking/"* ]]
+  [ "$output" = "skills/ssf-build/SKILL.md" ]
 
   run bash "$fixture/scripts/validate-pack.sh"
   [ "$status" -eq 0 ]

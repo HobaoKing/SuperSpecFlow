@@ -1,41 +1,29 @@
 # 示例：会员续费提醒
 
-本示例展示一次完整 SuperSpecFlow 循环：
+一个小功能只需要明确目标、实现和有效验证。本示例包含四个文件：
 
-```text
-/ssf-think 会员续费提醒
-/ssf-spec add-membership-renewal-reminder
-/ssf-build all
-/ssf-review
-/ssf-qa add-membership-renewal-reminder
-/ssf-ship add-membership-renewal-reminder
-/ssf-commit add-membership-renewal-reminder
-/ssf-pr add-membership-renewal-reminder
-/ssf-archive add-membership-renewal-reminder
-/ssf-retro add-membership-renewal-reminder
+- [一份计划](docs/plans/add-membership-renewal-reminder.md)：目标、边界、任务、验收和实际验证结果。
+- [最小实现](reminder.py)：判断当前会员是否应该看到提醒。
+- [单测文件](tests/test_reminder.py)：直接测试公开行为和时间边界。
+- 本说明：运行方式和提交消息示例。
+
+无需第三方库，Python 3.8+ 即可。从仓库根目录运行：
+
+```bash
+cd examples/add-membership-renewal-reminder
+python3 -B -m unittest discover -s tests -v
 ```
 
-## Change ID
+开发时先选一个行为写失败测试，再做最小实现并验证，随后补充下一个边界；结束时检查 diff。普通任务可直接在会话对齐，本例的计划文件用于展示需要留存时如何保持简短。
 
-`add-membership-renewal-reminder`
+提交消息示例（仅示例，不会自动提交）：
 
-## Spec IDs
+```text
+feat(membership): 增加到期前七天的续费提醒判断
 
-- `MEMBERSHIP-001`：展示续费提醒入口。
-- `MEMBERSHIP-002`：只在会员到期前 7 天内提醒。
-- `MEMBERSHIP-003`：已关闭提醒的用户不再收到提醒。
-- `MEMBERSHIP-004`：记录提醒展示和关闭事件。
-- `MEMBERSHIP-N1`：不得向非会员展示续费提醒。
-- `MEMBERSHIP-N2`：不得重复打扰已关闭提醒的用户。
+支持会员期限、本轮关闭状态和带时区的到期边界判断。
+验证：5 个单测方法通过，覆盖时间边界及不应展示的场景。
+范围：仅展示判断，未接入 UI、存储、埋点或推送。
+```
 
-## 目录
-
-- `openspec/changes/add-membership-renewal-reminder/`：OpenSpec 风格变更合同。
-- `.superspecflow/engineering/add-membership-renewal-reminder/`：宿主项目中的实现计划和 handoff 运行时路径。
-- `.superspecflow/maps/add-membership-renewal-reminder/spec-to-code-map.md`：宿主项目中的 spec-to-code map 运行时路径。
-- `.superspecflow/qa/add-membership-renewal-reminder/`：宿主项目中的验收、负向、风险、回归和 QA signoff 运行时路径。
-- `.superspecflow/release/add-membership-renewal-reminder/`：宿主项目中的发布清单、回滚、监控、PR、ship decision 运行时路径。
-- `.superspecflow/archive/add-membership-renewal-reminder/`：宿主项目中的归档摘要、决策记录、Git / PR 记录运行时路径。
-- `.superspecflow/retro/add-membership-renewal-reminder/`：宿主项目中的复盘运行时路径。
-
-本示例目录下保留的 `engineering/`、`qa/`、`release/`、`archive/` 和 `retro/` 是历史示例产物，用于展示完整流程内容；新宿主项目写入运行时产物时应使用 `.superspecflow/` 标准路径。
+这里没有模拟 UI 通过、发布成功或完整会员能力已交付。
