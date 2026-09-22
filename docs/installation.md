@@ -4,16 +4,29 @@
 
 ## 全局能力
 
-在本地包目录执行：
+### 远端一句话安装（推荐）
 
 ```bash
-bash scripts/install-global.sh --codex-only
-# 或 --claude-only / --both
+# 默认开启（同时支持 Claude Code 与 Codex）
+curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash
+
+# 或指定单个客户端
+curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --claude-only
+curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --codex-only
+```
+
+`scripts/bootstrap.sh` 是远端快捷安装入口，指向 master 分支；它会将仓库 clone/update 至 `~/.superspecflow`（可通过环境变量 `SUPERSPECFLOW_HOME` 自定义路径），并自动调用 `install-global.sh` 完成全局安装与默认配置。
+
+### 本地包安装
+
+源码获取可使用 `git clone https://github.com/HobaoKing/SuperSpecFlow.git <pack>`。尚未发布的工作区修改应从当前本地目录安装：
+
+```bash
+bash scripts/install-global.sh --both
+# 或 --claude-only / --codex-only
 ```
 
 脚本向选定宿主同步 skills；Claude 另同步 commands。已存在但不归本包所有、或被用户修改的文件会跳过并提示。已有全局 AGENTS.md / CLAUDE.md 不自动改写，缺少 include 时按输出追加。settings.json 仅提供可选 hook 提示。
-
-源码获取可使用 `git clone https://github.com/HobaoKing/SuperSpecFlow.git <pack>`。`scripts/bootstrap.sh` 是远端快捷安装入口，指向 master；现有逻辑会 reset 安装 checkout，有本地修改时不要使用。尚未发布的工作区修改应从当前本地目录安装。
 
 ## 项目启用
 

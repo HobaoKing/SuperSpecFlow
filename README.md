@@ -18,11 +18,24 @@
 
 ## 接入
 
+### 远端一句话安装（推荐）
+
+```bash
+# 默认开启（同时支持 Claude Code 与 Codex）
+curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash
+
+# 或指定单个客户端
+curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --claude-only
+curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --codex-only
+```
+
+### 本地源码安装
+
 在包目录执行：
 
 ```bash
-bash scripts/install-global.sh --codex-only
-# 或 --claude-only / --both
+bash scripts/install-global.sh --both
+# 或 --claude-only / --codex-only
 ```
 
 全局安装后默认已对所有项目开启轻量自然语言路由，无需在每个项目中自己执行 init。Claude 重启会话后使 `/ssf-*` 进入命令补全。若需单独禁用某项目，可在其根目录放置 `.superspecflow/disabled`；恢复或显式确认启用可运行 `/ssf-init`（Codex 使用 `bash <pack>/scripts/_ssf_init_apply.sh`）。
