@@ -2,6 +2,18 @@
 
 All notable SuperSpecFlow package changes are recorded here.
 
+## [2.1.0] - 2026-09-22
+
+### Added
+
+- `scripts/install-global.sh` 新增 `--append`：目标全局指令文件已存在但缺少 include 行时，自动把 include 行插入文件顶部并保留原有全部内容与排版。卸载时由 `uninstall-global.sh` 的 `remove_include` 以整行精确匹配移除该行，不影响用户其他内容。
+
+### Changed
+
+- `--yes` 从占位参数变为实际生效：接受默认值且不弹出追加确认。
+- 交互终端下未传 `--yes` 时会询问是否追加；非交互环境或 `--yes` 仍保持"不改写已有指令文件"的原有安全默认。
+- README 与安装文档补充远端一句话安装与本地安装的传参示例。
+
 ## [2.0.1] - 2026-09-22
 
 ### Changed
