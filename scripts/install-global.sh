@@ -10,10 +10,12 @@ SKIP_HOOK=0
 INSTALL_CLAUDE=1
 INSTALL_CODEX=1
 TARGET_SELECTED=0
+AUTO_APPEND=0
+ASSUME_YES=0
 
 usage() {
   cat <<MSG
-Usage: install-global.sh [--claude-only|--codex-only|--both] [--yes] [--no-hook]
+Usage: install-global.sh [--claude-only|--codex-only|--both] [--append] [--yes] [--no-hook]
 
 CLI selection (mutually exclusive):
   --claude-only  Only install include into ~/.claude/CLAUDE.md.
@@ -21,7 +23,8 @@ CLI selection (mutually exclusive):
   --both         Install into both (default).
 
 Other options:
-  --yes          Non-interactive mode (current default; reserved for future interactive features).
+  --append       Automatically prepend include line to existing CLAUDE.md / AGENTS.md.
+  --yes          Non-interactive mode (accept defaults without prompting).
   --no-hook      Skip Claude Code SessionStart hook setup hint.
   -h, --help     Show this help.
 MSG
@@ -56,7 +59,8 @@ while [ "$#" -gt 0 ]; do
       INSTALL_CODEX=1
       shift
       ;;
-    --yes) shift ;;
+    --append) AUTO_APPEND=1; shift ;;
+    --yes) ASSUME_YES=1; shift ;;
     --no-hook) SKIP_HOOK=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown arg: $1" >&2; usage >&2; exit 1 ;;
@@ -214,6 +218,27 @@ write_pack_root() {
   printf '%s\n' "$REPO_ROOT" > "$output"
 }
 
+# 在已存在的指令文件首行前插入 include 行，保留原文件全部内容与排版。
+# 输入：$1 目标文件绝对路径；$2 要插入的 include 完整行文本。
+# 输出：无 stdout；成功时原子覆盖更新目标文件。
+# 约束：$1 必须为已存在且具有写权限的普通文件。
+prepend_include() {
+  local target="$1"
+  local include_line="$2"
+  local tmp
+  tmp="$(mktemp "${TMPDIR:-/tmp}/ssf-include.XXXXXX")"
+
+  {
+    printf '%s\n' "$include_line"
+    cat "$target"
+  } > "$tmp"
+  mv "$tmp" "$target"
+}
+
+# 确保目标指令文件包含 SuperSpecFlow 全局 include 行。
+# 输入：$1 目标文件绝对路径（如 ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md）；$2 include 完整行文本。
+# 输出：成功或跳过信息至 stdout；未追加且未确认时输出手动操作提示。
+# 约束：若目标文件不存在则直接创建；已包含该行则幂等跳过；缺少该行时仅在指定 --append 或交互确认同意下自动追加，否则保持原文件不动。
 ensure_include() {
   local target="$1"          # ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md
   local include_line="$2"    # 已生成 wrapper 的绝对路径 include
@@ -230,6 +255,24 @@ ensure_include() {
     return 0
   fi
 
+  local do_append=0
+  if [ "$AUTO_APPEND" -eq 1 ]; then
+    do_append=1
+  elif [ "$ASSUME_YES" -eq 0 ] && [ -t 0 ]; then
+    local ans
+    read -r -p "⚠ $target 已存在但未包含 include 行。是否自动追加到文件顶部？[y/N] " ans
+    case "$ans" in
+      y|Y|yes|YES) do_append=1 ;;
+      *) do_append=0 ;;
+    esac
+  fi
+
+  if [ "$do_append" -eq 1 ]; then
+    prepend_include "$target" "$include_line"
+    echo "✓ appended SuperSpecFlow include to $target"
+    return 0
+  fi
+
   cat <<MSG
 
 ⚠ $target 已存在，但未包含 SuperSpecFlow include 行。
@@ -237,7 +280,7 @@ ensure_include() {
 
   $include_line
 
-脚本不会擅自改写已有的用户全局指令文件。
+脚本不会擅自改写已有的用户全局指令文件（亦可传入 --append 自动追加）。
 MSG
   return 0
 }
