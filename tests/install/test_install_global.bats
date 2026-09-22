@@ -78,6 +78,39 @@ teardown() {
   [[ "$output" == *"请手动追加"* || "$output" == *"manually append"* ]]
 }
 
+@test "已有 CLAUDE.md 但缺 include 行：传入 --append 时自动追加到文件顶部" {
+  mkdir -p "$HOME/.claude"
+  printf 'EXISTING CONTENT\n' > "$HOME/.claude/CLAUDE.md"
+  run "$INSTALL" --yes --no-hook --append
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"appended SuperSpecFlow include to"* ]]
+  first_line="$(head -n 1 "$HOME/.claude/CLAUDE.md")"
+  [ "$first_line" = "@${HOME}/.claude/superspecflow/CLAUDE.global.md" ]
+  grep -Fxq "EXISTING CONTENT" "$HOME/.claude/CLAUDE.md"
+}
+
+@test "已有 AGENTS.md 但缺 include 行：传入 --append 时自动追加到文件顶部" {
+  mkdir -p "$HOME/.codex"
+  printf 'CODEX RULES\n' > "$HOME/.codex/AGENTS.md"
+  run "$INSTALL" --codex-only --yes --no-hook --append
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"appended SuperSpecFlow include to"* ]]
+  first_line="$(head -n 1 "$HOME/.codex/AGENTS.md")"
+  [ "$first_line" = "@${HOME}/.codex/superspecflow/AGENTS.global.md" ]
+  grep -Fxq "CODEX RULES" "$HOME/.codex/AGENTS.md"
+}
+
+@test "已有指令文件经 --append 追加后，卸载脚本可准确移除非 SuperSpecFlow 行不受影响" {
+  mkdir -p "$HOME/.claude"
+  printf 'USER RULES\n' > "$HOME/.claude/CLAUDE.md"
+  run "$INSTALL" --claude-only --yes --no-hook --append
+  [ "$status" -eq 0 ]
+  run "$UNINSTALL" --claude-only
+  [ "$status" -eq 0 ]
+  [ -f "$HOME/.claude/CLAUDE.md" ]
+  [ "$(cat "$HOME/.claude/CLAUDE.md")" = "USER RULES" ]
+}
+
 @test "--no-hook 时不打印 hook 配置片段" {
   run "$INSTALL" --yes --no-hook
   [ "$status" -eq 0 ]

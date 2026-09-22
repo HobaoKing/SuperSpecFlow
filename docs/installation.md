@@ -10,6 +10,9 @@
 # 默认开启（同时支持 Claude Code 与 Codex）
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash
 
+# 若已有全局指令文件，可直接追加 --append 自动注入 include 行（免手动编辑）
+curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --append
+
 # 或指定单个客户端
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --claude-only
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --codex-only
@@ -23,10 +26,10 @@ curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scri
 
 ```bash
 bash scripts/install-global.sh --both
-# 或 --claude-only / --codex-only
+# 或 --claude-only / --codex-only；添加 --append 可自动向已有全局指令文件顶部追加 include
 ```
 
-脚本向选定宿主同步 skills；Claude 另同步 commands。已存在但不归本包所有、或被用户修改的文件会跳过并提示。已有全局 AGENTS.md / CLAUDE.md 不自动改写，缺少 include 时按输出追加。settings.json 仅提供可选 hook 提示。
+脚本向选定宿主同步 skills；Claude 另同步 commands。已存在但不归本包所有、或被用户修改的文件会跳过并提示。已有全局 AGENTS.md / CLAUDE.md 默认不擅自改写，缺少 include 时会提示手动追加，亦可传入 `--append`（或在交互终端中确认）自动将 include 行追加至文件顶部。settings.json 仅提供可选 hook 提示。
 
 ## 项目启用
 
