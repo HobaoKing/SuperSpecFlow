@@ -36,6 +36,16 @@ teardown() {
   [ ! -e "$PROJECT/docs" ]
 }
 
+@test "计划生成器参数数量非法时报错退出并提示用法" {
+  run "$REPO_ROOT/scripts/new-plan.sh"
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"用法："* ]]
+
+  run "$REPO_ROOT/scripts/new-plan.sh" a b c
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"用法："* ]]
+}
+
 @test "重复创建不能覆盖计划" {
   "$REPO_ROOT/scripts/new-plan.sh" sample-change "$PROJECT"
   printf 'user work\n' >> "$PROJECT/docs/plans/sample-change.md"
