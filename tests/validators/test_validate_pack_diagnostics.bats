@@ -41,8 +41,11 @@ teardown() {
 }
 
 @test "包校验拒绝路由声明的命令缺失" {
-  rm "$FIXTURE_REPO/commands/ssf-init.md"
-  run "$FIXTURE_REPO/scripts/validate-pack.sh"
-  [ "$status" -ne 0 ]
-  [[ "$output" == *"commands/ssf-init.md"* ]]
+  for command in think plan build review qa git ship init; do
+    mv "$FIXTURE_REPO/commands/ssf-$command.md" "$FIXTURE_REPO/command-backup"
+    run "$FIXTURE_REPO/scripts/validate-pack.sh"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"missing or empty: commands/ssf-$command.md"* ]]
+    mv "$FIXTURE_REPO/command-backup" "$FIXTURE_REPO/commands/ssf-$command.md"
+  done
 }

@@ -131,6 +131,9 @@ if [ "$list_mode" -eq 1 ]; then
   exit 0
 fi
 
+# 仅执行测试时需要 Bats，帮助和列表查询不依赖测试运行器。
+command -v bats >/dev/null 2>&1 || error "缺少 bats；macOS: brew install bats-core；Debian/Ubuntu: sudo apt install bats"
+
 tests=()
 while IFS= read -r test_file; do
   tests+=("$test_file")

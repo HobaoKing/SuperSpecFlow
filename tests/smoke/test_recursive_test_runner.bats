@@ -65,3 +65,20 @@ load '../lib/test_helper'
   grep -Fq 'rel="${arg#"$ROOT_DIR"/}"' "$REPO_ROOT/scripts/test.sh"
   ! grep -Fq 'rel="${arg#$ROOT_DIR/}"' "$REPO_ROOT/scripts/test.sh"
 }
+
+@test "缺少 bats 时提供安装提示且帮助和列表仍可用" {
+  tool_bin="$BATS_TEST_TMPDIR/tools"
+  mkdir -p "$tool_bin"
+  for tool in dirname mktemp rm find sort grep cat; do
+    ln -s "$(command -v "$tool")" "$tool_bin/$tool"
+  done
+  run env PATH="$tool_bin" /bin/bash "$REPO_ROOT/scripts/test.sh" --help
+  [ "$status" -eq 0 ]
+  run env PATH="$tool_bin" /bin/bash "$REPO_ROOT/scripts/test.sh" --list
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"tests/version/test_version_contract.bats"* ]]
+  run env PATH="$tool_bin" /bin/bash "$REPO_ROOT/scripts/test.sh"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"brew install bats-core"* ]]
+  [[ "$output" == *"apt install bats"* ]]
+}

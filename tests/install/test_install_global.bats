@@ -121,24 +121,24 @@ teardown() {
 }
 
 @test "安装不会覆盖已有同名用户能力文件，卸载也不会删除它们" {
-  mkdir -p "$HOME/.claude/commands" "$HOME/.claude/skills/ssf-qa" "$HOME/.claude/agents" "$HOME/.codex/skills/ssf-qa"
+  mkdir -p "$HOME/.claude/commands" "$HOME/.claude/skills/ssf-qa" "$HOME/.codex/skills/ssf-qa"
   printf 'USER COMMAND\n' > "$HOME/.claude/commands/ssf-init.md"
   printf 'USER SKILL\n' > "$HOME/.claude/skills/ssf-qa/SKILL.md"
-  printf 'USER AGENT\n' > "$HOME/.claude/agents/code-reviewer.md"
+  printf 'USER PLAN COMMAND\n' > "$HOME/.claude/commands/ssf-plan.md"
   printf 'USER CODEX SKILL\n' > "$HOME/.codex/skills/ssf-qa/SKILL.md"
 
   run "$INSTALL" --yes --no-hook
   [ "$status" -eq 0 ]
   [ "$(cat "$HOME/.claude/commands/ssf-init.md")" = "USER COMMAND" ]
   [ "$(cat "$HOME/.claude/skills/ssf-qa/SKILL.md")" = "USER SKILL" ]
-  [ "$(cat "$HOME/.claude/agents/code-reviewer.md")" = "USER AGENT" ]
+  [ "$(cat "$HOME/.claude/commands/ssf-plan.md")" = "USER PLAN COMMAND" ]
   [ "$(cat "$HOME/.codex/skills/ssf-qa/SKILL.md")" = "USER CODEX SKILL" ]
 
   run "$UNINSTALL" --both
   [ "$status" -eq 0 ]
   [ "$(cat "$HOME/.claude/commands/ssf-init.md")" = "USER COMMAND" ]
   [ "$(cat "$HOME/.claude/skills/ssf-qa/SKILL.md")" = "USER SKILL" ]
-  [ "$(cat "$HOME/.claude/agents/code-reviewer.md")" = "USER AGENT" ]
+  [ "$(cat "$HOME/.claude/commands/ssf-plan.md")" = "USER PLAN COMMAND" ]
   [ "$(cat "$HOME/.codex/skills/ssf-qa/SKILL.md")" = "USER CODEX SKILL" ]
 }
 

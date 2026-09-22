@@ -56,12 +56,15 @@ check_skills() {
   require_file skills/ssf-review/references/mattpocock-LICENSE.txt || true
 }
 
-# 命令引用的 skill 必须随包提供；init 直接调用项目启用脚本。
+# 同时校验反引号能力名与斜杠命令的文件存在性，再检查 skill 引用；init 无 skill。
 check_commands() {
-  local file name skill command
+  local file name skill command declared=0
+  # shellcheck disable=SC2016 # 正则按字面匹配 Markdown 反引号。
   while IFS= read -r command; do
-    require_file "commands/${command#/}.md" || true
-  done < <(grep -Eo '/ssf-[a-z-]+' routing/default.routing.md | sort -u)
+    declared=1
+    require_file "commands/$command.md" || true
+  done < <(grep -Eo '/ssf-[a-z-]+|`ssf-[a-z-]+`' routing/default.routing.md | tr -d '/`' | sort -u)
+  [ "$declared" -eq 1 ] || fail "routing/default.routing.md declares no commands"
   for file in commands/ssf-*.md; do
     require_file "$file" || continue
     name="${file##*/}"
@@ -91,10 +94,10 @@ check_routing_files
 check_skills
 check_commands
 check_runtime_boundary
-for file in templates/implementation-plan.md templates/qa-signoff.md templates/release-checklist.md templates/commit-message.md templates/pr-description.md; do
+for file in templates/implementation-plan.md templates/qa-signoff.md templates/release-checklist.md; do
   require_file "$file" || true
 done
-for file in scripts/*.sh scripts/hooks/*.sh update.sh templates/git-hooks/commit-msg; do
+for file in scripts/*.sh scripts/hooks/*.sh update.sh; do
   bash -n "$file" || fail "shell syntax: $file"
 done
 [ "$FAILED" -eq 0 ] || exit 1

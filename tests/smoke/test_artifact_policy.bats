@@ -17,18 +17,3 @@ load '../lib/test_helper'
     "$REPO_ROOT/skills" "$REPO_ROOT/commands" "$REPO_ROOT/routing"
   [ "$status" -eq 1 ]
 }
-
-@test "分发的提交 hook 不限制宿主可跟踪的目录" {
-  project="$(ssf_make_tmp_project)"
-  git -C "$project" init -q
-  # 隔离机器上的全局忽略规则，验证宿主自行决定跟踪目录时 hook 的行为。
-  git -C "$project" config core.excludesFile /dev/null
-  mkdir -p "$project/.claude"
-  printf 'project config\n' > "$project/.claude/project.md"
-  git -C "$project" add .claude/project.md
-  printf 'chore(meta): 添加项目配置\n' > "$project/msg.txt"
-  cd "$project"
-  run bash "$REPO_ROOT/templates/git-hooks/commit-msg" msg.txt
-  [ "$status" -eq 0 ]
-  ssf_cleanup_tmp "$project"
-}
