@@ -6,15 +6,25 @@ on:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    # 包声明支持 macOS Bash 3.2；空数组 nounset、UTF-8 locale 中文测试名等坑只在 macOS 复现，
+    # 因此除 Linux 外同时跑一个 macOS runner 守护。
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install tools
         run: |
-          sudo apt-get update
-          sudo apt-get install -y bats shellcheck ripgrep
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get install -y bats shellcheck ripgrep
+          else
+            brew install bats-core shellcheck ripgrep
+          fi
 
       - name: Pack validation
         run: bash scripts/validate-pack.sh
@@ -36,3 +46,7 @@ jobs:
             scripts/*.sh \
             scripts/hooks/*.sh \
             tests/lib/*.bash
+
+      # 仓库纪律要求提交前跑 git diff --check，CI 同步守护尾随空格等空白问题。
+      - name: Whitespace check
+        run: git diff --check HEAD

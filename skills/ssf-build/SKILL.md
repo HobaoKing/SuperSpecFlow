@@ -5,7 +5,7 @@ description: 实现明确的功能、修复缺陷或重构，按影响选择测�
 
 # ssf-build
 
-从当前会话、代码和已有计划确认目标，直接推进已授权工作。普通任务不落盘流程文档；跨模块或跨会话任务复用一份计划，必要时使用 `docs/plans/<topic>.md`。
+从当前会话、代码和已有计划确认目标，直接推进已授权工作。普通任务不落盘流程文档；跨模块或跨会话任务复用一份计划，必要时使用 `docs/plans/<topic>.md`（骨架可用 `bash <pack>/scripts/new-plan.sh <topic> [project-dir]` 生成，结构参考 `templates/implementation-plan.md`）。
 
 1. 定位现有实现、调用方和相关测试，选择最小修改范围，保护无关未提交工作。
 2. 编码遵守 [Karpathy 纪律](references/karpathy.md)；新行为或适合测试的缺陷按需读取 [TDD](references/tdd.md)；难复现、异步或性能问题读取 [调试](references/diagnosing-bugs.md)。无需逐任务询问测试边界。

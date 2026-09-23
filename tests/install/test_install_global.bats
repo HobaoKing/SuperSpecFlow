@@ -129,6 +129,9 @@ teardown() {
   [[ "$output" == *"SessionStart"* ]]
   [[ "$output" == *"matcher"* ]]
   [[ "$output" == *"\"type\": \"command\""* ]] || [[ "$output" == *"\"type\":\"command\""* ]]
+  # matcher 必须覆盖 startup/resume/clear/compact，否则会话中途禁用后 resume 沿用旧上下文；
+  # matcher 是正则表达式，多值必须用 | 交替——写成逗号分隔只会匹配字面串，hook 永不触发
+  [[ "$output" == *"\"matcher\": \"startup|resume|clear|compact\""* ]]
 }
 
 @test "退出码恒为 0（脚本不应因用户拒绝合并而失败）" {

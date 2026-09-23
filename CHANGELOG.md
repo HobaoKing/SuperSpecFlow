@@ -2,6 +2,38 @@
 
 All notable SuperSpecFlow package changes are recorded here.
 
+版本定档规则、发布流程与回滚方式见 [版本与发布策略](release-policy.md)。未发布条目先记在下面的 `[Unreleased]` 段，发布时整体归档为带日期的版本段。
+
+## [2.2.0] - 2026-09-23
+
+### Added
+
+- 支持 Antigravity 目标：`install-global.sh` 新增 `--antigravity-only` / `--all`，默认同时安装 Claude Code、Codex 与 Antigravity，`--both` 保持原有语义（仅 Claude Code 与 Codex）。skills 同步到 IDE `~/.gemini/config/skills/` 与 CLI `~/.gemini/antigravity-cli/skills/` 两个全局目录，include 行写入 `~/.gemini/GEMINI.md`，wrapper 与安装记录落在 `~/.gemini/superspecflow/`。
+- `routing/GEMINI.routing.md` 与 `routing/GEMINI.global.md`：Antigravity 使用同一份默认路由，项目覆盖写 `.superspecflow/GEMINI.routing.md`；Antigravity 没有 `/ssf-init` 命令入口，恢复已禁用项目执行 `bash <pack>/scripts/_ssf_init_apply.sh`。
+- 仓库根新增 `GEMINI.md` 入口，与 `AGENTS.md` / `CLAUDE.md` 同构并纳入 thin 与正文一致性校验。
+- `docs/release-policy.md`：版本档位判定树、边界表、发布流程、回滚与历史不一致记录。
+- `templates/release-checklist.md`：固定发布顺序（Unreleased 归档 → VERSION bump → develop 发布提交 → 合入 master → tag → 推送 → 回合并 develop）。
+- `bootstrap.sh` 支持 `SUPERSPECFLOW_REPO` / `SUPERSPECFLOW_BRANCH` 注入并新增 `--help`；`update.sh` 按各宿主 `pack-root` 探测已安装范围，不再无条件扩容到全部宿主，其余参数透传。
+
+### Fixed
+
+- `install-global.sh` 的 include 已接入判定改为整行精确匹配，注释掉或含尾随空行的同一路径不再被误判为已接入。
+- `install-global.sh` 渲染 wrapper 时对包路径做 sed 替换串转义，路径含 `&` 或 `#` 不再导致路径被破坏或安装中断。
+- 追加/移除 include 后保持目标文件原权限；目标为符号链接时改写其指向的真实文件并保留软链，卸载不再删除用户 dotfiles 仓库中的真实文件。
+- `uninstall-global.sh --purge` 改用物理路径比较与删除，经软链调用时不再只删软链却报告“已删除”。
+- `bootstrap.sh` 更新前中止脏工作区（已跟踪文件有未提交改动时），不再静默 `reset --hard`；未跟踪文件（如 `.DS_Store`）不阻断更新。
+- `_ssf_init_apply.sh` 对 `.superspecflow/disabled` 是目录等情况给出可读错误，不再暴露裸系统错误。
+- `install-global.sh` 同步 skills 时跳过非目录项，包内混入杂项文件不再中断安装。
+- `update.sh` 不再拒绝 `install-global.sh` 支持的参数。
+
+### Docs
+
+- `docs/installation.md`、`docs/compatibility.md`、`README.md` 补充 Antigravity 写入位置、目标选项语义、`~/.gemini/GEMINI.md` 与 Gemini CLI 共享说明，以及 `SUPERSPECFLOW_HOME` 仅用于 bootstrap 安装路径。
+- `docs/release-policy.md` 记录 `v2.0.0` tag 指向 fix 提交、2.0 前发布措辞不同两处历史不一致。
+- `NOTICE.md` 补充 karpathy 上游许可尽调：上游仓库未随附 LICENSE 文件，仅在 README 声明 MIT。
+- `skills/ssf-plan`、`skills/ssf-build` 补充 `scripts/new-plan.sh` 与 `templates/implementation-plan.md`。
+- Claude Code SessionStart hook 提示的 matcher 由 `startup` 扩展为 `startup|resume|clear|compact`（正则交替写法），并声明 Codex / Antigravity 无 hook 等价物的残余风险。
+
 ## [2.1.0] - 2026-09-22
 
 ### Added

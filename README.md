@@ -21,12 +21,14 @@
 ### 远端一句话安装（推荐）
 
 ```bash
-# 默认开启（同时支持 Claude Code 与 Codex）
+# 默认开启（同时支持 Claude Code、Codex 与 Antigravity）
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash
 
 # 或指定单个客户端
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --claude-only
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --codex-only
+
+# 目标参数必须已被 master 发布；未发布时用 SUPERSPECFLOW_BRANCH=develop 安装，见 docs/installation.md
 ```
 
 ### 本地源码安装
@@ -34,11 +36,12 @@ curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scri
 在包目录执行：
 
 ```bash
-bash scripts/install-global.sh --both
-# 或 --claude-only / --codex-only；带 --append 可自动向已有全局指令文件追加 include
+bash scripts/install-global.sh --all
+# 或 --claude-only / --codex-only / --antigravity-only；--both 表示只装 Claude Code 与 Codex
+# 带 --append 可自动向已有全局指令文件追加 include
 ```
 
-全局安装后默认已对所有项目开启轻量自然语言路由，无需在每个项目中自己执行 init。Claude 重启会话后使 `/ssf-*` 进入命令补全。若需单独禁用某项目，可在其根目录放置 `.superspecflow/disabled`；恢复或显式确认启用可运行 `/ssf-init`（Codex 使用 `bash <pack>/scripts/_ssf_init_apply.sh`）。
+全局安装后默认已对所有项目开启轻量自然语言路由，无需在每个项目中自己执行 init。Claude 重启会话后使 `/ssf-*` 进入命令补全。若需单独禁用某项目，可在其根目录放置 `.superspecflow/disabled`；恢复或显式确认启用可运行 `/ssf-init`（Codex 使用 `bash <pack>/scripts/_ssf_init_apply.sh`，Antigravity 使用 IDE / CLI 重启会话或同一脚本）。
 
 见 [安装说明](docs/installation.md) 和 [运行环境](docs/compatibility.md)。卸载使用 `scripts/uninstall-global.sh`。
 
@@ -63,7 +66,11 @@ bash scripts/install-global.sh --both
 
 ## 维护
 
-`routing/default.routing.md` 是规则源，公开的 AGENTS / CLAUDE routing 文件与它一致。`skills/` 负责工程方法，`commands/` 提供命令入口，`templates/` 提供可选模板。
+`routing/default.routing.md` 是规则源，公开的 AGENTS / CLAUDE / GEMINI routing 文件与它一致。`skills/` 负责工程方法，`commands/` 提供命令入口，`templates/` 提供可选模板。
+
+## 参与开发与发布
+
+功能提交在 `develop` 上累积，`master` 只通过发布合并提交前进（远端一句话安装拉取 master）。commit / PR 标题使用 `<英文类型>(<英文范围>): <中文摘要>`。版本档位判定树、发布顺序（Unreleased 归档 → VERSION bump → 发布提交 → 合入 master → tag → 推送 → 回合并 develop）、回滚方式见 [版本与发布策略](docs/release-policy.md)；分支与提交约定见 [分支与提交](docs/branching-strategy.md)。`major` 只在破坏既有契约时使用，`minor` 用于新增一类能力面（新宿主、新 skill、改变默认行为的 flag），`patch` 用于修复、文档和内部调整；发布提交只改 `CHANGELOG.md` 与 `VERSION`，`--no-ff` 合入 `master` 后按 `v<x.y.z>` 打 tag。
 
 提交忽略由具体仓库的 `.gitignore` 和仓库级校验负责，不放进可复用 skill、路由或 hook。
 

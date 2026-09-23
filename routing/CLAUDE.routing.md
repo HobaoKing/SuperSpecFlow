@@ -43,4 +43,4 @@
 
 ## 接入
 
-全局安装默认全局开启轻量自然语言路由，无需在每个项目中执行 init。若项目需要单独禁用，可在项目根目录放置 `.superspecflow/disabled`。项目可通过自己的 `.superspecflow/AGENTS.routing.md` / `CLAUDE.routing.md` 自定义规则覆盖默认路由；显式 include 也可接入。`/ssf-init` 可用于显式确认启用或恢复已禁用的项目。不覆盖宿主 AGENTS.md / CLAUDE.md。
+全局安装默认全局开启轻量自然语言路由，无需在每个项目中执行 init。若项目需要单独禁用，可在项目根目录放置 `.superspecflow/disabled`。项目可通过自己的 `.superspecflow/AGENTS.routing.md` / `CLAUDE.routing.md` / `GEMINI.routing.md` 自定义规则覆盖默认路由；显式 include 也可接入。恢复已禁用项目：Claude 运行 `/ssf-init`，Codex 与 Antigravity 执行 `bash <pack>/scripts/_ssf_init_apply.sh`。不覆盖宿主 AGENTS.md / CLAUDE.md / GEMINI.md。

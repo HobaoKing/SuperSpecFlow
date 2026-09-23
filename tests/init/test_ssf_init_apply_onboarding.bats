@@ -11,6 +11,16 @@ teardown() {
   ssf_cleanup_tmp "$PROJECT_DIR"
 }
 
+@test ".superspecflow/disabled 是目录时报可读错误而非裸系统错误" {
+  mkdir -p "$PROJECT_DIR/.superspecflow/disabled"
+
+  run env SSF_INIT_PROJECT_DIR="$PROJECT_DIR" bash "$APPLY"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"not a regular file"* ]]
+  [[ "$output" != *"is a directory"* ]]
+  [ -d "$PROJECT_DIR/.superspecflow/disabled" ]
+}
+
 @test "opt-in 输出提示已生效且需新会话启用 轻量自然语言路由（SSF-ONBOARD-002）" {
   run env SSF_INIT_PROJECT_DIR="$PROJECT_DIR" bash "$APPLY"
   [ "$status" -eq 0 ]

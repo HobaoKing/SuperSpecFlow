@@ -6,8 +6,8 @@ load '../lib/test_helper'
   run git -C "$REPO_ROOT" ls-files
   [ "$status" -eq 0 ]
 
-  if printf '%s\n' "$output" | grep -Eq '^(superpowers|docs/superpowers|\.superspecflow|\.claude|\.codex)/|(^|/)\.DS_Store$'; then
-    printf '%s\n' "$output" | grep -E '^(superpowers|docs/superpowers|\.superspecflow|\.claude|\.codex)/|(^|/)\.DS_Store$' >&2
+  if printf '%s\n' "$output" | grep -Eq '^(superpowers|docs/superpowers|\.superspecflow|\.claude|\.codex|\.gemini)/|(^|/)\.DS_Store$'; then
+    printf '%s\n' "$output" | grep -E '^(superpowers|docs/superpowers|\.superspecflow|\.claude|\.codex|\.gemini)/|(^|/)\.DS_Store$' >&2
     return 1
   fi
 }

@@ -1,4 +1,4 @@
-@./routing/CLAUDE.routing.md
+@./routing/GEMINI.routing.md
 
 # SuperSpecFlow 仓库入口
 
