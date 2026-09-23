@@ -4,6 +4,13 @@ All notable SuperSpecFlow package changes are recorded here.
 
 版本定档规则、发布流程与回滚方式见 [版本与发布策略](release-policy.md)。未发布条目先记在下面的 `[Unreleased]` 段，发布时整体归档为带日期的版本段。
 
+## [Unreleased]
+
+### Docs
+
+- 回补 README 与 `docs/installation.md` 的 Antigravity 一句话安装示例，删除等待 2.2.0 落地的「未发布」临时门控说明；README 补充更新方式（重复执行一句话安装）与 CHANGELOG 链接。
+- 发布策略与发布检查清单增加「文档回补」要求：发布前检查 README 与 `docs/` 中等待本版落地的临时说明。
+
 ## [2.2.0] - 2026-09-23
 
 ### Added
