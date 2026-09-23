@@ -2,6 +2,8 @@
 
 All notable SuperSpecFlow package changes are recorded here.
 
+版本定档规则、发布流程与回滚方式见 [版本与发布策略](release-policy.md)。
+
 ## [2.1.0] - 2026-09-22
 
 ### Added

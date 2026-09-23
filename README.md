@@ -67,6 +67,8 @@ bash scripts/install-global.sh --all
 
 `routing/default.routing.md` 是规则源，公开的 AGENTS / CLAUDE / GEMINI routing 文件与它一致。`skills/` 负责工程方法，`commands/` 提供命令入口，`templates/` 提供可选模板。
 
+版本定档、发布流程和回滚见 [版本与发布策略](docs/release-policy.md)：`major` 只在破坏既有契约时使用，`minor` 用于新增一类能力面（新宿主、新 skill、改变默认行为的 flag），`patch` 用于修复、文档和内部调整；发布提交只改 `CHANGELOG.md` 与 `VERSION`，`--no-ff` 合入 `master` 后按 `v<x.y.z>` 打 tag。
+
 提交忽略由具体仓库的 `.gitignore` 和仓库级校验负责，不放进可复用 skill、路由或 hook。
 
 ```bash
