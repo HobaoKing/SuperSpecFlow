@@ -26,11 +26,11 @@ check_root_instruction_files_thin() {
   done
 }
 
-# 两端发布实体副本以适应不同安装方式；源文件必须与副本完全一致。
+# 各端发布实体副本以适应不同安装方式；源文件必须与副本完全一致。
 check_routing_files() {
   local host
   require_file routing/default.routing.md || return 0
-  for host in AGENTS CLAUDE; do
+  for host in AGENTS CLAUDE GEMINI; do
     if ! cmp -s routing/default.routing.md "routing/$host.routing.md"; then
       fail "public routing files match canonical: routing/$host.routing.md drift"
     fi

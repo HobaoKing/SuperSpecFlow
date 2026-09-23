@@ -21,12 +21,13 @@
 ### 远端一句话安装（推荐）
 
 ```bash
-# 默认开启（同时支持 Claude Code 与 Codex）
+# 默认开启（同时支持 Claude Code、Codex 与 Antigravity）
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash
 
 # 或指定单个客户端
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --claude-only
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --codex-only
+curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --antigravity-only
 ```
 
 ### 本地源码安装
@@ -34,11 +35,12 @@ curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scri
 在包目录执行：
 
 ```bash
-bash scripts/install-global.sh --both
-# 或 --claude-only / --codex-only；带 --append 可自动向已有全局指令文件追加 include
+bash scripts/install-global.sh --all
+# 或 --claude-only / --codex-only / --antigravity-only；--both 表示只装 Claude Code 与 Codex
+# 带 --append 可自动向已有全局指令文件追加 include
 ```
 
-全局安装后默认已对所有项目开启轻量自然语言路由，无需在每个项目中自己执行 init。Claude 重启会话后使 `/ssf-*` 进入命令补全。若需单独禁用某项目，可在其根目录放置 `.superspecflow/disabled`；恢复或显式确认启用可运行 `/ssf-init`（Codex 使用 `bash <pack>/scripts/_ssf_init_apply.sh`）。
+全局安装后默认已对所有项目开启轻量自然语言路由，无需在每个项目中自己执行 init。Claude 重启会话后使 `/ssf-*` 进入命令补全。若需单独禁用某项目，可在其根目录放置 `.superspecflow/disabled`；恢复或显式确认启用可运行 `/ssf-init`（Codex 使用 `bash <pack>/scripts/_ssf_init_apply.sh`，Antigravity 使用 IDE / CLI 重启会话或同一脚本）。
 
 见 [安装说明](docs/installation.md) 和 [运行环境](docs/compatibility.md)。卸载使用 `scripts/uninstall-global.sh`。
 
@@ -63,7 +65,7 @@ bash scripts/install-global.sh --both
 
 ## 维护
 
-`routing/default.routing.md` 是规则源，公开的 AGENTS / CLAUDE routing 文件与它一致。`skills/` 负责工程方法，`commands/` 提供命令入口，`templates/` 提供可选模板。
+`routing/default.routing.md` 是规则源，公开的 AGENTS / CLAUDE / GEMINI routing 文件与它一致。`skills/` 负责工程方法，`commands/` 提供命令入口，`templates/` 提供可选模板。
 
 提交忽略由具体仓库的 `.gitignore` 和仓库级校验负责，不放进可复用 skill、路由或 hook。
 

@@ -24,9 +24,11 @@ load '../lib/test_helper'
   [ ! -L "$REPO_ROOT/routing/default.routing.md" ]
   [ ! -L "$REPO_ROOT/routing/AGENTS.routing.md" ]
   [ ! -L "$REPO_ROOT/routing/CLAUDE.routing.md" ]
+  [ ! -L "$REPO_ROOT/routing/GEMINI.routing.md" ]
 
   cmp -s "$REPO_ROOT/routing/default.routing.md" "$REPO_ROOT/routing/AGENTS.routing.md"
   cmp -s "$REPO_ROOT/routing/default.routing.md" "$REPO_ROOT/routing/CLAUDE.routing.md"
+  cmp -s "$REPO_ROOT/routing/default.routing.md" "$REPO_ROOT/routing/GEMINI.routing.md"
 }
 
 @test "validate-pack enforces canonical routing drift guard" {

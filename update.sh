@@ -58,7 +58,7 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-"$SCRIPT_DIR/scripts/install-global.sh" --both
+"$SCRIPT_DIR/scripts/install-global.sh" --all
 
 if [ "$ENABLE_NATURAL_LANGUAGE" -eq 1 ]; then
   SSF_INIT_PROJECT_DIR="$PROJECT_DIR" "$SCRIPT_DIR/scripts/_ssf_init_apply.sh"

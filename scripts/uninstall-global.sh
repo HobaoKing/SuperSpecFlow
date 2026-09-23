@@ -8,17 +8,20 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 REMOVE_CLAUDE=1
 REMOVE_CODEX=1
+REMOVE_ANTIGRAVITY=1
 PURGE=0
 TARGET_SELECTED=0
 
 usage() {
   cat <<MSG
-Usage: uninstall-global.sh [--claude-only|--codex-only|--both] [--purge]
+Usage: uninstall-global.sh [--claude-only|--codex-only|--antigravity-only|--both|--all] [--purge]
 
 CLI selection (mutually exclusive):
-  --claude-only  Only remove include from ~/.claude/CLAUDE.md.
-  --codex-only   Only remove include from ~/.codex/AGENTS.md.
-  --both         Remove from both (default).
+  --claude-only       Only remove include from ~/.claude/CLAUDE.md.
+  --codex-only        Only remove include from ~/.codex/AGENTS.md.
+  --antigravity-only  Only remove include from ~/.gemini/GEMINI.md.
+  --both              Remove from Claude Code and Codex only.
+  --all               Remove from Claude Code, Codex and Antigravity (default).
 
 Other options:
   --purge        After removing includes, also delete the pack directory at $REPO_ROOT.
@@ -29,7 +32,7 @@ MSG
 
 require_single_target() {
   if [ "$TARGET_SELECTED" -eq 1 ]; then
-    echo "error: --claude-only / --codex-only / --both are mutually exclusive" >&2
+    echo "error: --claude-only / --codex-only / --antigravity-only / --both / --all are mutually exclusive" >&2
     usage >&2
     exit 2
   fi
@@ -42,18 +45,35 @@ while [ "$#" -gt 0 ]; do
       require_single_target
       REMOVE_CLAUDE=1
       REMOVE_CODEX=0
+      REMOVE_ANTIGRAVITY=0
       shift
       ;;
     --codex-only)
       require_single_target
       REMOVE_CLAUDE=0
       REMOVE_CODEX=1
+      REMOVE_ANTIGRAVITY=0
+      shift
+      ;;
+    --antigravity-only)
+      require_single_target
+      REMOVE_CLAUDE=0
+      REMOVE_CODEX=0
+      REMOVE_ANTIGRAVITY=1
       shift
       ;;
     --both)
       require_single_target
       REMOVE_CLAUDE=1
       REMOVE_CODEX=1
+      REMOVE_ANTIGRAVITY=0
+      shift
+      ;;
+    --all)
+      require_single_target
+      REMOVE_CLAUDE=1
+      REMOVE_CODEX=1
+      REMOVE_ANTIGRAVITY=1
       shift
       ;;
     --purge) PURGE=1; shift ;;
@@ -63,7 +83,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 remove_include() {
-  local target="$1"          # ~/.claude/CLAUDE.md 或 ~/.codex/AGENTS.md
+  local target="$1"          # ~/.claude/CLAUDE.md、~/.codex/AGENTS.md 或 ~/.gemini/GEMINI.md
   local include_line="$2"    # 已生成 wrapper 的绝对路径 include
 
   if [ ! -e "$target" ]; then
@@ -134,6 +154,13 @@ remove_manifested_capabilities() {
 
   rm -f "$manifest"
 }
+
+if [ "$REMOVE_ANTIGRAVITY" -eq 1 ]; then
+  remove_include "$HOME/.gemini/GEMINI.md" "@$HOME/.gemini/superspecflow/GEMINI.global.md"
+  remove_manifested_capabilities "$HOME/.gemini/superspecflow/install-manifest.tsv"
+  rm -f "$HOME/.gemini/superspecflow/GEMINI.global.md" "$HOME/.gemini/superspecflow/pack-root"
+  rmdir "$HOME/.gemini/superspecflow" 2>/dev/null || true
+fi
 
 if [ "$REMOVE_CLAUDE" -eq 1 ]; then
   remove_include "$HOME/.claude/CLAUDE.md" "@$HOME/.claude/superspecflow/CLAUDE.global.md"
