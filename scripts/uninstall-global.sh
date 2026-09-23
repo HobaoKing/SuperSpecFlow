@@ -82,6 +82,20 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+# 读取文件权限位的八进制表示（如 644）。GNU stat（Linux）用 -c '%a'，BSD stat（macOS）用 -f '%Lp'。
+# 输入：$1 已存在的普通文件路径；输出：权限位（stdout），两种形式都不可用时输出空串。
+# 约束：必须“先 GNU 后 BSD”，不能写成 `stat -f '%Lp' f || stat -c '%a' f` 串联——GNU stat 的 -f 是
+# 文件系统模式，它会先把文件系统信息打印到 stdout 再以非零状态退出，串联兜底会把这段多行输出
+# 一起捕获进变量，后续 chmod 拿到脏值失败（Linux 上移除 include 后恢复权限因此中断）。
+file_mode() {
+  local mode
+  if mode="$(stat -c '%a' "$1" 2>/dev/null)"; then
+    printf '%s' "$mode"
+    return 0
+  fi
+  stat -f '%Lp' "$1" 2>/dev/null || true
+}
+
 remove_include() {
   local target="$1"          # ~/.claude/CLAUDE.md、~/.codex/AGENTS.md 或 ~/.gemini/GEMINI.md
   local include_line="$2"    # 已生成 wrapper 的绝对路径 include
@@ -119,7 +133,7 @@ remove_include() {
   grep -Fxv "$include_line" "$file" > "$tmp" || true
 
   # mktemp 产物是 600，写回前记录并恢复原权限，避免静默降级用户指令文件权限
-  mode="$(stat -f '%Lp' "$file" 2>/dev/null || stat -c '%a' "$file" 2>/dev/null || true)"
+  mode="$(file_mode "$file")"
   if [ ! -s "$tmp" ]; then
     if [ -L "$target" ]; then
       # 软链场景绝不越界删除用户真实文件（可能是 dotfiles 仓库里的共享文件）：
@@ -133,7 +147,7 @@ remove_include() {
     fi
   else
     mv "$tmp" "$file"
-    [ -n "$mode" ] && chmod "$mode" "$file"
+    if [ -n "$mode" ]; then chmod "$mode" "$file"; fi
     echo "✓ 已从 $target 移除 SuperSpecFlow include 行（其他内容保留）"
   fi
 }

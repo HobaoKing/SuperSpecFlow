@@ -32,6 +32,19 @@ ssf_make_tmp_project() {
   mktemp -d "$(ssf__tmpdir)/ssf-proj.XXXXXX"
 }
 
+# 读取文件权限位（八进制，如 644）：GNU stat（Linux）用 -c '%a'，BSD stat（macOS）用 -f '%Lp'。
+# 输入：$1 已存在文件路径；输出：权限位（stdout）。
+# 约束：必须“先 GNU 后 BSD”——GNU stat 的 -f 是文件系统模式，会先把文件系统信息打印到 stdout
+# 再非零退出，反着串联会把多行脏输出当成权限位，在 Linux 上让断言或 chmod 误判。
+ssf_file_mode() {
+  local mode
+  if mode="$(stat -c '%a' "$1" 2>/dev/null)"; then
+    printf '%s' "$mode"
+    return 0
+  fi
+  stat -f '%Lp' "$1" 2>/dev/null || true
+}
+
 ssf__physical_dir() {
   local dir="$1"
   [ -n "$dir" ] || return 1

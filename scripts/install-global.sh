@@ -271,6 +271,20 @@ write_pack_root() {
   printf '%s\n' "$REPO_ROOT" > "$output"
 }
 
+# 读取文件权限位的八进制表示（如 644）。GNU stat（Linux）用 -c '%a'，BSD stat（macOS）用 -f '%Lp'。
+# 输入：$1 已存在的普通文件路径；输出：权限位（stdout），两种形式都不可用时输出空串。
+# 约束：必须“先 GNU 后 BSD”，不能写成 `stat -f '%Lp' f || stat -c '%a' f` 串联——GNU stat 的 -f 是
+# 文件系统模式，它会先把文件系统信息打印到 stdout 再以非零状态退出，串联兜底会把这段多行输出
+# 一起捕获进变量，后续 chmod 拿到脏值失败（Linux 上 --append 全链路因此中断）。
+file_mode() {
+  local mode
+  if mode="$(stat -c '%a' "$1" 2>/dev/null)"; then
+    printf '%s' "$mode"
+    return 0
+  fi
+  stat -f '%Lp' "$1" 2>/dev/null || true
+}
+
 # 在已存在的指令文件首行前插入 include 行，保留原文件全部内容与排版。
 # 输入：$1 目标文件绝对路径；$2 要插入的 include 完整行文本。
 # 输出：无 stdout；成功时原子覆盖更新目标文件。
@@ -282,13 +296,13 @@ prepend_include() {
   local tmp mode
   tmp="$(mktemp "${TMPDIR:-/tmp}/ssf-include.XXXXXX")"
 
-  mode="$(stat -f '%Lp' "$target" 2>/dev/null || stat -c '%a' "$target" 2>/dev/null || true)"
+  mode="$(file_mode "$target")"
   {
     printf '%s\n' "$include_line"
     cat "$target"
   } > "$tmp"
   mv "$tmp" "$target"
-  [ -n "$mode" ] && chmod "$mode" "$target"
+  if [ -n "$mode" ]; then chmod "$mode" "$target"; fi
   return 0
 }
 

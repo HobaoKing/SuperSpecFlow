@@ -4,6 +4,12 @@ All notable SuperSpecFlow package changes are recorded here.
 
 版本定档规则、发布流程与回滚方式见 [版本与发布策略](release-policy.md)。未发布条目先记在下面的 `[Unreleased]` 段，发布时整体归档为带日期的版本段。
 
+## [Unreleased]
+
+### Fixed
+
+- 修复 2.2.0 引入的 Linux 回归：读取指令文件权限位时 `stat -f '%Lp' … || stat -c '%a' …` 串联在 GNU/Linux 上失效——GNU `stat -f` 是“文件系统”模式，会先把文件系统信息打印到 stdout 再非零退出，变量捕获到多行脏输出，随后 `chmod` 失败并中断脚本。表现为 GNU/Linux 上 `--append` 追加、卸载移除 include 后的权限恢复全部失败（macOS 的 BSD `stat` 行为不同，不受影响）。现在统一走 `file_mode()`：先试 GNU `-c '%a'`，失败才退回 BSD `-f '%Lp'`；测试断言改用可移植的 `ssf_file_mode()`。
+
 ## [2.2.1] - 2026-09-23
 
 ### Docs
