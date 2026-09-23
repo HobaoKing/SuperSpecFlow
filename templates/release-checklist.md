@@ -4,7 +4,7 @@
 
 ## 发布顺序（本包固定，按序执行）
 
-1. **Unreleased 归档**：把 `CHANGELOG.md` 顶部 `## [Unreleased]` 的条目并入新的 `## [<x.y.z>] - <YYYY-MM-DD>` 段；没有未发布条目就不要发版。
+1. **Unreleased 归档**：把 `CHANGELOG.md` 顶部 `## [Unreleased]` 的条目并入新的 `## [<x.y.z>] - <YYYY-MM-DD>` 段；没有未发布条目就不要发版。同一步回补等待本版落地的文档：README 与 `docs/` 中「未发布 / 尚未发布」一类临时说明要么兑现成正式表述，要么删除。
 2. **VERSION bump**：`VERSION` 改为同一个 `x.y.z`（单行、无 `v` 前缀）。
 3. **develop 发布提交**：`chore(meta): 发布 <x.y.z>`，只含 `CHANGELOG.md` 与 `VERSION`。
 4. **合并 master**：`git checkout master && git merge --no-ff develop -m "chore(meta): 发布 <x.y.z>"`（远端一句话安装拉取 master）。

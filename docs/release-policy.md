@@ -40,7 +40,7 @@ major 在 2.x 期间没有计划；真要做时必须在 CHANGELOG 写明手动�
 
 1. **门禁**：目标提交已在 `develop`，`scripts/validate-pack.sh`、`scripts/test.sh`（含一次带空格 `TMPDIR` 复跑）、`git diff --check`、`shellcheck -x`（CI 同参数）全部通过，工作区 clean。
 2. **定版本号**：按判定树读当前 `VERSION`，写下新 `x.y.z`。
-3. **改 `CHANGELOG.md`**：把 `[Unreleased]` 段归档为唯一一段 `## [<x.y.z>] - <YYYY-MM-DD>`。条目写清用户影响和实际风险；不留空段，不写未验证为通过的结论。
+3. **改 `CHANGELOG.md`**：把 `[Unreleased]` 段归档为唯一一段 `## [<x.y.z>] - <YYYY-MM-DD>`。条目写清用户影响和实际风险；不留空段，不写未验证为通过的结论。同一步回补等待本版落地的文档：搜索 README 与 `docs/` 中「未发布 / 尚未发布 / 等 master 发布」一类临时说明，能兑现的改为正式表述，不能兑现的删除。
 4. **改 `VERSION`**：单行 `x.y.z`，无 `v` 前缀。
 5. **develop 发布提交**：`chore(meta): 发布 <x.y.z>`，只含 `CHANGELOG.md` 与 `VERSION`；正文写变更摘要、验证命令与结果、风险与回滚方式。
 6. **合并到 master**：`git checkout master && git merge --no-ff develop -m "chore(meta): 发布 <x.y.z>"`。保留发布合并提交，不用 fast-forward 直推 master。
