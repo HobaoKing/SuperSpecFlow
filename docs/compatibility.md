@@ -8,6 +8,8 @@ Claude 使用 commands 和 skills；Codex 使用 skills 和项目指令，不假
 
 Claude、Codex 与 Antigravity 的全局指令文件都支持按绝对路径 include 另一个 Markdown 文件，因此三个宿主都不需要 `templates/integration/` snippet；Antigravity 的 include 行写在 `~/.gemini/GEMINI.md` 中，且该文件同时被 Gemini CLI 读取。
 
+SessionStart hook 只有 Claude Code 提供；安装脚本打印的 matcher 覆盖 `startup|resume|clear|compact`（matcher 是正则表达式，多值用 `|` 交替，逗号分隔不会生效），使启动、恢复、清空和压缩都会重新检测项目禁用状态。Codex 与 Antigravity 没有 hook 等价物，只能依靠全局规则文本要求 agent 在会话中读取 `.superspecflow/disabled`——这是已知残余风险：会话中途新建禁用标记时，已在进行且未重载规则的会话仍可能沿用旧上下文。
+
 不支持 include 的宿主可手动将 `templates/integration/` 对应 snippet 追加到已有项目指令中，将 `<pack>` 替换为实际安装目录的绝对路径；不要覆盖宿主文件。snippet 先读取存在的项目覆盖文件，否则回退到包内 routing，不自动复制或同步整份规则。
 
 宿主业务、构建和运行约束优先。SuperSpecFlow 不依赖或自动调用 Superpowers；两者共存时按宿主实际指令层级及用户指定的方法执行，本包不声明对其他插件的全局覆盖权。

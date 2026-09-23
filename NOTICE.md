@@ -18,3 +18,5 @@ Copyright (c) 2026 Matt Pocock。完整上游 MIT 授权随两个参考目录的
 - Goal-Driven Execution（目标驱动执行）
 
 对应参考见 `skills/ssf-build/references/karpathy.md`，来源固定为修订 `2c606141936f1eeef17fa3043a72095b4765b9c2` 的 README。本地为原则的中文概括，允许必要的测试边界与可读性提取，不是逐字复制，不要求独立命令。
+
+上游该仓库未随附 LICENSE 文件，仅在 README 的 License 一节声明 MIT；本包据该声明进行适配与再分发，并在本文件保留来源、固定修订与改动说明。若上游后续补充或变更许可，请以更严格的条款为准并更新本文件。

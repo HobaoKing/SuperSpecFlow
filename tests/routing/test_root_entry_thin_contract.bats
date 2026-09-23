@@ -5,6 +5,7 @@ load '../lib/test_helper'
 @test "root instruction files are thin entries into centralized routing" {
   grep -q 'routing/AGENTS.routing.md' "$REPO_ROOT/AGENTS.md"
   grep -q 'routing/CLAUDE.routing.md' "$REPO_ROOT/CLAUDE.md"
+  grep -q 'routing/GEMINI.routing.md' "$REPO_ROOT/GEMINI.md"
 
   ! grep -q '| 类别 | 判定标准 | 处理方式 |' "$REPO_ROOT/AGENTS.md"
   ! grep -q '显式命令集合' "$REPO_ROOT/AGENTS.md"
@@ -13,6 +14,17 @@ load '../lib/test_helper'
   ! grep -q 'Intake Gate 分类' "$REPO_ROOT/CLAUDE.md"
   ! grep -q '显式命令集合' "$REPO_ROOT/CLAUDE.md"
   ! grep -q '/ssf-think <idea>' "$REPO_ROOT/CLAUDE.md"
+
+  ! grep -q '显式命令集合' "$REPO_ROOT/GEMINI.md"
+  ! grep -q '/ssf-think <idea>' "$REPO_ROOT/GEMINI.md"
+}
+
+@test "三个根入口正文一致，仅 include 行不同" {
+  agents_body="$(tail -n +2 "$REPO_ROOT/AGENTS.md")"
+  claude_body="$(tail -n +2 "$REPO_ROOT/CLAUDE.md")"
+  gemini_body="$(tail -n +2 "$REPO_ROOT/GEMINI.md")"
+  [ "$agents_body" = "$claude_body" ]
+  [ "$agents_body" = "$gemini_body" ]
 }
 
 @test "validate-pack enforces thin root instruction entries" {

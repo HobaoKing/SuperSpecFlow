@@ -34,17 +34,20 @@ major 在 2.x 期间没有计划；真要做时必须在 CHANGELOG 写明手动�
 
 ## 发布流程
 
-功能提交只在 `develop` 上累积；`master` 只通过发布合并提交前进，因为远端一句话安装（`scripts/bootstrap.sh`）拉取的是 `master`。
+功能提交只在 `develop` 上累积；`master` 只通过发布合并提交前进，因为远端一句话安装（`scripts/bootstrap.sh`）拉取的是 `master`。可复制的检查清单见 `templates/release-checklist.md`。
+
+未发布条目先记在 `CHANGELOG.md` 顶部的 `## [Unreleased]` 段（按 `Added` / `Changed` / `Fixed` / `Docs` 分组），落地即记录；发版时整段归档为带日期的版本段。没有未发布条目就不要发版。
 
 1. **门禁**：目标提交已在 `develop`，`scripts/validate-pack.sh`、`scripts/test.sh`（含一次带空格 `TMPDIR` 复跑）、`git diff --check`、`shellcheck -x`（CI 同参数）全部通过，工作区 clean。
 2. **定版本号**：按判定树读当前 `VERSION`，写下新 `x.y.z`。
-3. **改 `CHANGELOG.md`**：在顶部新增唯一一段 `## [<x.y.z>] - <YYYY-MM-DD>`。条目按 `Added` / `Changed` / `Fixed` / `Docs` 分组，中文，写清用户影响和实际风险；不留空段，不写未验证为通过的结论。
+3. **改 `CHANGELOG.md`**：把 `[Unreleased]` 段归档为唯一一段 `## [<x.y.z>] - <YYYY-MM-DD>`。条目写清用户影响和实际风险；不留空段，不写未验证为通过的结论。
 4. **改 `VERSION`**：单行 `x.y.z`，无 `v` 前缀。
 5. **develop 发布提交**：`chore(meta): 发布 <x.y.z>`，只含 `CHANGELOG.md` 与 `VERSION`；正文写变更摘要、验证命令与结果、风险与回滚方式。
 6. **合并到 master**：`git checkout master && git merge --no-ff develop -m "chore(meta): 发布 <x.y.z>"`。保留发布合并提交，不用 fast-forward 直推 master。
-7. **推送**：`git push origin develop master`。
-8. **打 tag**：`git tag -a v<x.y.z> -m "发布 <x.y.z>"`，tag 指向 **master 上的发布合并提交**，随后 `git push origin v<x.y.z>`。
-9. **发布后核验**：tag 解引用落在 master 的合并提交上；`tests/version/test_version_contract.bats` 通过（`VERSION` 与 CHANGELOG 唯一当前版本段一致）；远端一句话安装可用。
+7. **打 tag**：`git tag -a v<x.y.z> -m "发布 <x.y.z>"`，tag 指向 **master 上的发布合并提交**。
+8. **推送**：`git push origin develop master`，再 `git push origin v<x.y.z>`。
+9. **回合并 develop**：`git checkout develop && git merge --no-ff master`。master 侧的合并提交必须成为 develop 祖先，否则 `git describe --tags` 在 develop 上会退化到更早的 tag，依赖它的工具会拿到错误版本号。
+10. **发布后核验**：tag 解引用落在 master 的合并提交上；在 develop 上 `git describe --tags` 得到刚发布的版本；`tests/version/test_version_contract.bats` 通过（`VERSION` 与 CHANGELOG 唯一当前版本段一致）；远端一句话安装可用。
 
 ## 回滚
 
@@ -65,5 +68,5 @@ major 在 2.x 期间没有计划；真要做时必须在 CHANGELOG 写明手动�
 撰写本文件时，`develop` 领先 `master` 一个提交 `feat(install): 支持 Antigravity 目标安装`，包含新宿主目标、两个新安装目录、新 flag，且让默认安装多写一个宿主——按判定树第 2 条定 **minor**：
 
 - 当前 `VERSION` 为 `2.1.0` → 发布 **`2.2.0`**。
-- CHANGELOG 顶部新增 `## [2.2.0] - <发布日期>`：`Added` 段写 Antigravity 目标、写入位置（`~/.gemini/GEMINI.md` 与两个全局 skills 目录）和 `--antigravity-only` / `--all`，并说明默认安装范围由两家变为三家。
+- CHANGELOG 顶部的 `[Unreleased]` 段（Antigravity、发布策略、脚本修复与文档）整段归档为 `## [2.2.0] - <发布日期>`。
 - 之后纯修复走 `2.2.1`，新 skill 或新 flag 走 `2.3.0`，二者不混发。

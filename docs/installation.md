@@ -16,10 +16,13 @@ curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scri
 # 或指定单个客户端
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --claude-only
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --codex-only
-curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --antigravity-only
+
+# 目标参数必须已被 master 发布；下面这行需要 Antigravity 参数已合入 master，
+# 未发布时改用 develop 分支安装：
+#   SUPERSPECFLOW_BRANCH=develop curl -fsSL .../bootstrap.sh | bash -s -- --antigravity-only
 ```
 
-`scripts/bootstrap.sh` 是远端快捷安装入口，指向 master 分支；它会将仓库 clone/update 至 `~/.superspecflow`（可通过环境变量 `SUPERSPECFLOW_HOME` 自定义路径），并自动调用 `install-global.sh` 完成全局安装与默认配置。
+`scripts/bootstrap.sh` 是远端快捷安装入口，指向 master 分支；它会将仓库 clone/update 至 `~/.superspecflow`（可通过环境变量 `SUPERSPECFLOW_HOME` 自定义路径），并自动调用 `install-global.sh` 完成全局安装与默认配置。该路径只影响 bootstrap 的检出位置，本地源码安装（`bash scripts/install-global.sh`）不写入这个变量；`SUPERSPECFLOW_HOME` 仅在 bootstrap 安装路径中使用。另有两个仅 bootstrap 读取的变量：`SUPERSPECFLOW_REPO`（源仓库地址）与 `SUPERSPECFLOW_BRANCH`（源分支，默认 `master`）——master 尚未发布的能力需显式指定 `SUPERSPECFLOW_BRANCH=develop` 才能装上。
 
 ### 本地包安装
 
@@ -60,12 +63,14 @@ Claude 安装后重启会话即可加载全局指令并使 `/ssf-*` 进入命令
 bash <pack>/scripts/_ssf_init_apply.sh
 ```
 
-该命令仅确保 `.superspecflow/enabled` 存在并清除 `.superspecflow/disabled`，不预建阶段目录或改写宿主 AGENTS.md / CLAUDE.md。
+该命令仅确保 `.superspecflow/enabled` 存在并清除 `.superspecflow/disabled`，不预建阶段目录或改写宿主 AGENTS.md / CLAUDE.md / GEMINI.md。注意 `enabled` 只是显式确认记录，没有开关作用：SessionStart hook 和三份全局规则都只依据 `.superspecflow/disabled` 判定启用与否。
 
-项目可通过自己的 `.superspecflow/AGENTS.routing.md` / `CLAUDE.routing.md` 定义规则覆盖默认路由；显式 routing include 也可接入；这些项目文件由项目自己维护。
+项目可通过自己的 `.superspecflow/AGENTS.routing.md` / `CLAUDE.routing.md` / `GEMINI.routing.md` 定义规则覆盖默认路由；显式 routing include 也可接入；这些项目文件由项目自己维护。
 
 ## 验证与卸载
 
 检查安装输出中的 skipped 提示，确认目标 skill 可用和包引用正确。重复安装会保护用户修改。
 
 `bash scripts/uninstall-global.sh --all`（或 `--claude-only` / `--codex-only` / `--antigravity-only` / `--both`）按安装记录卸载并保护用户修改，不操作项目数据。
+
+卸载按各宿主的 `install-manifest.tsv` 记录删除本包装入的文件。若该清单丢失，已安装的 skills 会成为孤儿目录，需手动删除对应宿主的 skills 目录（如 `~/.gemini/config/skills/ssf-*`）并移除指令文件中的 include 行；重复安装不会覆盖用户在清单丢失前改过的文件。

@@ -49,3 +49,20 @@ teardown() {
     mv "$FIXTURE_REPO/command-backup" "$FIXTURE_REPO/commands/ssf-$command.md"
   done
 }
+
+@test "包校验要求每个 global wrapper 模板带有该宿主的 routing 占位符" {
+  for host in CLAUDE AGENTS GEMINI; do
+    printf '# 无占位符模板\n' > "$FIXTURE_REPO/routing/$host.global.md"
+    run "$FIXTURE_REPO/scripts/validate-pack.sh"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"routing/$host.global.md missing routing placeholder"* ]]
+    git -C "$FIXTURE_REPO" checkout -- "routing/$host.global.md"
+  done
+}
+
+@test "包校验要求 AGENTS.md 与 CLAUDE.md 正文一致（仅 include 行可不同）" {
+  printf '只有 Claude 才看得到的一行\n' >> "$FIXTURE_REPO/CLAUDE.md"
+  run "$FIXTURE_REPO/scripts/validate-pack.sh"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"root instruction bodies drift"* ]]
+}

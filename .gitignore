@@ -6,6 +6,7 @@
 
 # 本仓库本地 workflow / 安装运行时产物
 .codex/
+.gemini/
 .superspecflow/
 docs/superpowers/
 superpowers/

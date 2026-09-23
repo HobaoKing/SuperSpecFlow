@@ -85,27 +85,55 @@ done
 remove_include() {
   local target="$1"          # ~/.claude/CLAUDE.md、~/.codex/AGENTS.md 或 ~/.gemini/GEMINI.md
   local include_line="$2"    # 已生成 wrapper 的绝对路径 include
+  local file
 
-  if [ ! -e "$target" ]; then
+  if [ -L "$target" ]; then
+    # 软链改写其指向的真实文件并保留软链本身；多跳或悬空软链跳过，避免把软链替换成普通文件
+    local link
+    link="$(readlink "$target")"
+    case "$link" in
+      /*) file="$link" ;;
+      *) file="$(dirname "$target")/$link" ;;
+    esac
+    if [ -L "$file" ] || [ ! -f "$file" ]; then
+      echo "= $target 是指向不存在或多跳的符号链接，跳过"
+      return 0
+    fi
+  else
+    file="$target"
+  fi
+
+  if [ ! -e "$file" ]; then
     echo "= $target 不存在，跳过"
     return 0
   fi
 
-  if ! grep -Fxq "$include_line" "$target"; then
+  if ! grep -Fxq "$include_line" "$file"; then
     echo "= $target 未包含 SuperSpecFlow include 行，跳过"
     return 0
   fi
 
-  local tmp
+  local tmp mode
   tmp="$(mktemp)"
   # -F 固定字符串，-x 整行匹配，-v 反选；只移除恰好等于 include_line 的行
-  grep -Fxv "$include_line" "$target" > "$tmp" || true
+  grep -Fxv "$include_line" "$file" > "$tmp" || true
 
+  # mktemp 产物是 600，写回前记录并恢复原权限，避免静默降级用户指令文件权限
+  mode="$(stat -f '%Lp' "$file" 2>/dev/null || stat -c '%a' "$file" 2>/dev/null || true)"
   if [ ! -s "$tmp" ]; then
-    rm -f "$target" "$tmp"
-    echo "✓ 已移除 ${target}（删除 include 后文件为空，整文件已删除）"
+    if [ -L "$target" ]; then
+      # 软链场景绝不越界删除用户真实文件（可能是 dotfiles 仓库里的共享文件）：
+      # 只提示真实文件已空，由用户自行决定去留。
+      rm -f "$tmp"
+      echo "✓ 已从 $target 移除 SuperSpecFlow include 行（软链保留）"
+      echo "⚠ 其指向的真实文件 $file 删除 include 后已为空，请自行确认是否删除。"
+    else
+      rm -f "$file" "$tmp"
+      echo "✓ 已移除 ${target}（删除 include 后文件为空，整文件已删除）"
+    fi
   else
-    mv "$tmp" "$target"
+    mv "$tmp" "$file"
+    [ -n "$mode" ] && chmod "$mode" "$file"
     echo "✓ 已从 $target 移除 SuperSpecFlow include 行（其他内容保留）"
   fi
 }
@@ -189,8 +217,11 @@ MSG
 fi
 
 if [ "$PURGE" -eq 1 ]; then
-  case "$PWD/" in
-    "$REPO_ROOT"/*)
+  # 用物理路径比较与删除：REPO_ROOT 来自 cd && pwd 的逻辑路径，经软链调用时
+  # 逻辑比较可能漏判，且 rm -rf 逻辑路径只会删掉软链本身却报告“已删除”。
+  real_root="$(cd "$REPO_ROOT" 2>/dev/null && pwd -P)" || real_root="$REPO_ROOT"
+  case "$(pwd -P)/" in
+    "$real_root"/*)
       echo
       echo "error: 当前工作目录位于 $REPO_ROOT 之内，无法 --purge。" >&2
       echo "       请 cd 到其他位置后重试。" >&2
@@ -198,8 +229,8 @@ if [ "$PURGE" -eq 1 ]; then
       ;;
   esac
   echo
-  echo "→ 删除 pack 目录 $REPO_ROOT"
-  rm -rf "$REPO_ROOT"
+  echo "→ 删除 pack 目录 $real_root"
+  rm -rf "$real_root"
   echo "✓ pack 目录已删除"
 fi
 
