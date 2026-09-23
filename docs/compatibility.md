@@ -2,6 +2,8 @@
 
 脚本支持 macOS Bash 3.2+ 和 Linux，依赖 `git` 及常见 POSIX 工具。远端 bootstrap 需要 `curl`；开发测试需要 `bats`，静态检查需要 `shellcheck`。可运行示例及其 CI 测试需要 `python3` 命令（Python 3.8+），不依赖第三方 Python 包。文本检索优先 `rg`，包校验不依赖它。
 
+脚本的系统工具调用需同时兼容 GNU（Linux）与 BSD（macOS）变体，CI 在 ubuntu 与 macos 两个 runner 上各跑一轮全量测试。权限位读取统一走 `file_mode()`（先 GNU `stat -c '%a'`，失败才退回 BSD `stat -f '%Lp'`）——不要把两种形式用 `||` 串联：GNU `stat -f` 是“文件系统”模式，它会先把文件系统信息打印到 stdout 再非零退出，串联兜底会把多行脏输出当成权限位。
+
 Claude 使用 commands 和 skills；Codex 使用 skills 和项目指令，不假定支持 Claude 的 slash 注册；Antigravity 使用 skills 与全局 `GEMINI.md` rules，没有用户自定义全局 slash 命令目录，skill 由 CLI 暴露为 `/ssf-*`、IDE 中按 `<skill-name>` 手动调用。方法参考文件随 skill 目录安装，运行时无需访问上游或 issue tracker。
 
 全局 wrapper 默认开启轻量自然语言路由，仅在项目根目录存在 `.superspecflow/disabled` 时禁用。在本包内部，项目 `.superspecflow/<宿主>.routing.md` 存在时替代包内默认 routing；普通初始化只创建启用标记，不生成项目覆盖文件。显式 include 也可接入。

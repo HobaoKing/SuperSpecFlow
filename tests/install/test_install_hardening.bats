@@ -106,7 +106,7 @@ make_pack_at_special_path() {
 
   run "$INSTALL" --claude-only --yes --no-hook --append
   [ "$status" -eq 0 ]
-  [ "$(stat -f '%Lp' "$HOME/.claude/CLAUDE.md")" = "644" ]
+  [ "$(ssf_file_mode "$HOME/.claude/CLAUDE.md")" = "644" ]
 }
 
 @test "卸载移除 include 后目标指令文件权限保持不变" {
@@ -118,7 +118,7 @@ make_pack_at_special_path() {
 
   run "$UNINSTALL" --claude-only
   [ "$status" -eq 0 ]
-  [ "$(stat -f '%Lp' "$HOME/.claude/CLAUDE.md")" = "640" ]
+  [ "$(ssf_file_mode "$HOME/.claude/CLAUDE.md")" = "640" ]
   [ "$(cat "$HOME/.claude/CLAUDE.md")" = "USER" ]
 }
 
@@ -148,7 +148,7 @@ make_pack_at_special_path() {
   [ "$status" -eq 0 ]
   [ -L "$HOME/.claude/CLAUDE.md" ]
   [ "$(cat "$HOME/dotfiles/CLAUDE.md")" = "USER" ]
-  [ "$(stat -f '%Lp' "$HOME/dotfiles/CLAUDE.md")" = "644" ]
+  [ "$(ssf_file_mode "$HOME/dotfiles/CLAUDE.md")" = "644" ]
 }
 
 @test "目标是指令文件是软链时把 include 写入其指向的真实文件并保留软链" {
