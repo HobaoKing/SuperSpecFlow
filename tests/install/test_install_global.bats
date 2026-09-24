@@ -32,7 +32,8 @@ teardown() {
 @test "首次运行：安装 Claude commands skills 和 Codex skills，不创建角色目录" {
   run "$INSTALL" --yes --no-hook
   [ "$status" -eq 0 ]
-  [ -f "$HOME/.claude/commands/ssf-init.md" ]
+  [ ! -e "$HOME/.claude/commands/ssf-init.md" ]
+  [ -f "$HOME/.claude/commands/ssf-review.md" ]
   [ -f "$HOME/.claude/skills/ssf-qa/SKILL.md" ]
   [ ! -e "$HOME/.claude/agents" ]
   [ -f "$HOME/.codex/skills/ssf-qa/SKILL.md" ]
@@ -44,7 +45,7 @@ teardown() {
   done
 }
 
-@test "首次运行：生成不含 <repo> 占位符的 global wrapper" {
+@test "首次运行：生成自包含、不含 <repo> 占位符的 global wrapper" {
   run "$INSTALL" --yes --no-hook
   [ "$status" -eq 0 ]
 
@@ -54,8 +55,12 @@ teardown() {
   [ -f "$codex_wrapper" ]
   ! grep -q '<repo>' "$claude_wrapper"
   ! grep -q '<repo>' "$codex_wrapper"
-  grep -q "$REPO_ROOT/routing/CLAUDE.routing.md" "$claude_wrapper"
-  grep -q "$REPO_ROOT/routing/AGENTS.routing.md" "$codex_wrapper"
+  ! grep -q '<pack>' "$claude_wrapper"
+  ! grep -q '<pack>' "$codex_wrapper"
+  grep -q 'SuperSpecFlow 轻量规则' "$claude_wrapper"
+  grep -q 'SuperSpecFlow 轻量规则' "$codex_wrapper"
+  ! grep -q '^@' "$claude_wrapper"
+  ! grep -q '^@' "$codex_wrapper"
 }
 
 @test "已有 CLAUDE.md 且已含 include 行：脚本跳过，文件不变" {
@@ -111,27 +116,15 @@ teardown() {
   [ "$(cat "$HOME/.claude/CLAUDE.md")" = "USER RULES" ]
 }
 
-@test "--no-hook 时不打印 hook 配置片段" {
-  run "$INSTALL" --yes --no-hook
-  [ "$status" -eq 0 ]
-  [[ "$output" != *"session-start-detect.sh"* ]]
-}
-
-@test "默认（带 hook）打印 settings.json 应合并的官方 schema JSON 片段，且不擅自改写" {
+@test "安装不再输出 SessionStart hook 配置片段，也不改写 settings.json" {
   mkdir -p "$HOME/.claude"
   printf '{}' > "$HOME/.claude/settings.json"
   before="$(cat "$HOME/.claude/settings.json")"
   run "$INSTALL" --yes
   [ "$status" -eq 0 ]
   [ "$(cat "$HOME/.claude/settings.json")" = "$before" ]
-  # 官方 hook schema 关键字段必须全部出现
-  [[ "$output" == *"session-start-detect.sh"* ]]
-  [[ "$output" == *"SessionStart"* ]]
-  [[ "$output" == *"matcher"* ]]
-  [[ "$output" == *"\"type\": \"command\""* ]] || [[ "$output" == *"\"type\":\"command\""* ]]
-  # matcher 必须覆盖 startup/resume/clear/compact，否则会话中途禁用后 resume 沿用旧上下文；
-  # matcher 是正则表达式，多值必须用 | 交替——写成逗号分隔只会匹配字面串，hook 永不触发
-  [[ "$output" == *"\"matcher\": \"startup|resume|clear|compact\""* ]]
+  [[ "$output" != *"session-start-detect.sh"* ]]
+  [[ "$output" != *"SessionStart"* ]]
 }
 
 @test "退出码恒为 0（脚本不应因用户拒绝合并而失败）" {
@@ -158,21 +151,21 @@ teardown() {
 
 @test "安装不会覆盖已有同名用户能力文件，卸载也不会删除它们" {
   mkdir -p "$HOME/.claude/commands" "$HOME/.claude/skills/ssf-qa" "$HOME/.codex/skills/ssf-qa"
-  printf 'USER COMMAND\n' > "$HOME/.claude/commands/ssf-init.md"
+  printf 'USER COMMAND\n' > "$HOME/.claude/commands/ssf-review.md"
   printf 'USER SKILL\n' > "$HOME/.claude/skills/ssf-qa/SKILL.md"
   printf 'USER PLAN COMMAND\n' > "$HOME/.claude/commands/ssf-plan.md"
   printf 'USER CODEX SKILL\n' > "$HOME/.codex/skills/ssf-qa/SKILL.md"
 
   run "$INSTALL" --yes --no-hook
   [ "$status" -eq 0 ]
-  [ "$(cat "$HOME/.claude/commands/ssf-init.md")" = "USER COMMAND" ]
+  [ "$(cat "$HOME/.claude/commands/ssf-review.md")" = "USER COMMAND" ]
   [ "$(cat "$HOME/.claude/skills/ssf-qa/SKILL.md")" = "USER SKILL" ]
   [ "$(cat "$HOME/.claude/commands/ssf-plan.md")" = "USER PLAN COMMAND" ]
   [ "$(cat "$HOME/.codex/skills/ssf-qa/SKILL.md")" = "USER CODEX SKILL" ]
 
   run "$UNINSTALL" --both
   [ "$status" -eq 0 ]
-  [ "$(cat "$HOME/.claude/commands/ssf-init.md")" = "USER COMMAND" ]
+  [ "$(cat "$HOME/.claude/commands/ssf-review.md")" = "USER COMMAND" ]
   [ "$(cat "$HOME/.claude/skills/ssf-qa/SKILL.md")" = "USER SKILL" ]
   [ "$(cat "$HOME/.claude/commands/ssf-plan.md")" = "USER PLAN COMMAND" ]
   [ "$(cat "$HOME/.codex/skills/ssf-qa/SKILL.md")" = "USER CODEX SKILL" ]
@@ -182,29 +175,29 @@ teardown() {
   run "$INSTALL" --yes --no-hook
   [ "$status" -eq 0 ]
 
-  printf 'LOCAL COMMAND EDIT\n' > "$HOME/.claude/commands/ssf-init.md"
+  printf 'LOCAL COMMAND EDIT\n' > "$HOME/.claude/commands/ssf-review.md"
   printf 'LOCAL CLAUDE SKILL EDIT\n' > "$HOME/.claude/skills/ssf-qa/SKILL.md"
   printf 'LOCAL CODEX SKILL EDIT\n' > "$HOME/.codex/skills/ssf-qa/SKILL.md"
 
   run "$INSTALL" --yes --no-hook
   [ "$status" -eq 0 ]
-  [ "$(cat "$HOME/.claude/commands/ssf-init.md")" = "LOCAL COMMAND EDIT" ]
+  [ "$(cat "$HOME/.claude/commands/ssf-review.md")" = "LOCAL COMMAND EDIT" ]
   [ "$(cat "$HOME/.claude/skills/ssf-qa/SKILL.md")" = "LOCAL CLAUDE SKILL EDIT" ]
   [ "$(cat "$HOME/.codex/skills/ssf-qa/SKILL.md")" = "LOCAL CODEX SKILL EDIT" ]
 
   run "$UNINSTALL" --both
   [ "$status" -eq 0 ]
-  [ "$(cat "$HOME/.claude/commands/ssf-init.md")" = "LOCAL COMMAND EDIT" ]
+  [ "$(cat "$HOME/.claude/commands/ssf-review.md")" = "LOCAL COMMAND EDIT" ]
   [ "$(cat "$HOME/.claude/skills/ssf-qa/SKILL.md")" = "LOCAL CLAUDE SKILL EDIT" ]
   [ "$(cat "$HOME/.codex/skills/ssf-qa/SKILL.md")" = "LOCAL CODEX SKILL EDIT" ]
 }
 
-@test "安装成功结尾引导重启会话并运行 /ssf-init（SSF-ONBOARD-001）" {
+@test "安装成功结尾引导重启会话（SSF-ONBOARD-001）" {
   run "$INSTALL" --yes --no-hook
   [ "$status" -eq 0 ]
   [[ "$output" == *"重启"* ]]
   [[ "$output" == *"补全"* ]]
-  [[ "$output" == *"/ssf-init"* ]]
+  [[ "$output" != *"/ssf-init"* ]]
 }
 
 @test "安装结尾提示留意 skipped 警告（SSF-ONBOARD-006）" {
@@ -213,11 +206,11 @@ teardown() {
   [[ "$output" == *"skipped"* ]]
 }
 
-@test "--codex-only 安装结尾不把 /ssf-init 当作可用 Claude 命令（SSF-ONBOARD-005）" {
+@test "--codex-only 安装结尾不再包含 init 相关引导（SSF-ONBOARD-005）" {
   run "$INSTALL" --codex-only --yes --no-hook
   [ "$status" -eq 0 ]
-  [[ "$output" != *"运行 /ssf-init 完成项目 opt-in"* ]]
-  [[ "$output" == *"_ssf_init_apply.sh"* ]]
+  [[ "$output" != *"/ssf-init"* ]]
+  [[ "$output" != *"_ssf_init_apply.sh"* ]]
 }
 
 @test "精简版安装包含自包含参考和授权，Codex-only 不写 Claude" {

@@ -4,6 +4,21 @@ All notable SuperSpecFlow package changes are recorded here.
 
 版本定档规则、发布流程与回滚方式见 [版本与发布策略](release-policy.md)。未发布条目先记在下面的 `[Unreleased]` 段，发布时整体归档为带日期的版本段。
 
+## [3.0.0] - 2026-09-24
+
+**手动迁移（major）**：
+
+- 升级方式不变：重跑一句话安装或 `bash <pack>/scripts/install-global.sh`；全局 wrapper 会被重写为自包含规则全文，宿主全局指令文件中的 include 行路径不变，无需手动处理。
+- 曾用 `.superspecflow/disabled` 禁用或 `/ssf-init` 恢复项目的：机制已删除，遗留的标记文件无影响；不想在某宿主启用时，移除对应全局指令文件中的 include 行即可。
+- `update.sh --enable-natural-language` 现以退出码 2 报错：从自动化脚本中去掉该参数即可，其余参数语义不变。
+- 2.x 安装曾建议手动向 Claude `settings.json` 合并 SessionStart hook 片段（指向 `scripts/hooks/session-start-detect.sh`）：该脚本已删除，合并过该片段的请从 `settings.json` 移除，避免会话启动报"脚本不存在"。
+
+### Removed
+
+- 删除 `.superspecflow/disabled` 开关、`/ssf-init` 命令、`scripts/_ssf_init_apply.sh`、Claude SessionStart hook（`scripts/hooks/session-start-detect.sh`）与 `update.sh --enable-natural-language`：不再用标记文件或 hook 判定启用状态，不想启用时移除宿主全局指令文件中的 include 行即可。`install-global.sh --no-hook` 保留为兼容 no-op。按发布策略属公开契约删除，本版定档 major。
+- 全局 wrapper 从入口话术瘦身为安装时内联渲染的规则全文（自包含，不依赖宿主嵌套 include，也不再受包路径特殊字符影响）；`routing/*.routing.md` 删除自我描述的启用/禁用/恢复流程文本，完整保留会话纪律（Karpathy/mattpocock 方法、测试与验证纪律、提交纪律），按需入口改为自然语言自动触发。
+- 删除 `tests/hooks/`、`tests/init/`、`tests/e2e/test_zero_touch_flow.bats`；安装测试改为断言输出不再包含 hook 配置与 init 引导，能力文件保护用例改用 `ssf-review.md`。
+
 ## [2.2.2] - 2026-09-23
 
 ### Fixed

@@ -3,8 +3,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VERSION_FILE="$SCRIPT_DIR/VERSION"
 
-ENABLE_NATURAL_LANGUAGE=0
-PROJECT_DIR=""
 # 透传给 install-global.sh 的参数；用标志位而非数组长度判断是否显式指定目标，规避 Bash 3.2 nounset 下空数组问题
 PASSTHROUGH_ARGS=()
 TARGET_EXPLICIT=0
@@ -13,17 +11,11 @@ usage() {
   cat <<'MSG'
 Usage:
   ./update.sh [install-global.sh 参数...]
-  ./update.sh --enable-natural-language <project> [install-global.sh 参数...]
   ./update.sh --version
 
 Options:
   --version
       Print the SuperSpecFlow package version and exit without installing.
-
-  --enable-natural-language <project>
-      After global installation, initialize SuperSpecFlow routing for the given
-      project by creating .superspecflow/enabled. Host AGENTS.md / CLAUDE.md /
-      GEMINI.md files are not overwritten.
 
   其余参数原样透传给 scripts/install-global.sh（如 --claude-only、--append、--yes）。
   不传目标参数时，按各宿主 pack-root 记录探测已安装范围；探测不到才默认安装全部宿主。
@@ -89,14 +81,8 @@ while [ "$#" -gt 0 ]; do
       exit 0
       ;;
     --enable-natural-language)
-      if [ "$#" -lt 2 ]; then
-        echo "error: --enable-natural-language requires a project path" >&2
-        usage >&2
-        exit 1
-      fi
-      ENABLE_NATURAL_LANGUAGE=1
-      PROJECT_DIR="$2"
-      shift 2
+      echo "error: --enable-natural-language 已删除：不再使用标记文件，启用状态由 include 行决定" >&2
+      exit 2
       ;;
     -h|--help)
       usage
@@ -121,12 +107,6 @@ else
   TARGET_ARGS="$(detected_target_args)"
   echo "→ 未指定目标，按已安装范围更新：$TARGET_ARGS"
   "$SCRIPT_DIR/scripts/install-global.sh" "$TARGET_ARGS" ${PASSTHROUGH_ARGS[@]+"${PASSTHROUGH_ARGS[@]}"}
-fi
-
-if [ "$ENABLE_NATURAL_LANGUAGE" -eq 1 ]; then
-  SSF_INIT_PROJECT_DIR="$PROJECT_DIR" "$SCRIPT_DIR/scripts/_ssf_init_apply.sh"
-else
-  echo "SuperSpecFlow natural-language routing is enabled globally by default across all projects."
 fi
 
 echo "Done. Restart the session to reload instructions."

@@ -95,12 +95,13 @@ teardown() {
   [ ! -e "$HOME/.gemini" ]
 }
 
-@test "--enable-natural-language 在安装后创建 enabled 标记" {
+@test "--enable-natural-language 已删除，报错退出" {
   PROJECT="$(ssf_make_tmp_project)"
 
   run "$UPDATE" --enable-natural-language "$PROJECT" --yes --no-hook
-  [ "$status" -eq 0 ]
-  [ -f "$PROJECT/.superspecflow/enabled" ]
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"已删除"* ]]
+  [ ! -e "$PROJECT/.superspecflow/enabled" ]
 
   ssf_cleanup_tmp "$PROJECT"
 }
