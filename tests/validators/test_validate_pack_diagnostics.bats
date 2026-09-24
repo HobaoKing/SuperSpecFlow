@@ -41,7 +41,7 @@ teardown() {
 }
 
 @test "包校验拒绝路由声明的命令缺失" {
-  for command in think plan build review qa git ship init; do
+  for command in think plan build review qa git ship; do
     mv "$FIXTURE_REPO/commands/ssf-$command.md" "$FIXTURE_REPO/command-backup"
     run "$FIXTURE_REPO/scripts/validate-pack.sh"
     [ "$status" -ne 0 ]

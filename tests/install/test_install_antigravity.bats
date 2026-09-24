@@ -30,13 +30,15 @@ teardown() {
   [ ! -e "$HOME/.gemini/commands" ]
 }
 
-@test "首次运行：生成不含 <repo> 占位符的 GEMINI global wrapper" {
+@test "首次运行：生成自包含、不含 <repo> 占位符的 GEMINI global wrapper" {
   run "$INSTALL" --yes --no-hook
   [ "$status" -eq 0 ]
   wrapper="${HOME}/.gemini/superspecflow/GEMINI.global.md"
   [ -f "$wrapper" ]
   ! grep -q '<repo>' "$wrapper"
-  grep -q "$REPO_ROOT/routing/GEMINI.routing.md" "$wrapper"
+  ! grep -q '<pack>' "$wrapper"
+  grep -q 'SuperSpecFlow 轻量规则' "$wrapper"
+  ! grep -q '^@' "$wrapper"
 }
 
 @test "--antigravity-only 只安装 Antigravity，不写 Claude 与 Codex" {

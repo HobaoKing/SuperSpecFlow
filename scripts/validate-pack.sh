@@ -82,7 +82,7 @@ check_skills() {
   require_file skills/ssf-review/references/mattpocock-LICENSE.txt || true
 }
 
-# 同时校验反引号能力名与斜杠命令的文件存在性，再检查 skill 引用；init 无 skill。
+# 同时校验反引号能力名与斜杠命令的文件存在性，再检查 skill 引用。
 check_commands() {
   local file name skill command declared=0
   # shellcheck disable=SC2016 # 正则按字面匹配 Markdown 反引号。
@@ -93,10 +93,6 @@ check_commands() {
   [ "$declared" -eq 1 ] || fail "routing/default.routing.md declares no commands"
   for file in commands/ssf-*.md; do
     require_file "$file" || continue
-    name="${file##*/}"
-    case "$name" in
-      ssf-init.md) continue ;;
-    esac
     # shellcheck disable=SC2016 # 按字面匹配 Markdown 反引号，不执行变量展开。
     skill="$(sed -nE 's/.*使用 `(ssf-[a-z-]+)` skill.*/\1/p' "$file")"
     if [ -z "$skill" ]; then
@@ -125,7 +121,7 @@ check_runtime_boundary
 for file in templates/implementation-plan.md templates/qa-signoff.md templates/release-checklist.md; do
   require_file "$file" || true
 done
-for file in scripts/*.sh scripts/hooks/*.sh update.sh; do
+for file in scripts/*.sh update.sh; do
   bash -n "$file" || fail "shell syntax: $file"
 done
 [ "$FAILED" -eq 0 ] || exit 1

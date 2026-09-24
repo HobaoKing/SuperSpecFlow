@@ -40,29 +40,20 @@ bash scripts/install-global.sh --all
 |---|---|
 | 全局 rules | `~/.gemini/GEMINI.md`（写入 `@~/.gemini/superspecflow/GEMINI.global.md` include 行） |
 | IDE 全局 skills | `~/.gemini/config/skills/ssf-*/` |
-| CLI 全局 skills | `~/.gemini/antigravity-cli/skills/ssf-*/` |
+| CLI/IDE 全局 skills | `~/.gemini/antigravity-cli/skills/ssf-*/`、`~/.gemini/config/skills/ssf-*/` |
 | wrapper 与安装记录 | `~/.gemini/superspecflow/` |
 
 - Antigravity 没有用户自定义全局 slash 命令目录，因此只同步 skills：CLI 会自动把 skill 暴露为 `/ssf-*`，IDE 里可在输入框用 `/<skill-name>` 手动调用。
 - `~/.gemini/GEMINI.md` 同时是 Gemini CLI 的全局指令文件；写入 include 行后 Gemini CLI 也会加载同一份路由，属预期行为，不需要时可改用 `--claude-only` / `--codex-only` 单独安装。
 - 若 IDE 的 Customizations 面板之后重写了 `~/.gemini/GEMINI.md` 导致 include 行丢失，重新执行安装脚本即可（include 判定幂等，已安装的 skills 会被跳过）。
-- 项目级覆盖仍写 `.superspecflow/GEMINI.routing.md`（与 AGENTS / CLAUDE 版本同为默认路由副本）。
 
 ## 项目启用
 
-全局安装默认已开启轻量自然语言路由，所有项目开箱即用，无需在每个项目中自己执行 init。
+全局安装后所有项目开箱即用，无需逐项目执行 init。
 
 Claude 安装后重启会话即可加载全局指令并使 `/ssf-*` 进入命令补全。Codex-only 同步 skills 与 wrapper 后在新会话中自动生效。Antigravity 重启 IDE / CLI 会话后 skills 与全局 rules 生效。
 
-若某个项目需要单独禁用 SuperSpecFlow，可在该项目根目录下放置 `.superspecflow/disabled` 文件。需要恢复或显式确认启用时，可在 Claude 中运行 `/ssf-init`，或在终端执行：
-
-```bash
-bash <pack>/scripts/_ssf_init_apply.sh
-```
-
-该命令仅确保 `.superspecflow/enabled` 存在并清除 `.superspecflow/disabled`，不预建阶段目录或改写宿主 AGENTS.md / CLAUDE.md / GEMINI.md。注意 `enabled` 只是显式确认记录，没有开关作用：SessionStart hook 和三份全局规则都只依据 `.superspecflow/disabled` 判定启用与否。
-
-项目可通过自己的 `.superspecflow/AGENTS.routing.md` / `CLAUDE.routing.md` / `GEMINI.routing.md` 定义规则覆盖默认路由；显式 routing include 也可接入；这些项目文件由项目自己维护。
+不想在某宿主启用时，移除该宿主全局指令文件中的 include 行即可（卸载脚本也会做这件事）。项目也可以在自己的指令文件中显式 include 其他规则文件，由项目自己维护。
 
 ## 验证与卸载
 

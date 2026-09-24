@@ -218,18 +218,6 @@ if [ "$REMOVE_CODEX" -eq 1 ]; then
   rmdir "$HOME/.codex/superspecflow" 2>/dev/null || true
 fi
 
-if [ "$REMOVE_CLAUDE" -eq 1 ]; then
-  hook_path="${REPO_ROOT}/scripts/hooks/session-start-detect.sh"
-  cat <<MSG
-
-—— 可选：清理 Claude Code SessionStart hook ——
-如果之前在 ~/.claude/settings.json 中合并过 SuperSpecFlow 的 SessionStart hook，
-请手动移除其中 command 指向以下路径的 hook 条目（脚本不会改写 settings.json）：
-
-  ${hook_path}
-MSG
-fi
-
 if [ "$PURGE" -eq 1 ]; then
   # 用物理路径比较与删除：REPO_ROOT 来自 cd && pwd 的逻辑路径，经软链调用时
   # 逻辑比较可能漏判，且 rm -rf 逻辑路径只会删掉软链本身却报告“已删除”。

@@ -4,6 +4,17 @@ All notable SuperSpecFlow package changes are recorded here.
 
 版本定档规则、发布流程与回滚方式见 [版本与发布策略](release-policy.md)。未发布条目先记在下面的 `[Unreleased]` 段，发布时整体归档为带日期的版本段。
 
+## [Unreleased]
+
+### Removed
+
+- 删除 `.superspecflow/disabled` 开关、`/ssf-init` 命令、`scripts/_ssf_init_apply.sh`、Claude SessionStart hook（`scripts/hooks/session-start-detect.sh`）与 `update.sh --enable-natural-language`：不再用标记文件或 hook 判定启用状态，不想启用时移除宿主全局指令文件中的 include 行即可。`install-global.sh --no-hook` 保留为兼容 no-op。按发布策略属公开契约删除，下个版本定档 major。
+- 全局 wrapper 从入口话术瘦身为安装时内联渲染的规则全文（自包含，不依赖宿主嵌套 include，也不再受包路径特殊字符影响）；`routing/*.routing.md` 删除自我描述的启用/禁用/恢复流程文本，完整保留会话纪律（Karpathy/mattpocock 方法、测试与验证纪律、提交纪律），按需入口改为自然语言自动触发。
+
+### Tests
+
+- 删除 `tests/hooks/`、`tests/init/`、`tests/e2e/test_zero_touch_flow.bats`；安装测试改为断言输出不再包含 hook 配置与 init 引导，能力文件保护用例改用 `ssf-review.md`。
+
 ## [2.2.2] - 2026-09-23
 
 ### Fixed

@@ -6,7 +6,6 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-SKIP_HOOK=0
 INSTALL_CLAUDE=1
 INSTALL_CODEX=1
 INSTALL_ANTIGRAVITY=1
@@ -28,7 +27,7 @@ CLI selection (mutually exclusive):
 Other options:
   --append       Automatically prepend include line to existing CLAUDE.md / AGENTS.md / GEMINI.md.
   --yes          Non-interactive mode (accept defaults without prompting).
-  --no-hook      Skip Claude Code SessionStart hook setup hint.
+  --no-hook      Deprecated no-op kept for CLI compatibility; the SessionStart hook was removed.
   -h, --help     Show this help.
 MSG
 }
@@ -81,7 +80,8 @@ while [ "$#" -gt 0 ]; do
       ;;
     --append) AUTO_APPEND=1; shift ;;
     --yes) ASSUME_YES=1; shift ;;
-    --no-hook) SKIP_HOOK=1; shift ;;
+    # --no-hook 已废弃：SessionStart hook 已删除，保留解析仅为兼容旧调用。
+    --no-hook) shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown arg: $1" >&2; usage >&2; exit 1 ;;
   esac
@@ -239,29 +239,30 @@ sync_antigravity_capabilities() {
   echo "✓ synced Antigravity skills (IDE + CLI)"
 }
 
-# 转义 sed 替换串里的元字符，避免包安装路径中的 &、#、\ 被 sed 解释。
-# 输入：$1 原始字符串；输出：转义后的字符串（stdout）。
-# 约束：# 同时是本脚本 sed 命令的分隔符，必须一并转义，否则路径含 # 时替换直接报错中断安装。
-sed_escape_replacement() {
-  printf '%s' "$1" | sed -e 's/[\\&#]/\\&/g'
-}
-
-# 用包内模板渲染全局 wrapper：把 <repo>/routing/<host> 与 <repo> 占位符替换为包绝对路径。
+# 用包内模板渲染全局 wrapper：模板中含 <repo> 的占位行被整体替换为对应 routing 文件全文，
+# 同时把内联内容中的 <pack> 占位符展开为包绝对路径，使安装后的 wrapper 自包含规则与路径，
+# 不依赖宿主是否支持嵌套 include，也不受包路径特殊字符影响（一律用 index 定位替换，无正则展开）。
 # 输入：$1 模板路径；$2 输出路径；$3 routing 文件名（如 GEMINI.routing.md）。
-# 输出：无 stdout；成功时写出不含占位符的 wrapper 文件。
-# 约束：包路径可能含 & 或 #（企业账号、同步盘），因此对 REPO_ROOT 做 sed 替换串转义，不做任何路径合法性假设。
+# 输出：无 stdout；成功时写出不含 <repo>/<pack> 占位符的自包含 wrapper 文件。
 render_wrapper() {
   local template="$1"
   local output="$2"
   local routing_file="$3"
-  local repo_escaped
+  local routing_path="$REPO_ROOT/routing/$routing_file"
 
-  repo_escaped="$(sed_escape_replacement "$REPO_ROOT")"
   mkdir -p "$(dirname "$output")"
-  sed \
-    -e "s#<repo>/routing/${routing_file}#${repo_escaped}/routing/${routing_file}#g" \
-    -e "s#<repo>#${repo_escaped}#g" \
-    "$template" > "$output"
+  awk -v f="$routing_path" -v root="$REPO_ROOT" '
+    function emit(s,   out, i) {
+      out = ""
+      while ((i = index(s, "<pack>")) > 0) {
+        out = out substr(s, 1, i - 1) root
+        s = substr(s, i + 6)
+      }
+      print out s
+    }
+    index($0, "<repo>") > 0 { while ((getline line < f) > 0) emit(line); close(f); next }
+    { emit($0) }
+  ' "$template" > "$output"
 }
 
 write_pack_root() {
@@ -417,31 +418,6 @@ if [ "$INSTALL_ANTIGRAVITY" -eq 1 ]; then
   ensure_include "$HOME/.gemini/GEMINI.md" "@$HOME/.gemini/superspecflow/GEMINI.global.md"
 fi
 
-if [ "$SKIP_HOOK" -eq 0 ] && [ "$INSTALL_CLAUDE" -eq 1 ]; then
-  hook_path="${REPO_ROOT}/scripts/hooks/session-start-detect.sh"
-  cat <<MSG
-
-—— 可选：Claude Code SessionStart hook ——
-建议在 ~/.claude/settings.json 中合并以下片段（使用 Claude Code 官方 hook schema），
-让会话启动、恢复、清空和压缩时都重新检测项目 opt-in：
-
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup|resume|clear|compact",
-        "hooks": [
-          {"type": "command", "command": "${hook_path}"}
-        ]
-      }
-    ]
-  }
-}
-
-脚本不会擅自改写 settings.json。若该文件不存在，可直接创建并仅包含上述内容。
-MSG
-fi
-
 echo
 echo "下一步："
 step=1
@@ -450,14 +426,13 @@ if [ "$INSTALL_CLAUDE" -eq 1 ]; then
   step=$((step + 1))
 fi
 if [ "$INSTALL_CODEX" -eq 1 ]; then
-  echo "  $step. Codex：新会话中 skills 与全局 rules 自动生效；显式恢复已禁用项目可执行 bash \"$REPO_ROOT/scripts/_ssf_init_apply.sh\"。"
+  echo "  $step. Codex：新会话中 skills 与全局 rules 自动生效。"
   step=$((step + 1))
 fi
 if [ "$INSTALL_ANTIGRAVITY" -eq 1 ]; then
   echo "  $step. Antigravity：重启 IDE / CLI 会话后 skills 与 ~/.gemini/GEMINI.md 里的全局 rules 生效，CLI 中可直接使用 /ssf-*。"
 fi
-echo "  默认安装已全局开启轻量自然语言路由，所有项目开箱即用，无需在每个项目中自己执行 init。"
-echo "     （若需单独禁用某项目，可在该项目根目录放置 .superspecflow/disabled；需恢复时运行 /ssf-init）"
+echo "  全局 rules 已接入，所有项目开箱即用；不想在某宿主启用时，移除对应全局指令文件中的 include 行即可。"
 echo "  注意：若上面出现 \"skipped\" 警告，请确认对应文件，避免看到的并非 SuperSpecFlow 命令。"
 echo
 echo "按需使用工程 skills；项目规则优先。"

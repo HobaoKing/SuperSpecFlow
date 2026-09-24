@@ -44,7 +44,6 @@ jobs:
           shellcheck -x \
             update.sh \
             scripts/*.sh \
-            scripts/hooks/*.sh \
             tests/lib/*.bash
 
       # 仓库纪律要求提交前跑 git diff --check，CI 同步守护尾随空格等空白问题。

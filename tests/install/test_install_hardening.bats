@@ -72,29 +72,33 @@ make_pack_at_special_path() {
   [ "$(grep -Fcx "$inc" "$HOME/.claude/CLAUDE.md")" -eq 1 ]
 }
 
-# —— A4：wrapper 渲染必须原样写入包路径 ——
+# —— A4：特殊包路径下 wrapper 渲染必须成功且自包含 ——
 
-@test "包路径含 & 时 wrapper 写入真实路径而非 sed 匹配展开" {
+@test "包路径含 & 时安装成功且 wrapper 内联规则全文" {
   pack="$(make_pack_at_special_path 'a&b')"
   run bash "$pack/scripts/install-global.sh" --antigravity-only --yes --no-hook
   [ "$status" -eq 0 ]
 
   wrapper="$HOME/.gemini/superspecflow/GEMINI.global.md"
   [ -f "$wrapper" ]
-  grep -Fq "$pack/routing/GEMINI.routing.md" "$wrapper"
+  grep -q 'SuperSpecFlow 轻量规则' "$wrapper"
   ! grep -q '<repo>' "$wrapper"
-  # & 被当成“整个匹配”展开时会写入字面 <repo>
-  ! grep -Fq '<repo>' "$wrapper"
+  ! grep -q '<pack>' "$wrapper"
+  # & 在正则/g Sub 替换串里会被展开，内联渲染用 index 定位不受影响
+  grep -Fq "$pack/scripts/new-plan.sh" "$wrapper"
 }
 
-@test "包路径含 # 时安装不中断且 wrapper 写入真实路径" {
+@test "包路径含 # 时安装不中断且 wrapper 内联规则全文" {
   pack="$(make_pack_at_special_path 'a#b')"
   run bash "$pack/scripts/install-global.sh" --antigravity-only --yes --no-hook
   [ "$status" -eq 0 ]
 
   wrapper="$HOME/.gemini/superspecflow/GEMINI.global.md"
   [ -f "$wrapper" ]
-  grep -Fq "$pack/routing/GEMINI.routing.md" "$wrapper"
+  grep -q 'SuperSpecFlow 轻量规则' "$wrapper"
+  ! grep -q '<repo>' "$wrapper"
+  ! grep -q '<pack>' "$wrapper"
+  grep -Fq "$pack/scripts/new-plan.sh" "$wrapper"
 }
 
 # —— A6：追加与移除 include 必须保留权限，且不把软链替换成普通文件 ——
