@@ -17,6 +17,32 @@ REPO_URL="${SUPERSPECFLOW_REPO:-https://github.com/HobaoKing/SuperSpecFlow.git}"
 REPO_BRANCH="${SUPERSPECFLOW_BRANCH:-master}"
 INSTALL_DIR="${SUPERSPECFLOW_HOME:-$HOME/.superspecflow}"
 
+# 比较目标提交的文件路径与所有本地未跟踪文件（包括被忽略文件），拒绝同名或父子路径冲突。
+# $1 是已 fetch 的提交；仅读取工作区，失败时列出冲突并返回 1，不切换分支或执行安装。
+check_untracked_conflicts() {
+  local commit="$1" path target conflict=0
+  local targets=()
+  while IFS= read -r -d '' target; do
+    targets+=("$target")
+  done < <(git -C "$INSTALL_DIR" ls-tree -r --name-only -z "$commit")
+  while IFS= read -r -d '' path; do
+    # Git 将未跟踪的嵌套仓库表示为目录路径，去掉结尾 / 后同样检查父子冲突。
+    path="${path%/}"
+    for target in ${targets[@]+"${targets[@]}"}; do
+      case "$path/" in
+        "$target/"*) conflict=1; break ;;
+      esac
+      case "$target/" in
+        "$path/"*) conflict=1; break ;;
+      esac
+    done
+    if [ "$conflict" -eq 1 ]; then
+      printf 'error: 本地未跟踪或被忽略路径与更新冲突，已中止更新：%s\n' "$path" >&2
+      return 1
+    fi
+  done < <(git -C "$INSTALL_DIR" ls-files --others -z)
+}
+
 usage() {
   cat <<MSG
 Usage: bootstrap.sh [install-global.sh 参数...]
@@ -59,9 +85,7 @@ if [ -d "$INSTALL_DIR/.git" ]; then
     echo "       请手动处理后重试，脚本不会改写已有 remote。" >&2
     exit 1
   fi
-  # 更新前拒绝脏工作区：reset --hard 会无声丢弃用户对已跟踪文件的本地改动（例如自建的
-  # routing 覆盖或调试脚本）。只用 -uno 判定——未跟踪文件不会被 reset --hard 删除，
-  # macOS 上 Finder 留下的 .DS_Store 之类的未跟踪文件不该阻断更新。
+  # 先拒绝已跟踪文件的本地改动；未跟踪及被忽略文件在 fetch 后按目标版本检查路径冲突。
   if [ -n "$(git -C "$INSTALL_DIR" status --porcelain -uno 2>/dev/null)" ]; then
     echo "error: $INSTALL_DIR 的已跟踪文件有未提交改动，已中止更新。" >&2
     echo "       请先自行处理这些改动（提交、转移或确认可丢弃），再重试：" >&2
@@ -70,8 +94,10 @@ if [ -d "$INSTALL_DIR/.git" ]; then
   fi
   echo "→ updating existing checkout at $INSTALL_DIR"
   git -C "$INSTALL_DIR" fetch --depth=1 origin "$REPO_BRANCH"
-  git -C "$INSTALL_DIR" checkout "$REPO_BRANCH"
-  git -C "$INSTALL_DIR" reset --hard "origin/$REPO_BRANCH"
+  target_commit="$(git -C "$INSTALL_DIR" rev-parse --verify 'FETCH_HEAD^{commit}')"
+  check_untracked_conflicts "$target_commit"
+  # 直接切到已检查的提交，避免先切换到本地旧分支时写入另一组未检查的路径。
+  git -C "$INSTALL_DIR" checkout -B "$REPO_BRANCH" "$target_commit"
 else
   echo "→ cloning $REPO_URL into $INSTALL_DIR"
   git clone --depth=1 --branch "$REPO_BRANCH" "$REPO_URL" "$INSTALL_DIR"

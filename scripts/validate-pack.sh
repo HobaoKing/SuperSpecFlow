@@ -63,9 +63,10 @@ check_routing_files() {
   done
 }
 
-# 每个已安装 skill 自包含：frontmatter 与目录一致，本地 Markdown 引用必须可解析。
+# 每个已安装 skill 自包含：frontmatter 与目录一致，参考、脚本、模板链接必须在 skill 内可解析。
+# 计划与 QA 模板校验安装副本一致；本项目发布清单与 skill 通用模板用途不同，不做同步。
 check_skills() {
-  local dir file name ref
+  local dir file name ref mapping skill template
   for dir in skills/ssf-*; do
     file="$dir/SKILL.md"
     require_file "$file" || continue
@@ -75,8 +76,17 @@ check_skills() {
     grep -Eq '^description: .+' "$file" || fail "$file missing description"
     while IFS= read -r ref; do
       require_file "$dir/$ref" || true
-    done < <(grep -Eo '\]\(references/[^)]+\)' "$file" | sed 's/^](//; s/)$//' || true)
+    done < <(grep -Eo '\]\((references|assets|scripts)/[^)]+\)' "$file" | sed 's/^](//; s/)$//' || true)
   done
+  for mapping in plan:implementation-plan.md qa:qa-signoff.md; do
+    skill="${mapping%%:*}"
+    template="${mapping#*:}"
+    cmp -s "templates/$template" "skills/ssf-$skill/assets/$template" ||
+      fail "skill template drift: skills/ssf-$skill/assets/$template"
+  done
+  while IFS= read -r file; do
+    bash -n "$file" || fail "shell syntax: $file"
+  done < <(find skills -type f -name '*.sh')
   require_file skills/ssf-build/references/diagnosing-bugs.md || true
   require_file skills/ssf-build/references/mattpocock-LICENSE.txt || true
   require_file skills/ssf-review/references/mattpocock-LICENSE.txt || true

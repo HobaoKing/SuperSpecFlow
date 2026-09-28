@@ -40,19 +40,19 @@ major 在 2.x 期间没有计划；真要做时必须在 CHANGELOG 写明手动�
 
 1. **门禁**：目标提交已在 `develop`，`scripts/validate-pack.sh`、`scripts/test.sh`（含一次带空格 `TMPDIR` 复跑）、`git diff --check`、`shellcheck -x`（CI 同参数）全部通过，工作区 clean。
 2. **定版本号**：按判定树读当前 `VERSION`，写下新 `x.y.z`。
-3. **改 `CHANGELOG.md`**：把 `[Unreleased]` 段归档为唯一一段 `## [<x.y.z>] - <YYYY-MM-DD>`。条目写清用户影响和实际风险；不留空段，不写未验证为通过的结论。同一步回补等待本版落地的文档：搜索 README 与 `docs/` 中「未发布 / 尚未发布 / 等 master 发布」一类临时说明，能兑现的改为正式表述，不能兑现的删除。
+3. **改 `CHANGELOG.md`**：把 `[Unreleased]` 段归档为唯一一段 `## [<x.y.z>] - <YYYY-MM-DD>`。条目写清用户影响和实际风险；不留空段，不写未验证为通过的结论。先回补本次发布范围内的文档：搜索 README 与 `docs/` 中「未发布 / 尚未发布 / 等 master 发布」一类临时说明，能兑现的改为正式表述，不能兑现的删除；存在文档改动时在 develop 单独精确暂存、验证并提交，不混入随后仅含两个版本文件的发布提交。只评估或缺少对应 Git 授权时仅报告待执行步骤，不操作无关改动。
 4. **改 `VERSION`**：单行 `x.y.z`，无 `v` 前缀。
 5. **develop 发布提交**：`chore(meta): 发布 <x.y.z>`，只含 `CHANGELOG.md` 与 `VERSION`；正文写变更摘要、验证命令与结果、风险与回滚方式。
-6. **合并到 master**：`git checkout master && git merge --no-ff develop -m "chore(meta): 发布 <x.y.z>"`。保留发布合并提交，不用 fast-forward 直推 master。
+6. **合并到 master**：先确认本次发布内容全部已提交且工作区 clean；不以清理无关工作满足此条件。`git checkout master && git merge --no-ff develop -m "chore(meta): 发布 <x.y.z>"`。保留发布合并提交，不用 fast-forward 直推 master。
 7. **打 tag**：`git tag -a v<x.y.z> -m "发布 <x.y.z>"`，tag 指向 **master 上的发布合并提交**。
 8. **推送**：`git push origin develop master`，再 `git push origin v<x.y.z>`。
-9. **回合并 develop**：`git checkout develop && git merge --no-ff master`。master 侧的合并提交必须成为 develop 祖先，否则 `git describe --tags` 在 develop 上会退化到更早的 tag，依赖它的工具会拿到错误版本号。
-10. **发布后核验**：tag 解引用落在 master 的合并提交上；在 develop 上 `git describe --tags` 得到刚发布的版本；`tests/version/test_version_contract.bats` 通过（`VERSION` 与 CHANGELOG 唯一当前版本段一致）；远端一句话安装可用。
+9. **回合并 develop**：`git checkout develop && git merge --no-ff master`。master 侧的合并提交必须成为 develop 祖先，否则 `git describe --tags` 在 develop 上会退化到更早的 tag，依赖它的工具会拿到错误版本号。同一远端 develop 推送已在发布授权内时执行 `git push origin develop`，否则明确待授权的远端同步，不宣称流程完成。
+10. **发布后核验**：读取远端 develop、master 与 tag 引用，分别与本地发布结果核对；tag 解引用落在 master 的合并提交上；在 develop 上 `git describe --tags` 得到刚发布的版本；`tests/version/test_version_contract.bats` 通过（`VERSION` 与 CHANGELOG 唯一当前版本段一致）；远端一句话安装可用。
 
 ## 回滚
 
 - 上一个 tag 即回滚点，发布时不要删旧 tag。
-- 代码回滚：优先 `git revert <发布合并提交>` 再走一遍上面的推送与打 tag；确需重置 master 到上一 tag 时，必须在授权下进行，并同步 `develop`。
+- 代码回滚：先核对发布合并提交的父节点，确认第一父节点是发布前的 master，再执行 `git revert -m 1 <发布合并提交>`。回滚仍按新修复版本记录 CHANGELOG、更新 VERSION 并完成验证、推送与打新 tag，不移动旧 tag；同步 `develop`。后续重新引入被回滚的合并内容时，应明确处理该 revert，不能假定再次合并原分支就会恢复变更。确需重置 master 到上一 tag 时，必须在授权下进行，并同步 `develop`。
 - 用户侧：安装脚本对每个文件做归属校验，重装不会覆盖用户改过的 skills 或指令文件；回滚后用户重跑一句话安装即回到旧版本。
 - 影响面观测信号：安装输出中的 `skipped` 警告数量、`~/.superspecflow` 更新是否成功、issue 回报。
 

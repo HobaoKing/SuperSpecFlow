@@ -58,7 +58,9 @@ bash scripts/install-global.sh --all
 | `/ssf-git` | 按请求处理分支、提交、PR 等 Git 操作 |
 | `/ssf-ship` | 发布评估与已授权发布 |
 
-已接入项目可直接使用自然语言。各能力独立执行，不自动串联阶段。
+已接入项目可直接使用自然语言，按意图选最直接的 skill；明确修复无需先走讨论、计划、独立审查流程。复合任务按已有授权续接。只读适用参考，复用未变化的规则和有效证据，不自动刷新安装、重复评审或无依据重跑检查；简短报告不省略必要交付。
+
+用户已经要求“计划后直接实现”或已授权后续操作时，继续完成同一范围内的任务；“只讨论”“只计划”“只评估”则停在相应交付。计划按用户指定路径或已有文件维护，普通修复不因有多个步骤就生成计划。
 
 ## 方法来源
 
@@ -67,6 +69,10 @@ bash scripts/install-global.sh --all
 ## 维护
 
 `routing/default.routing.md` 是规则源，公开的 AGENTS / CLAUDE / GEMINI routing 文件与它一致。`skills/` 负责工程方法，`commands/` 提供命令入口，`templates/` 提供可选模板。
+
+计划生成脚本与计划、QA、发布模板随所属 skill 安装，资源路径相对于该 skill 的 `SKILL.md`；单独调用不依赖宿主项目存在 `templates/` 或已接入全局规则。计划、QA 公共模板与 skill 的 assets 副本由包校验保持一致。`skills/ssf-ship/assets/release-checklist.md` 是遵循宿主机制的通用模板；`templates/release-checklist.md` 保留本项目固定发布步骤，与 `docs/release-policy.md` 共同约束本项目发布。
+
+脚本与结构测试之外，按需使用 [Skills 行为验证](tests/behavior/README.md) 检查真实任务中的选择、续接、授权和证据边界；其结果与确定性测试分开记录。
 
 ## 参与开发与发布
 

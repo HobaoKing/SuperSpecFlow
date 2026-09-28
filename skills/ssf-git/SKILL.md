@@ -1,11 +1,11 @@
 ---
 name: ssf-git
-description: 按用户请求管理分支、提交、PR 或回滚，保护无关工作并检查实际 staged diff。
+description: 用户要求分支、提交、推送、PR 或回滚时使用；只做会话已授权操作，保护无关改动。
 ---
 
 # ssf-git
 
-只执行当前请求已授权的 Git 操作。代码完成不自动提交；提交授权不自动扩大到 push、PR、合并或发布。
+只执行当前会话已授权的 Git 操作。同一目标、目的地与操作范围的明确授权持续有效，“继续”或进入本 skill 不要求重复确认；范围或影响实质变化时才重新确认。代码完成不自动提交；提交授权不自动扩大到 push、PR、合并或发布。
 
 - 操作前查看分支、`git status --short`、`git diff --stat`、`git diff --check` 和 `git diff --staged`。核查暂存区已有改动的归属，不把他人或无关内容混入提交。
 - 按明确文件路径暂存，不用 `git add .`、reset、clean 或强推处理脏工作区。普通任务不自动新建 worktree；建分支时采用宿主规范，Codex 默认 `codex/<topic>`。

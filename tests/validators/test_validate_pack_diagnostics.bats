@@ -66,3 +66,12 @@ teardown() {
   [ "$status" -ne 0 ]
   [[ "$output" == *"root instruction bodies drift"* ]]
 }
+
+@test "包校验拒绝独立 skill 资源缺失和公共模板漂移" {
+  rm "$FIXTURE_REPO/skills/ssf-plan/scripts/new-plan.sh"
+  printf '\nDRIFT\n' >> "$FIXTURE_REPO/skills/ssf-qa/assets/qa-signoff.md"
+  run "$FIXTURE_REPO/scripts/validate-pack.sh"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"skills/ssf-plan/scripts/new-plan.sh"* ]]
+  [[ "$output" == *"skill template drift: skills/ssf-qa/assets/qa-signoff.md"* ]]
+}

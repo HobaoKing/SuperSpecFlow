@@ -16,4 +16,6 @@ Claude、Codex 与 Antigravity 的全局指令文件都支持按绝对路径 inc
 
 技能负责方法，不管理宿主的 `.gitignore` 或特定文件的提交策略。
 
+skills 中的 Markdown 资源链接相对于该 `SKILL.md` 所在目录。`ssf-plan` 自带默认路径计划生成器与模板，`ssf-qa`、`ssf-ship` 自带报告模板；复制整个 skill 目录即可保留这些依赖。包级 `scripts/new-plan.sh` 保留原 CLI，转调 skill 内同一个生成器。用户指定其他计划路径时直接编辑指定文件，不使用默认路径生成器。
+
 安装见 [安装说明](installation.md)。

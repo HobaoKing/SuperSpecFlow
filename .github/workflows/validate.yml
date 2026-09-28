@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install tools
         run: |
@@ -44,8 +46,17 @@ jobs:
           shellcheck -x \
             update.sh \
             scripts/*.sh \
+            skills/ssf-plan/scripts/*.sh \
             tests/lib/*.bash
 
-      # 仓库纪律要求提交前跑 git diff --check，CI 同步守护尾随空格等空白问题。
+      # 检查 PR / push 的真实提交范围，不能用 clean checkout 与 HEAD 的空 diff 代替。
       - name: Whitespace check
-        run: git diff --check HEAD
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            bash scripts/check-commit-whitespace.sh "$BASE_SHA" "$HEAD_SHA" --merge-base
+          else
+            bash scripts/check-commit-whitespace.sh "$BASE_SHA" "$HEAD_SHA"
+          fi

@@ -136,6 +136,7 @@ make_pack_at_special_path() {
   run "$UNINSTALL" --claude-only
   [ "$status" -eq 0 ]
   [ -e "$HOME/dotfiles/CLAUDE.md" ]
+  [ ! -s "$HOME/dotfiles/CLAUDE.md" ]
   [ -L "$HOME/.claude/CLAUDE.md" ]
   [[ "$output" == *"已为空"* ]]
 }
