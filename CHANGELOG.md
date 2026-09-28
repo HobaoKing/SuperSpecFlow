@@ -2,7 +2,21 @@
 
 All notable SuperSpecFlow package changes are recorded here.
 
-版本定档规则、发布流程与回滚方式见 [版本与发布策略](release-policy.md)。未发布条目先记在下面的 `[Unreleased]` 段，发布时整体归档为带日期的版本段。
+版本定档规则、发布流程与回滚方式见 [版本与发布策略](docs/release-policy.md)。未发布条目先记在下面的 `[Unreleased]` 段，发布时整体归档为带日期的版本段。
+
+## [Unreleased]
+
+### Fixed
+
+- bootstrap 在切换版本前拒绝与本地未跟踪、被忽略文件冲突的同名或父子路径，保留不冲突的本地文件。
+- 安装和卸载共用归属判定，仅匹配每个目标最近一次安装记录；兼容旧版追加式 manifest，保护用户手动回退、软链及特殊文件。
+- 升级清理未修改的退役能力，保留用户修改或无归属记录的内容；包含 Antigravity 的双宿主更新不再扩展安装范围。
+- 卸载正确清空仅含 include 的软链目标并保持权限；purge 在卸载前检查当前目录和其他宿主对共享包的引用。
+- 安装汇总区分能力同步与 rules 接入；CI 按 push / PR 的真实提交范围检查空白错误。
+
+### Docs
+
+- 更新安装、迁移与 purge 说明，修复 CHANGELOG 发布策略链接和合并提交回滚命令。
 
 ## [3.0.0] - 2026-09-24
 

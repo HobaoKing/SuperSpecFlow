@@ -12,6 +12,7 @@ REMOVE_ANTIGRAVITY=1
 PURGE=0
 TARGET_SELECTED=0
 
+# 展示卸载范围与 purge 的前置约束；只打印帮助，不改动安装状态。
 usage() {
   cat <<MSG
 Usage: uninstall-global.sh [--claude-only|--codex-only|--antigravity-only|--both|--all] [--purge]
@@ -25,7 +26,7 @@ CLI selection (mutually exclusive):
 
 Other options:
   --purge        After removing includes, also delete the pack directory at $REPO_ROOT.
-                 拒绝在 pack 目录内部执行。
+                 拒绝在 pack 目录内部执行，或删除其他未卸载宿主仍引用的共享包。
   -h, --help     Show this help.
 MSG
 }
@@ -82,6 +83,33 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+if [ "$PURGE" -eq 1 ]; then
+  # 在任何卸载写操作之前检查物理路径与未选宿主依赖，失败时保留完整安装。
+  real_root="$(cd "$REPO_ROOT" 2>/dev/null && pwd -P)" || real_root="$REPO_ROOT"
+  case "$(pwd -P)/" in
+    "$real_root"/*)
+      echo
+      echo "error: 当前工作目录位于 $REPO_ROOT 之内，无法 --purge。" >&2
+      echo "       请 cd 到其他位置后重试。" >&2
+      exit 1
+      ;;
+  esac
+  for host_state in ".claude:$REMOVE_CLAUDE" ".codex:$REMOVE_CODEX" ".gemini:$REMOVE_ANTIGRAVITY"; do
+    [ "${host_state##*:}" -eq 0 ] || continue
+    host_dir="${host_state%:*}"
+    record="$HOME/$host_dir/superspecflow/pack-root"
+    [ -f "$record" ] || continue
+    dependency="$(cat "$record")"
+    if [ -d "$dependency" ]; then
+      dependency="$(cd "$dependency" && pwd -P)"
+    fi
+    if [ "$dependency" = "$real_root" ]; then
+      echo "error: $host_dir 仍引用此共享包，无法 --purge；请保留包或明确卸载所有引用宿主。" >&2
+      exit 1
+    fi
+  done
+fi
+
 # 读取文件权限位的八进制表示（如 644）。GNU stat（Linux）用 -c '%a'，BSD stat（macOS）用 -f '%Lp'。
 # 输入：$1 已存在的普通文件路径；输出：权限位（stdout），两种形式都不可用时输出空串。
 # 约束：必须“先 GNU 后 BSD”，不能写成 `stat -f '%Lp' f || stat -c '%a' f` 串联——GNU stat 的 -f 是
@@ -96,6 +124,8 @@ file_mode() {
   stat -f '%Lp' "$1" 2>/dev/null || true
 }
 
+# 精确移除 include 并保留其余内容与权限；软链目标删空时写回空文件，不删除真实文件或软链。
+# $1 宿主指令文件路径，$2 完整 include 行；无法解析的软链仅提示并跳过。
 remove_include() {
   local target="$1"          # ~/.claude/CLAUDE.md、~/.codex/AGENTS.md 或 ~/.gemini/GEMINI.md
   local include_line="$2"    # 已生成 wrapper 的绝对路径 include
@@ -137,8 +167,9 @@ remove_include() {
   if [ ! -s "$tmp" ]; then
     if [ -L "$target" ]; then
       # 软链场景绝不越界删除用户真实文件（可能是 dotfiles 仓库里的共享文件）：
-      # 只提示真实文件已空，由用户自行决定去留。
-      rm -f "$tmp"
+      # 写回空内容并恢复权限，保留真实文件，由用户自行决定去留。
+      mv "$tmp" "$file"
+      if [ -n "$mode" ]; then chmod "$mode" "$file"; fi
       echo "✓ 已从 $target 移除 SuperSpecFlow include 行（软链保留）"
       echo "⚠ 其指向的真实文件 $file 删除 include 后已为空，请自行确认是否删除。"
     else
@@ -152,48 +183,22 @@ remove_include() {
   fi
 }
 
-file_checksum() {
-  shasum -a 256 "$1" | awk '{print $1}'
-}
+# shellcheck source=scripts/install-state.sh
+source "$REPO_ROOT/scripts/install-state.sh"
 
-dir_checksum() {
-  local dir="$1"
-  local file rel
-
-  (
-    cd "$dir"
-    find . -type f ! -name '.superspecflow-installed' -print | LC_ALL=C sort | while IFS= read -r file; do
-      rel="${file#./}"
-      printf '%s\n' "$rel"
-      shasum -a 256 "$rel"
-    done
-  ) | shasum -a 256 | awk '{print $1}'
-}
-
+# 仅依据清单最后一条记录移除未修改能力；无法校验或用户修改的目标保留并提示。
+# $1 为当前宿主清单；兼容旧版重复记录，卸载结束删除该宿主清单。
 remove_manifested_capabilities() {
-  local manifest="$1"
-  local kind checksum target current marker
-
+  local manifest="$1" kind checksum target
   [ -f "$manifest" ] || return 0
-
   while IFS=$'\t' read -r kind checksum target; do
     [ -n "${target:-}" ] || continue
-    if [ "$kind" = "F" ] && [ -f "$target" ]; then
-      current="$(file_checksum "$target")"
-      if [ "$current" = "$checksum" ]; then
-        rm -f "$target"
-      fi
-    elif [ "$kind" = "D" ] && [ -d "$target" ]; then
-      marker="$target/.superspecflow-installed"
-      current="$(dir_checksum "$target")"
-      if [ -f "$marker" ] &&
-         grep -Fxq "$REPO_ROOT" "$marker" &&
-         [ "$current" = "$checksum" ]; then
-        rm -rf "$target"
-      fi
+    if owned_target_matches "$kind" "$checksum" "$target"; then
+      if [ "$kind" = D ]; then rm -rf "$target"; else rm -f "$target"; fi
+    elif [ -e "$target" ] || [ -L "$target" ]; then
+      echo "⚠ modified or unverifiable capability preserved: $target"
     fi
-  done < "$manifest"
-
+  done < <(manifest_latest "$manifest")
   rm -f "$manifest"
 }
 
@@ -219,17 +224,6 @@ if [ "$REMOVE_CODEX" -eq 1 ]; then
 fi
 
 if [ "$PURGE" -eq 1 ]; then
-  # 用物理路径比较与删除：REPO_ROOT 来自 cd && pwd 的逻辑路径，经软链调用时
-  # 逻辑比较可能漏判，且 rm -rf 逻辑路径只会删掉软链本身却报告“已删除”。
-  real_root="$(cd "$REPO_ROOT" 2>/dev/null && pwd -P)" || real_root="$REPO_ROOT"
-  case "$(pwd -P)/" in
-    "$real_root"/*)
-      echo
-      echo "error: 当前工作目录位于 $REPO_ROOT 之内，无法 --purge。" >&2
-      echo "       请 cd 到其他位置后重试。" >&2
-      exit 1
-      ;;
-  esac
   echo
   echo "→ 删除 pack 目录 $real_root"
   rm -rf "$real_root"

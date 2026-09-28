@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# SuperSpecFlow 全局安装脚本（方案 C 推荐入口）
-# 只做检测 + 提示。绝不擅自改写用户已存在的全局指令文件 / settings.json。
+# SuperSpecFlow 全局安装脚本。
+# 同步所选宿主能力；已有全局指令仅在 --append 或交互确认后追加，不改写 settings.json。
 
 set -euo pipefail
 
@@ -12,6 +12,7 @@ INSTALL_ANTIGRAVITY=1
 TARGET_SELECTED=0
 AUTO_APPEND=0
 ASSUME_YES=0
+INCLUDES_PENDING=0
 
 usage() {
   cat <<MSG
@@ -87,55 +88,11 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-file_checksum() {
-  shasum -a 256 "$1" | awk '{print $1}'
-}
+# shellcheck source=scripts/install-state.sh
+source "$REPO_ROOT/scripts/install-state.sh"
 
-dir_checksum() {
-  local dir="$1"
-  local file rel
-
-  (
-    cd "$dir"
-    find . -type f ! -name '.superspecflow-installed' -print | LC_ALL=C sort | while IFS= read -r file; do
-      rel="${file#./}"
-      printf '%s\n' "$rel"
-      shasum -a 256 "$rel"
-    done
-  ) | shasum -a 256 | awk '{print $1}'
-}
-
-manifest_has_path() {
-  local manifest="$1"
-  local target="$2"
-
-  [ -f "$manifest" ] || return 1
-  awk -F '\t' -v p="$target" '$3 == p { found = 1 } END { exit found ? 0 : 1 }' "$manifest"
-}
-
-manifest_checksum_matches() {
-  local manifest="$1"
-  local kind="$2"
-  local checksum="$3"
-  local target="$4"
-
-  [ -f "$manifest" ] || return 1
-  awk -F '\t' -v k="$kind" -v c="$checksum" -v p="$target" '
-    $1 == k && $2 == c && $3 == p { found = 1 }
-    END { exit found ? 0 : 1 }
-  ' "$manifest"
-}
-
-record_manifest() {
-  local manifest="$1"
-  local kind="$2"
-  local checksum="$3"
-  local target="$4"
-
-  mkdir -p "$(dirname "$manifest")"
-  printf '%s\t%s\t%s\n' "$kind" "$checksum" "$target" >> "$manifest"
-}
-
+# 只覆盖最近一次安装后未修改的普通文件；用户软链和未归属文件均保留。
+# $1 源文件，$2 安装目标，$3 宿主 manifest；成功复制后替换该目标的安装记录。
 copy_file_safe() {
   local src="$1"
   local target="$2"
@@ -143,8 +100,8 @@ copy_file_safe() {
   local current
 
   mkdir -p "$(dirname "$target")"
-  if [ -e "$target" ]; then
-    if [ ! -f "$target" ]; then
+  if [ -e "$target" ] || [ -L "$target" ]; then
+    if [ ! -f "$target" ] || [ -L "$target" ]; then
       echo "⚠ $target already exists but is not a regular file; skipped"
       return 0
     fi
@@ -164,6 +121,8 @@ copy_file_safe() {
   record_manifest "$manifest" "F" "$(file_checksum "$target")" "$target"
 }
 
+# 重装目录前核对当前包标记与最新校验值；含软链或特殊文件时跳过，保留旧版校验兼容性。
+# $1 源目录，$2 安装目标，$3 宿主 manifest；允许替换时同步整个目录并写入当前包标记。
 copy_dir_safe() {
   local src="$1"
   local target="$2"
@@ -171,13 +130,13 @@ copy_dir_safe() {
   local marker="$target/.superspecflow-installed"
   local current
 
-  if [ -e "$target" ]; then
-    if [ ! -d "$target" ]; then
+  if [ -e "$target" ] || [ -L "$target" ]; then
+    if [ ! -d "$target" ] || [ -L "$target" ]; then
       echo "⚠ $target already exists but is not a directory; skipped"
       return 0
     fi
-    current="$(dir_checksum "$target")"
-    if [ -f "$marker" ] &&
+    if current="$(dir_checksum "$target")" &&
+       [ -f "$marker" ] &&
        grep -Fxq "$REPO_ROOT" "$marker" &&
        manifest_checksum_matches "$manifest" "D" "$current" "$target"; then
       rm -rf "$target"
@@ -193,11 +152,13 @@ copy_dir_safe() {
   record_manifest "$manifest" "D" "$(dir_checksum "$target")" "$target"
 }
 
-# 同步 Claude 的 skills 和命令，复用文件归属校验保护用户修改，不创建角色目录。
+# 同步 Claude 的 skills 和命令；先按最近安装记录清理未修改的退役能力，保留用户内容。
 sync_claude_capabilities() {
   local manifest="$HOME/.claude/superspecflow/install-manifest.tsv"
   local path
 
+  prune_retired_capabilities "$manifest" "$HOME/.claude/skills" D "$REPO_ROOT/skills"
+  prune_retired_capabilities "$manifest" "$HOME/.claude/commands" F "$REPO_ROOT/commands"
   mkdir -p "$HOME/.claude/skills" "$HOME/.claude/commands"
   for path in "$REPO_ROOT/skills/"ssf-*; do
     [ -d "$path" ] || continue
@@ -209,10 +170,12 @@ sync_claude_capabilities() {
   echo "✓ synced Claude Code skills and commands"
 }
 
+# 同步 Codex skills；仅清理清单中未修改的退役目录，不影响未归属或用户修改的能力。
 sync_codex_capabilities() {
   local manifest="$HOME/.codex/superspecflow/install-manifest.tsv"
   local path
 
+  prune_retired_capabilities "$manifest" "$HOME/.codex/skills" D "$REPO_ROOT/skills"
   mkdir -p "$HOME/.codex/skills"
   for path in "$REPO_ROOT/skills/"ssf-*; do
     [ -d "$path" ] || continue
@@ -224,12 +187,13 @@ sync_codex_capabilities() {
 # 同步 Antigravity 的 skills 到 IDE 与 CLI 两个全局目录。
 # 输入：无（依赖全局 HOME 与 REPO_ROOT）；输出：同步结果至 stdout。
 # 约束：Antigravity 没有用户自定义全局 slash 命令目录，skill 在 CLI 会自动成为 /ssf-*，IDE 里可按 <skill-name> 手动调用，因此这里只同步 skills、不写 commands。
-# 两个目录共用同一份 install-manifest.tsv，保证重装与卸载对两份拷贝执行同一套“本包装的且未被用户修改”判定。
+# 两个目录共用一份清单，先分别清理未修改的退役能力；重装和卸载均只对比最近一次安装记录。
 sync_antigravity_capabilities() {
   local manifest="$HOME/.gemini/superspecflow/install-manifest.tsv"
   local root path
 
   for root in "$HOME/.gemini/config/skills" "$HOME/.gemini/antigravity-cli/skills"; do
+    prune_retired_capabilities "$manifest" "$root" D "$REPO_ROOT/skills"
     mkdir -p "$root"
     for path in "$REPO_ROOT/skills/"ssf-*; do
       [ -d "$path" ] || continue
@@ -327,7 +291,7 @@ resolve_instruction_target() {
 
 # 确保目标指令文件包含 SuperSpecFlow 全局 include 行。
 # 输入：$1 目标文件绝对路径（如 ~/.claude/CLAUDE.md、~/.codex/AGENTS.md 或 ~/.gemini/GEMINI.md）；$2 include 完整行文本。
-# 输出：成功或跳过信息至 stdout；未追加且未确认时输出手动操作提示。
+# 输出：成功或跳过信息至 stdout；未接入时设置 INCLUDES_PENDING 并输出手动操作提示。
 # 约束：已接入判定必须是整行精确匹配——子串匹配会把注释掉或含尾随空行的同一路径误判为已接入，导致路由实际不生效且无任何警告；
 # 目标是软链时改写其指向的真实文件并保留软链；追加后保持原文件权限不变。
 ensure_include() {
@@ -336,6 +300,7 @@ ensure_include() {
   local file
 
   file="$(resolve_instruction_target "$target")" || {
+    INCLUDES_PENDING=1
     cat <<MSG
 
 ⚠ $target 是符号链接，但其指向的文件不存在、是多跳软链或不是普通文件。
@@ -376,6 +341,7 @@ MSG
     return 0
   fi
 
+  INCLUDES_PENDING=1
   cat <<MSG
 
 ⚠ $target 已存在，但未包含 SuperSpecFlow include 行。
@@ -426,13 +392,17 @@ if [ "$INSTALL_CLAUDE" -eq 1 ]; then
   step=$((step + 1))
 fi
 if [ "$INSTALL_CODEX" -eq 1 ]; then
-  echo "  $step. Codex：新会话中 skills 与全局 rules 自动生效。"
+  echo "  $step. Codex：完成 include 接入后，新会话会加载 skills 与全局 rules。"
   step=$((step + 1))
 fi
 if [ "$INSTALL_ANTIGRAVITY" -eq 1 ]; then
-  echo "  $step. Antigravity：重启 IDE / CLI 会话后 skills 与 ~/.gemini/GEMINI.md 里的全局 rules 生效，CLI 中可直接使用 /ssf-*。"
+  echo "  $step. Antigravity：完成 include 接入后重启 IDE / CLI 会话，加载 skills 与全局 rules；CLI 中可直接使用 /ssf-*。"
 fi
-echo "  全局 rules 已接入，所有项目开箱即用；不想在某宿主启用时，移除对应全局指令文件中的 include 行即可。"
+if [ "$INCLUDES_PENDING" -eq 0 ]; then
+  echo "  所选宿主的全局 rules 已接入；不想启用时，移除对应全局指令文件中的 include 行即可。"
+else
+  echo "  能力同步已完成，但部分宿主的全局 rules 尚未接入，请按上方提示手动追加 include，或使用 --append。"
+fi
 echo "  注意：若上面出现 \"skipped\" 警告，请确认对应文件，避免看到的并非 SuperSpecFlow 命令。"
 echo
 echo "按需使用工程 skills；项目规则优先。"

@@ -32,7 +32,7 @@ bash scripts/install-global.sh --all
 # 添加 --append 可自动向已有全局指令文件顶部追加 include
 ```
 
-脚本向选定宿主同步 skills；Claude 另同步 commands。已存在但不归本包所有、或被用户修改的文件会跳过并提示。已有全局 AGENTS.md / CLAUDE.md / GEMINI.md 默认不擅自改写，缺少 include 时会提示手动追加，亦可传入 `--append`（或在交互终端中确认）自动将 include 行追加至文件顶部。settings.json 仅提供可选 hook 提示。
+脚本向选定宿主同步 skills；Claude 另同步 commands。已存在但不归本包所有、或相对最近一次安装被用户修改的文件会跳过并提示；包含软链或特殊文件的 skill 目录也会保留。已有全局 AGENTS.md / CLAUDE.md / GEMINI.md 默认不擅自改写，缺少 include 时会提示手动追加，亦可传入 `--append`（或在交互终端中确认）自动将 include 行追加至文件顶部。能力同步与 rules 接入会分别提示；未写入 include 时不会宣称 rules 已接入。3.0 起不再提供 SessionStart hook，也不改写 settings.json；旧版手工添加的 hook 需按 CHANGELOG 的迁移说明移除。
 
 ### Antigravity 写入位置
 
@@ -45,7 +45,7 @@ bash scripts/install-global.sh --all
 
 - Antigravity 没有用户自定义全局 slash 命令目录，因此只同步 skills：CLI 会自动把 skill 暴露为 `/ssf-*`，IDE 里可在输入框用 `/<skill-name>` 手动调用。
 - `~/.gemini/GEMINI.md` 同时是 Gemini CLI 的全局指令文件；写入 include 行后 Gemini CLI 也会加载同一份路由，属预期行为，不需要时可改用 `--claude-only` / `--codex-only` 单独安装。
-- 若 IDE 的 Customizations 面板之后重写了 `~/.gemini/GEMINI.md` 导致 include 行丢失，重新执行安装脚本即可（include 判定幂等，已安装的 skills 会被跳过）。
+- 若 IDE 的 Customizations 面板之后重写了 `~/.gemini/GEMINI.md` 导致 include 行丢失，重新执行安装并使用 `--append`（或交互确认）补回 include。已接入时不会重复追加；未修改的 skills 会同步到当前包版本。
 
 ## 项目启用
 
@@ -59,6 +59,12 @@ Claude 安装后重启会话即可加载全局指令并使 `/ssf-*` 进入命令
 
 检查安装输出中的 skipped 提示，确认目标 skill 可用和包引用正确。重复安装会保护用户修改。重复执行上面的任一安装命令即更新到 master 最新发布：bootstrap 会更新 `~/.superspecflow` 检出并重装，归本包所有但被你改过的文件会跳过并提示。
 
+bootstrap 在切换版本前检查已跟踪文件修改，以及本地未跟踪、被忽略文件与目标版本的同名或父子路径冲突；冲突时保留工作区并中止，不冲突的本地文件不影响更新。本地 `update.sh` 只按 `pack-root` 记录重装已安装宿主，不拉取源码；包含 Antigravity 的双宿主组合也保持原范围。
+
+升级会清理安装记录中未被修改的退役 commands 与 skills，例如 3.0 移除的 `/ssf-init`。用户修改过的退役能力会保留并提示；同名但无本包安装记录的内容不会被清理。
+
 `bash scripts/uninstall-global.sh --all`（或 `--claude-only` / `--codex-only` / `--antigravity-only` / `--both`）按安装记录卸载并保护用户修改，不操作项目数据。
+
+`--purge` 还会删除源码包，必须在包目录之外执行；未卸载的宿主仍引用该包时，脚本会在任何卸载操作之前拒绝 purge。需要保留其他宿主时不要加 `--purge`。
 
 卸载按各宿主的 `install-manifest.tsv` 记录删除本包装入的文件。若该清单丢失，已安装的 skills 会成为孤儿目录，需手动删除对应宿主的 skills 目录（如 `~/.gemini/config/skills/ssf-*`）并移除指令文件中的 include 行；重复安装不会覆盖用户在清单丢失前改过的文件。

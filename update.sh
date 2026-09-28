@@ -38,11 +38,9 @@ host_was_installed() {
   [ -f "$HOME/$host_dir/superspecflow/pack-root" ]
 }
 
-# 按探测结果给出 install-global.sh 的目标参数；未显式传目标时才调用。
-# 输入：无；输出：单个目标参数（stdout）。
-# 约束：install-global.sh 的目标选项互斥，只能单选，因此按“命中数量与组合”收敛：
-# 恰好命中 1 个宿主用对应 --<host>-only；恰好命中 Claude+Codex 用 --both；
-# 其余组合（0 个、3 个或含 Gemini 的多选）统一用 --all，由安装脚本自行处理。
+# 按探测结果输出目标参数，每行一次安装调用；不扩大原宿主集合。
+# 单宿主、Claude+Codex 与三宿主复用现有选项，其余双宿主输出两个单宿主选项。
+# 无安装记录时保持 --all 默认；调用方逐行执行并向每次调用透传非目标参数。
 detected_target_args() {
   local found=0
   local claude_hit=0
@@ -69,6 +67,10 @@ detected_target_args() {
   elif [ "$found" -eq 2 ] && [ "$claude_hit" -eq 1 ] && [ "$codex_hit" -eq 1 ]; then
     # Claude+Codex 组合有专门的 --both，语义与逐项安装等价且不重复执行公共步骤
     printf '%s' "--both"
+  elif [ "$found" -eq 2 ]; then
+    if [ "$claude_hit" -eq 1 ]; then printf '%s\n' "--claude-only"; fi
+    if [ "$codex_hit" -eq 1 ]; then printf '%s\n' "--codex-only"; fi
+    printf '%s\n' "--antigravity-only"
   else
     printf '%s' "--all"
   fi
@@ -106,7 +108,9 @@ if [ "$TARGET_EXPLICIT" -eq 1 ]; then
 else
   TARGET_ARGS="$(detected_target_args)"
   echo "→ 未指定目标，按已安装范围更新：$TARGET_ARGS"
-  "$SCRIPT_DIR/scripts/install-global.sh" "$TARGET_ARGS" ${PASSTHROUGH_ARGS[@]+"${PASSTHROUGH_ARGS[@]}"}
+  while IFS= read -r target; do
+    "$SCRIPT_DIR/scripts/install-global.sh" "$target" ${PASSTHROUGH_ARGS[@]+"${PASSTHROUGH_ARGS[@]}"}
+  done <<< "$TARGET_ARGS"
 fi
 
 echo "Done. Restart the session to reload instructions."
