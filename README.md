@@ -60,6 +60,8 @@ bash scripts/install-global.sh --all
 
 已接入项目可直接使用自然语言。各能力独立执行，不自动串联阶段。
 
+用户已经要求“计划后直接实现”或已授权后续操作时，继续完成同一范围内的任务；“只讨论”“只计划”“只评估”则停在相应交付。计划按用户指定路径或已有文件维护，普通修复不因有多个步骤就生成计划。
+
 ## 方法来源
 
 采用 [mattpocock/skills](https://github.com/mattpocock/skills)（TDD、缺陷定位、代码审查）与 [multica-ai/andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)（编码前思考、简单优先、外科手术式修改、目标驱动执行）作为底层工程实践，随包提供精简适配版。取消逐项测试确认、强制双 agent、issue tracker 和自动提交。授权见 [NOTICE](NOTICE.md)。
@@ -67,6 +69,10 @@ bash scripts/install-global.sh --all
 ## 维护
 
 `routing/default.routing.md` 是规则源，公开的 AGENTS / CLAUDE / GEMINI routing 文件与它一致。`skills/` 负责工程方法，`commands/` 提供命令入口，`templates/` 提供可选模板。
+
+计划生成脚本与计划、QA、发布模板随所属 skill 安装，资源路径相对于该 skill 的 `SKILL.md`；单独调用不依赖宿主项目存在 `templates/` 或已接入全局规则。计划、QA 公共模板与 skill 的 assets 副本由包校验保持一致。`skills/ssf-ship/assets/release-checklist.md` 是遵循宿主机制的通用模板；`templates/release-checklist.md` 保留本项目固定发布步骤，与 `docs/release-policy.md` 共同约束本项目发布。
+
+脚本与结构测试之外，按需使用 [Skills 行为验证](tests/behavior/README.md) 检查真实任务中的选择、续接、授权和证据边界；其结果与确定性测试分开记录。
 
 ## 参与开发与发布
 

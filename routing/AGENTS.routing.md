@@ -4,7 +4,7 @@
 
 ## 核心约定
 
-- 跨模块、多步骤或跨会话任务复用一份计划，文件用 `docs/plans/<topic>.md`，骨架用 `bash <pack>/scripts/new-plan.sh <topic> [project-dir]` 生成，结构参考 `<pack>/templates/implementation-plan.md`；普通任务不落盘流程文档。
+- 仅跨模块、跨会话或用户明确要求时维护一份计划；普通任务不因有多个步骤就落盘。用户指定路径与当前任务已有计划优先；新建默认路径 `docs/plans/<topic>.md` 时可用 `bash <pack>/scripts/new-plan.sh <topic> [project-dir]`，结构参考 `<pack>/templates/implementation-plan.md`，其他路径直接按约定编辑。
 - 遵循 Karpathy 纪律（编码前思考、简单优先、外科手术式修改、目标驱动执行）与 mattpocock 实战方法（TDD、根因诊断、代码审查）。只修改目标所需内容，保护无关未提交工作，优先复用项目机制，避免推测性抽象。
 - 本次新增或行为、契约发生变化的函数必须在实现定义处写简体中文函数级注释，说明功能及实际适用的输入输出语义、约束；仅格式调整不补注释，不补写无关历史代码。
 - 测试观察公开接口的行为，不复制实现逻辑。缺陷优先建立能捕获该症状的复现或测试，小步修改后复验。测试方式遵守宿主构建和运行限制。
