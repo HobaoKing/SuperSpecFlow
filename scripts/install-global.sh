@@ -96,7 +96,7 @@ done
 source "$REPO_ROOT/scripts/install-state.sh"
 
 # 仅回收本次创建的暂存目录；其中尚有旧版本时保留并提示恢复位置，避免失败后误删。
-# shellcheck disable=SC2329 # EXIT trap 调用。
+# shellcheck disable=SC2317,SC2329 # EXIT trap 间接调用，兼容不同检查器版本。
 cleanup_install_stage() {
   [ -n "$INSTALL_STAGE" ] || return 0
   if [ -e "$INSTALL_STAGE/previous" ] || [ -L "$INSTALL_STAGE/previous" ]; then
@@ -105,7 +105,7 @@ cleanup_install_stage() {
     rm -rf "$INSTALL_STAGE"
   fi
 }
-trap cleanup_install_stage EXIT
+trap 'cleanup_install_stage' EXIT
 
 # 记录本次写入的预期内容供安装末尾读回；四项为类型、源内容 checksum、目标与可选清单。
 remember_install_write() {
@@ -299,7 +299,10 @@ render_wrapper() {
   local routing_file="$3"
   local routing_path="$REPO_ROOT/routing/$routing_file"
   local expected
-  [ -s "$template" ] && [ -s "$routing_path" ] || { echo "error: missing wrapper source" >&2; return 1; }
+  if [ ! -s "$template" ] || [ ! -s "$routing_path" ]; then
+    echo "error: missing wrapper source" >&2
+    return 1
+  fi
   [ ! -L "$output" ] || { echo "error: wrapper is a symlink: $output" >&2; return 1; }
 
   mkdir -p "$(dirname "$output")"

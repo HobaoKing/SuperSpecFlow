@@ -4,6 +4,12 @@ All notable SuperSpecFlow package changes are recorded here.
 
 版本定档规则、发布流程与回滚方式见 [版本与发布策略](docs/release-policy.md)。未发布条目先记在下面的 `[Unreleased]` 段，发布时整体归档为带日期的版本段。
 
+## [Unreleased]
+
+### Fixed
+
+- 修复 Linux CI 旧版 ShellCheck 对未加引号的 EXIT trap 和组合条件判断的诊断：明确引用 trap 命令并使用 if 分支，不改变安装校验、失败恢复或退役清理行为；CI 将静态检查前移并输出检查器版本，提前发现环境差异。
+
 ## [3.0.1] - 2026-09-28
 
 ### Fixed
