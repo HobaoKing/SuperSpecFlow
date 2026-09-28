@@ -83,9 +83,15 @@ owned_target_matches() {
 
 # 清理当前包已退役的能力，只处理指定宿主目录内、清单记录过的直接子项 ssf-*。
 # $1 清单，$2 已安装目录，$3 类型 F/D，$4 包内源目录；用户改过的内容与记录保留并告警。
+# 只删除最近清单与当前归属校验一致的项；删除后读回再移除记录，计数用于安装汇总。
 prune_retired_capabilities() {
   local manifest="$1" target_root="$2" expected_kind="$3" source_root="$4"
   local kind checksum target name
+  if [ -L "$target_root" ]; then
+    echo "⚠ retired cleanup root is a symlink; skipped: $target_root"
+    SSF_PRUNE_PRESERVED=$((${SSF_PRUNE_PRESERVED:-0} + 1))
+    return 0
+  fi
   while IFS=$'\t' read -r kind checksum target; do
     [ "$kind" = "$expected_kind" ] || continue
     [ "$(dirname "$target")" = "$target_root" ] || continue
@@ -96,9 +102,12 @@ prune_retired_capabilities() {
       record_manifest "$manifest" '' '' "$target"
     elif owned_target_matches "$kind" "$checksum" "$target"; then
       if [ "$kind" = D ]; then rm -rf "$target"; else rm -f "$target"; fi
+      [ ! -e "$target" ] && [ ! -L "$target" ] || { echo "error: retired target remains: $target" >&2; return 1; }
       record_manifest "$manifest" '' '' "$target"
+      SSF_PRUNED=$((${SSF_PRUNED:-0} + 1))
       echo "✓ removed retired capability: $target"
     else
+      SSF_PRUNE_PRESERVED=$((${SSF_PRUNE_PRESERVED:-0} + 1))
       echo "⚠ retired capability was modified or cannot be verified; skipped: $target"
     fi
   done < <(manifest_latest "$manifest")

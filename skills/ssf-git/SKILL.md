@@ -1,6 +1,6 @@
 ---
 name: ssf-git
-description: 按用户请求管理分支、提交、PR 或回滚，保护无关工作并检查实际 staged diff。
+description: 用户要求分支、提交、推送、PR 或回滚时使用；只做会话已授权操作，保护无关改动。
 ---
 
 # ssf-git
