@@ -97,12 +97,15 @@ prune_retired_capabilities() {
     [ "$(dirname "$target")" = "$target_root" ] || continue
     name="$(basename "$target")"
     case "$name" in ssf-*) ;; *) continue ;; esac
-    [ ! -e "$source_root/$name" ] && [ ! -L "$source_root/$name" ] || continue
+    if [ -e "$source_root/$name" ] || [ -L "$source_root/$name" ]; then continue; fi
     if [ ! -e "$target" ] && [ ! -L "$target" ]; then
       record_manifest "$manifest" '' '' "$target"
     elif owned_target_matches "$kind" "$checksum" "$target"; then
       if [ "$kind" = D ]; then rm -rf "$target"; else rm -f "$target"; fi
-      [ ! -e "$target" ] && [ ! -L "$target" ] || { echo "error: retired target remains: $target" >&2; return 1; }
+      if [ -e "$target" ] || [ -L "$target" ]; then
+        echo "error: retired target remains: $target" >&2
+        return 1
+      fi
       record_manifest "$manifest" '' '' "$target"
       SSF_PRUNED=$((${SSF_PRUNED:-0} + 1))
       echo "✓ removed retired capability: $target"
