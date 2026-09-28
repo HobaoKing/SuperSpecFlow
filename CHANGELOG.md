@@ -4,7 +4,7 @@ All notable SuperSpecFlow package changes are recorded here.
 
 版本定档规则、发布流程与回滚方式见 [版本与发布策略](docs/release-policy.md)。未发布条目先记在下面的 `[Unreleased]` 段，发布时整体归档为带日期的版本段。
 
-## [Unreleased]
+## [3.0.1] - 2026-09-28
 
 ### Fixed
 
