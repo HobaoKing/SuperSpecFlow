@@ -23,10 +23,11 @@ setup() {
   [ "$(cat "$HOME_DIR/.codex/AGENTS.md")" = 'Host rules' ]
 }
 
-@test "QA 和发布模板随独立 skill 安装且本地引用均可解析" {
+# 覆盖七个入口的实际安装副本，防止新增方法只在源码仓库可读、安装后丢失。
+@test "七个独立 skill 的方法参考脚本模板随安装提供且引用可解析" {
   [ -s "$HOME_DIR/.codex/skills/ssf-qa/assets/qa-signoff.md" ]
   [ -s "$HOME_DIR/.codex/skills/ssf-ship/assets/release-checklist.md" ]
-  for name in plan qa ship; do
+  for name in think plan build review qa ship git; do
     skill="$HOME_DIR/.codex/skills/ssf-$name"
     while IFS= read -r ref; do
       [ -s "$skill/$ref" ]
