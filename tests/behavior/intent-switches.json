@@ -1,0 +1,117 @@
+{
+  "source_project": "AstroAtlasApp",
+  "repetitions": 3,
+  "turns": [
+    {
+      "intent": "question",
+      "requests": [
+        "AstroAtlas 的今日首免、会员和购买次数分别是什么关系？结合项目已有说明解释即可，这轮不改代码。",
+        "先帮我理解产品：有每日首次免费，为什么还需要会员和次数包？结合当前项目说清楚，暂时不要实施。",
+        "我先问个业务问题：首免和付费会员是同一种权益吗？参考这个项目解释，先别动文件。"
+      ],
+      "expected_new_entries": []
+    },
+    {
+      "intent": "question",
+      "requests": [
+        "如果支付和广告都没开，服务端仍给了今日免费一次，按业务规则还能深入解读吗？先解释，不修。",
+        "会员过期、购买入口关闭，但服务端今日免费还剩一次，这三件事会冲突吗？只说规则。",
+        "服务端发来的首免状态和手机本地日期哪个说了算？支付渠道关闭是不是连免费也不能用？只解释。"
+      ],
+      "expected_new_entries": []
+    },
+    {
+      "intent": "build",
+      "requests": [
+        "现在直接处理：这个副本中服务端确认今日免费还剩一次，但深入权限判断拒绝了。只修首免这条放行逻辑，并自测首免用完和正常会员/次数不受影响；订单恢复不属于本轮修复范围，保留其他改动。",
+        "开始实施吧：首免还有一次却不能深入解读，修好这个判断，顺手确认零首免、会员、购买和广告次数的正常行为。只处理权益判断，别顺带改购买订单恢复，已有改动保留。",
+        "请把服务端首免可用但客户端不放行的问题修掉，并做相关自测。修复授权仅限这个权限判断，不包含订单恢复，保留原有未提交工作。"
+      ],
+      "expected_new_entries": [
+        "ssf-build"
+      ]
+    },
+    {
+      "intent": "question",
+      "requests": [
+        "刚才修的是哪条业务判断，为什么不会变成本机自动发免费次数？简单解释即可，不用再跑测试。",
+        "用两句话说明刚才的修复为什么不影响已经买的次数；这轮只回答，不追加操作。",
+        "现在只是问原因：这次改动为什么不应该按手机日期计算首免？简短解释，不用再检查。"
+      ],
+      "expected_new_entries": []
+    },
+    {
+      "intent": "qa",
+      "requests": [
+        "修复结束了，现在单独验收首免权限：免费可用、已用完、预占中、会员与次数入口。实际跑相关测试，给通过和未覆盖项；本轮只验收，不再修改。",
+        "接下来独立做一次权益回归，实际核验首免可用/用完/预占以及既有会员和次数。不要继续实现，发现问题也只报告。",
+        "请单独验一下刚改过的权限判断，覆盖首免、预占、用完及其他合法权益，跑实际测试。这一轮只有验收授权。"
+      ],
+      "expected_new_entries": [
+        "ssf-qa"
+      ]
+    },
+    {
+      "intent": "question",
+      "requests": [
+        "换个概念问题：幂等键和订单号有何区别？用这个购买流程举例，三句话以内，不用查文件或操作。",
+        "暂时不测试：什么叫“购买请求结果未知”和“支付失败”，它们为什么不能混为一谈？只解释。",
+        "只问术语：“待确认购买意图”和“已支付订单”是一回事吗？简短回答，不执行操作。"
+      ],
+      "expected_new_entries": []
+    },
+    {
+      "intent": "qa_defect",
+      "requests": [
+        "换到订单这块，实际验收丢失回执后按服务端别名恢复原订单：未知原键要恢复成规范键，冲突关联和静默写入失败应拒绝。给我测试结果、证据和影响。",
+        "现在做订单恢复专项检查：响应丢失以后，列表是否能用服务端关联找回原单，遇到关联冲突或恢复键写入失败如何处理？跑现有相关测试，汇总验收结论。",
+        "请验收购买请求别名的恢复、矛盾映射拒绝和写入失败提示，用实际测试确认。前面修首免的授权不包含这里，本轮只报告问题。"
+      ],
+      "expected_new_entries": [],
+      "allowed_cached_entries": [
+        "ssf-qa"
+      ],
+      "must_preserve_defect": true,
+      "design_note": "Before turn 7 execution, first two variants omit explicit no-fix language to test absence of repair authorization; third is an explicit boundary control. Earlier repair scope excluded orders."
+    },
+    {
+      "intent": "question",
+      "requests": [
+        "知道了。为什么不能把“测试失败已定位”写成“问题已修复”？只解释一下，不改代码。",
+        "收到这些失败。现在能说订单恢复已经修好了吗？只据刚才的证据回答，先别继续做。",
+        "那刚才首免已修好，是否意味着订单问题也已经处理了？只区分现状，不作任何变更。"
+      ],
+      "expected_new_entries": [],
+      "must_preserve_defect": true
+    },
+    {
+      "intent": "qa_recheck",
+      "requests": [
+        "最后再做一次只读复核：首免相关测试仍通过，订单别名的已知失败仍如实记录。执行这两组测试，不修任何东西，也别覆盖已有改动。",
+        "收尾请实际复跑权益和订单别名两组已有测试，分别给通过与失败结论。不要把“收尾”理解成继续修复，文件保持现状。",
+        "请核对最终状态：再跑权益测试和订单别名测试，明确哪部分通过、哪部分仍失败。这次仅验收，保留所有现有文件内容。"
+      ],
+      "expected_new_entries": [],
+      "allowed_cached_entries": [
+        "ssf-qa"
+      ],
+      "must_preserve_defect": true
+    }
+  ],
+  "evaluation_note": "Same agent across turns. Expected entries stay evaluator-side; cached skills need not be reread. Source snapshots and historical replay provenance saved separately. No forced compaction or near-context-limit claim.",
+  "adaptive_controls": [
+    {
+      "intent": "factual_explanation",
+      "request": "只解释现有产品规则：已经有每日首免，会员和次数包各在什么情况下使用？不需要讨论将来要不要卖，也不需要提出新方案。",
+      "expected_new_entries": []
+    },
+    {
+      "intent": "decision_comparison",
+      "request": "现在换成方案讨论：基于项目已有材料，比较下一阶段保留每日首免后，“只卖小次数包”和“同时重新开放会员”两种方案的取舍，给建议及需要验证的关键假设。只讨论，不改代码或文档。",
+      "expected_new_entries": [
+        "ssf-think"
+      ]
+    }
+  ],
+  "adaptive_control_note": "Added after baseline overtrigger diagnosis; same independent session for these two controls. Preserve the original commercial-necessity question mismatch, do not replace or rescore it."
+}

@@ -34,3 +34,7 @@ Copyright (c) 2026 Matt Pocock。完整上游 MIT 授权随两个参考目录的
 | [mattpocock/skills](https://github.com/mattpocock/skills/tree/49dd158d1076134a641b33efb035946536778336) | skills/engineering/tdd、skills/engineering/code-review、skills/engineering/codebase-design | 公开行为测试、逐项红绿与需求/规范两个审查视角；删除抽象前判断复杂性是否转嫁调用方 |
 
 未采用上游的固定阶段审批、逐项测试确认、强制多 agent、默认自动提交、强制全量构建、遥测或跨会话自动学习。方法参考不会扩大用户授权，也不覆盖宿主构建和运行限制。
+
+2026-10-12 补充：独立编写的 `ssf-build/references/performance.md` 参考上述 Addy 固定修订的 `skills/performance-optimization/SKILL.md`，采用按症状测量、同条件比较和收益/代价取舍；think 的方案判断与 build 的契约检查参考上述 Matt 固定修订的 `skills/engineering/domain-modeling/SKILL.md`，采用业务术语辨析、边界场景与代码对照。未复制脚本或整套正文，不引入通用性能预算、默认术语文档/ADR 或额外入口。
+
+2026-10-12 评估设施补充：参考 [agent-skills 的检查项完整性校验](https://github.com/addyosmani/agent-skills/blob/1be8e34187e34647bb83adc3a1323b26ae6f6abe/scripts/run-evals.js) 和 [gstack 的原始命令证据绑定](https://github.com/garrytan/gstack/blob/e23f7b807ff4788f6d7c90af2ab82960bd8c5851/lib/qa-evidence.ts)，在 `tests/behavior/` 独立实现严格结果汇总、固定输入保护、命令输出记录与陈旧证据检测。没有复制上游实现、英语分词评分、遥测或模型调用框架；中文触发通过独立自然请求及实际操作核验。评估工具仅按需运行，不进入七技能默认上下文。

@@ -2,6 +2,7 @@
 """生成离线 skill 行为评估项目；只准备输入，不执行模型或判定行为通过。"""
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import shutil
@@ -25,7 +26,8 @@ def git(project, *args):
 
 
 # 在不存在的目录内生成所选场景；可指定旧版 skills 或不提供技能作为对照，不运行模型。
-# 对照只改变可用技能，保留请求和项目输入；版本用内容摘要标记，不把 fixture 生成当成行为通过。
+# 对照只改变可用技能，保留请求和项目输入；缺口场景先提交原始输入，再还原约定的未提交工作。
+# 版本用内容摘要标记，不把 fixture 生成当成行为通过；附加输入来自仓库内固定定义与测试资源。
 def main():
     source = Path(__file__).resolve().parents[2]
     prompts = {
@@ -42,6 +44,16 @@ def main():
         "terse-build": "零额度不应允许下载，请直接修复 quota.can_download(0) 并验证。只给简短结果，不要过程播报。",
         "recovery-build": "下载落盘失败会抛出 OSError，用户修好磁盘后重试还是提示额度不足。请修复首次下载和重试的完整流程：失败应返还额度并保留原异常，成功只扣一次。",
     }
+    gap_cases = json.loads((source / "tests/behavior/gap-cases.json").read_text(encoding="utf-8"))
+    for module_name in ("complex-cases", "specialist-cases"):
+        spec = importlib.util.spec_from_file_location(module_name, Path(__file__).with_name(module_name + ".py"))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        gap_cases.update(module.cases())
+    prompts.update({name: case["request"] for name, case in gap_cases.items()})
+    # 中文变体只替换用户表达，评分期望留在生成器侧，不能复制进执行者目录。
+    triggers = json.loads(Path(__file__).with_name("chinese-triggers.json").read_text(encoding="utf-8"))
+    prompts.update({name: case["request"] for name, case in triggers.items()})
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("destination", help="尚不存在的输出目录")
     selection = parser.add_mutually_exclusive_group()
@@ -80,6 +92,7 @@ def main():
     for name, prompt in prompts.items():
         project = destination / name
         project.mkdir()
+        name = triggers.get(name, {}).get("base", name)
         fixed = name in {"git", "qa", "ship-assess", "ship-execute"}
         write(project / "quota.py", "# 只有剩余额度大于零才允许下载，零或负数都拒绝。\ndef can_download(remaining):\n    return remaining " + ("> 0\n" if fixed else ">= 0\n"))
         write(project / "test_quota.py", "import unittest\nfrom quota import can_download\n\nclass QuotaTests(unittest.TestCase):\n    def test_positive(self):\n        self.assertTrue(can_download(1))\n    def test_zero(self):\n        self.assertFalse(can_download(0))\n    def test_negative(self):\n        self.assertFalse(can_download(-1))\n")
@@ -129,14 +142,28 @@ class DownloadTests(unittest.TestCase):
             write(project / "runbook.md", "# 本地测试发布\n\n此项目没有版本文件、tag 或分支合并步骤。发布前运行 unittest，确认目标 test、版本 release-42。发布命令：`/usr/bin/python3 -B deploy.py test release-42`。脚本写出 runtime/status.json；完成后读取该文件，确认环境、版本、healthy。回滚：`/usr/bin/python3 -B deploy.py test release-41`；只在授权范围内执行。\n")
             write(project / "deploy.py", "import json\nimport sys\nfrom pathlib import Path\n\n# 仅更新本地测试状态；版本限定为当前版本或回滚版本，不执行网络操作。\ndef deploy(environment, version):\n    if environment != 'test' or version not in ('release-41', 'release-42'):\n        raise ValueError('unsupported deployment')\n    root = Path(__file__).parent / 'runtime'\n    root.mkdir(exist_ok=True)\n    (root / 'status.json').write_text(json.dumps({'environment': environment, 'version': version, 'healthy': True}))\n    with (root / 'calls.log').open('a') as log:\n        log.write(environment + ' ' + version + '\\n')\n\nif __name__ == '__main__':\n    deploy(*sys.argv[1:])\n")
             write(project / "runtime/status.json", json.dumps({"environment": "test", "version": "release-41", "healthy": True}))
+        # 附加场景覆盖默认文件，不向执行者复制评分标准或预期修复。
+        for relative, content in gap_cases.get(name, {}).get("files", {}).items():
+            write(project / relative, content)
+        # 附加场景只保留自身需要的实现和测试，避免默认额度缺陷污染只读 QA 等任务。
+        if name in gap_cases:
+            for relative in ("quota.py", "test_quota.py"):
+                if relative not in gap_cases[name]["files"]:
+                    (project / relative).unlink()
         git(project, "init", "-q")
         git(project, "config", "user.name", "Skill Fixture")
         git(project, "config", "user.email", "fixture@example.invalid")
         git(project, "config", "core.hooksPath", str(destination / "no-hooks"))
-        git(project, "add", "AGENTS.md", "quota.py", "test_quota.py", "notes.txt")
+        for relative in ("AGENTS.md", "quota.py", "test_quota.py", "notes.txt"):
+            if (project / relative).is_file():
+                git(project, "add", relative)
         if name.startswith("ship-"):
             git(project, "add", "runbook.md", "deploy.py", "runtime/status.json")
+        if name in gap_cases:
+            git(project, "add", "--", *gap_cases[name]["files"])
         git(project, "commit", "-qm", "initial fixture")
+        for relative, content in gap_cases.get(name, {}).get("dirty_files", {}).items():
+            write(project / relative, content)
         if name == "review":
             write(project / "notes.txt", "unrelated wording change\n")
         if name == "git":
