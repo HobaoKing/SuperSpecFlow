@@ -49,6 +49,10 @@ major 在 2.x 期间没有计划；真要做时必须在 CHANGELOG 写明手动�
 9. **回合并 develop**：`git checkout develop && git merge --no-ff master`。master 侧的合并提交必须成为 develop 祖先，否则 `git describe --tags` 在 develop 上会退化到更早的 tag，依赖它的工具会拿到错误版本号。同一远端 develop 推送已在发布授权内时执行 `git push origin develop`，否则明确待授权的远端同步，不宣称流程完成。
 10. **发布后核验**：读取远端 develop、master 与 tag 引用，分别与本地发布结果核对；tag 解引用落在 master 的合并提交上；在 develop 上 `git describe --tags` 得到刚发布的版本；`tests/version/test_version_contract.bats` 通过（`VERSION` 与 CHANGELOG 唯一当前版本段一致）；远端一句话安装可用。
 
+11. **创建 GitHub Release**：基于已经推送的 `v<x.y.z>` 创建正式 Release（非 draft、非 prerelease），不得仅打 tag 就宣称 Release 已发布。说明以本版 CHANGELOG 和实际 diff 为依据，按新增、优化、修复、文档等适用分类写清用户影响、升级方式、兼容性和未验证项；不将历史或未执行检查写成本次通过。使用 `gh release create v<x.y.z> --verify-tag --title "SuperSpecFlow <x.y.z>" --notes-file <说明文件>`；正文放文件，保留换行。若该版本已有 Release，先读回状态，按授权更新说明，不重复创建或移动 tag。完成后读回 URL、tag、标题、正文与公开状态，并提供链接。
+
+Tag 固定该版对应的源码提交，是定位、比较和回滚的依据；Release 依附该 tag，承载用户可读的更新说明与 GitHub 源码下载入口。两者互补，不能用可编辑的说明代替固定版本引用，也不默认需要另行上传二进制附件。
+
 ## 回滚
 
 - 上一个 tag 即回滚点，发布时不要删旧 tag。

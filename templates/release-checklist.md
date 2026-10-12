@@ -13,6 +13,8 @@
 7. **回合并 develop**：`git checkout develop && git merge --no-ff master`，让 master 侧提交（含 tag 指向的合并提交）成为 develop 祖先，保证 `git describe --tags` 在 develop 上也能得到正确版本号。同一远端 develop 推送已获授权时执行 `git push origin develop`，否则报告待授权同步。
 8. **读回**：核对远端 develop、master 与 tag 引用与本地发布结果一致，再按发布策略验证安装结果；仅本地检查通过不能宣称远端同步完成。
 
+9. **GitHub Release**：基于已推送的 tag 创建正式 Release；说明新增、优化、修复、升级方式和未验证项，已有同名版本先读回再按授权更新。读回 URL、tag、标题、正文及非草稿、非预发布状态，交付可访问链接。Tag 固定源码，Release 承载面向用户的说明，二者都保留。
+
 版本档位判定见 [版本与发布策略](../docs/release-policy.md)。
 
 ## 变更与风险

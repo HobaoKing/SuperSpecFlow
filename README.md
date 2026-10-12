@@ -1,5 +1,7 @@
 # SuperSpecFlow
 
+[最新 Release](https://github.com/HobaoKing/SuperSpecFlow/releases/latest) · [3.0.5 更新说明](https://github.com/HobaoKing/SuperSpecFlow/releases/tag/v3.0.5) · [完整变更记录](CHANGELOG.md)
+
 一个薄入口，加按需工程 skills。明确的小修复直接做；普通功能在会话里对齐目标后实现、验证；跨模块或跨会话工作只维护一份计划。
 
 不依赖 OpenSpec 或 Superpowers，不要求 Spec ID、阶段签字、issue tracker、多 agent 或自动提交。
@@ -15,6 +17,15 @@
 | 支付、权限、迁移、发布 | 根据实际影响补充负向验证、恢复和观测措施 |
 
 会话授权持续有效，普通技术和测试选择由 agent 自主处理。提交、远端写入、发布、删除、权限、凭据和费用仍遵守实际授权范围。
+
+## 3.0.5 更新亮点
+
+- **性能问题按证据优化**：从慢请求、列表查询、交互卡顿或资源增长选择测量入口，按相同输入和缓存条件比较收益，同时保留权限、租户、顺序与失败恢复等行为。
+- **业务含义先对齐**：需求、字段和代码冲突时，核对有效约定及边界场景，例如取消是否退款、历史开通是否代表当前访问权，保留必要的旧协议映射。
+- **自然语言入口更准确**：事实解释直接回答；实现附带的基础自测沿用 build，专项验收使用 QA；续接只读任务时，新增测试也受“不改文件”限制。
+- **评估证据更完整**：增加中文表达、连续意图切换、压缩续接、浏览器、契约、幂等、队列、回填、可观测性和过载恢复场景；独立核验器拒绝空跑或缺项，命令记录器保留失败、超时及输入摘要。
+
+仍使用原有七个入口与安装方式。专项参考按需读取，评估工具供维护者选择运行，不进入普通任务的默认流程。3.0.5 从 3.0.3 升级，未发布 3.0.4；本次按维护者要求不重跑发布验证，历史演练的证据与限制见 [评估记录](docs/plans/skill-effectiveness.md)，不能据此宣称跨模型稳定收益或生产验收通过。
 
 ## 怎么知道 skill 有没有用
 
@@ -48,7 +59,7 @@ curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scri
 curl -fsSL https://raw.githubusercontent.com/HobaoKing/SuperSpecFlow/master/scripts/bootstrap.sh | bash -s -- --antigravity-only
 ```
 
-重复执行同一条命令即更新到 master 最新发布：脚本会更新 `~/.superspecflow` 检出并重装，归本包所有但被你改过的文件会跳过并提示。目标参数需已在 master 发布；试用未发布能力用 `SUPERSPECFLOW_BRANCH=develop`，见 [安装说明](docs/installation.md)。
+重复执行同一条命令即更新到 master 最新发布：脚本会更新 `~/.superspecflow` 检出并重装，归本包所有但被你改过的文件会跳过并提示。试用开发分支用 `SUPERSPECFLOW_BRANCH=develop`，见 [安装说明](docs/installation.md)。
 
 ### 本地源码安装
 
@@ -70,15 +81,28 @@ bash scripts/install-global.sh --all
 |---|---|
 | `/ssf-think` | 找到实际问题，核对能推翻方案的前提，比较可行选择并推荐 |
 | `/ssf-plan` | 将目标拆成可验证的完整小步，安排依赖与高风险验证 |
-| `/ssf-build` | 先复用再实现，核对契约；用行为测试和根因证据推动修复 |
+| `/ssf-build` | 先复用再实现，核对契约；按需采用 TDD、根因定位与性能测量 |
 | `/ssf-review` | 检查需求与正确性，按影响核查数据/权限/状态风险并排除误报 |
-| `/ssf-qa` | 按风险选择测试层次与真实旅程，验证边界、恢复和最终状态 |
+| `/ssf-qa` | 专项验收按风险验证旅程、边界、恢复和最终状态，遵守只读限制 |
 | `/ssf-git` | 组织行为完整的提交，保护混合暂存区，核验合并和远端结果 |
 | `/ssf-ship` | 核对候选证据、新旧兼容、恢复条件；按授权发布并读回 |
 
 已接入项目可直接使用自然语言，按意图选最直接的 skill；明确修复无需先走讨论、计划、独立审查流程。复合任务按已有授权续接。只读适用参考，复用未变化的规则和有效证据，不自动刷新安装、重复评审或无依据重跑检查；简短报告不省略必要交付。
 
 用户已经要求“计划后直接实现”或已授权后续操作时，继续完成同一范围内的任务；“只讨论”“只计划”“只评估”则停在相应交付。计划按用户指定路径或已有文件维护，普通修复不因有多个步骤就生成计划。
+
+### 自然语言示例
+
+直接描述目标和限制即可，不必记住命令或先走完全部入口：
+
+| 你可以这样说 | 对应处理 |
+|---|---|
+| “保存失败后额度没返还，修好并验证重试。” | 定位首次与重试入口，修复并完成基础自测 |
+| “列表越来越慢，找出原因并优化，权限逻辑保持。” | 测量查询与等待成本，定位瓶颈，同条件复测 |
+| “取消订单和退款在这份需求里是什么关系？” | 已有约定明确时直接解释；存在业务取舍时再讨论 |
+| “只验收下载流程，不修改任何项目文件。” | 只读核验并报告问题，新增测试也不写入项目 |
+| “根据现有计划继续，保留我的其他改动。” | 核对当前状态，沿用唯一计划和既有授权续接 |
+| “提交当前改动并发布版本，写清更新说明。” | 按宿主流程提交、发布并读回版本与 Release 状态 |
 
 ## 方法来源
 
@@ -94,11 +118,13 @@ bash scripts/install-global.sh --all
 
 计划生成脚本与计划、QA、发布模板随所属 skill 安装，资源路径相对于该 skill 的 `SKILL.md`；单独调用不依赖宿主项目存在 `templates/` 或已接入全局规则。计划、QA 公共模板与 skill 的 assets 副本由包校验保持一致。`skills/ssf-ship/assets/release-checklist.md` 是遵循宿主机制的通用模板；`templates/release-checklist.md` 保留本项目固定发布步骤，与 `docs/release-policy.md` 共同约束本项目发布。
 
+行为评估的场景准备、专项核验与命令证据工具位于 `tests/behavior/`；fixture 生成成功不等于模型执行通过，合成场景也不代表生产或真机验收。
+
 脚本与结构测试之外，按需使用 [Skills 行为验证](tests/behavior/README.md) 检查真实任务中的选择、续接、授权和证据边界；其结果与确定性测试分开记录。
 
 ## 参与开发与发布
 
-功能提交在 `develop` 上累积，`master` 只通过发布合并提交前进（远端一句话安装拉取 master）。commit / PR 标题使用 `<英文类型>(<英文范围>): <中文摘要>`。版本档位判定树、发布顺序（Unreleased 归档 → VERSION bump → 发布提交 → 合入 master → tag → 推送 → 回合并 develop）、回滚方式见 [版本与发布策略](docs/release-policy.md)；分支与提交约定见 [分支与提交](docs/branching-strategy.md)。`major` 只在破坏既有契约时使用，`minor` 用于新增一类能力面（新宿主、新 skill、改变默认行为的 flag），`patch` 用于修复、文档和内部调整；发布提交只改 `CHANGELOG.md` 与 `VERSION`，`--no-ff` 合入 `master` 后按 `v<x.y.z>` 打 tag。各版本变更记录见 [CHANGELOG](CHANGELOG.md)。
+功能提交在 `develop` 上累积，`master` 只通过发布合并提交前进（远端一句话安装拉取 master）。commit / PR 标题使用 `<英文类型>(<英文范围>): <中文摘要>`。版本档位判定树、发布顺序（Unreleased 归档 → VERSION bump → 发布提交 → 合入 master → tag → 推送 → 回合并 develop）、回滚方式见 [版本与发布策略](docs/release-policy.md)；分支与提交约定见 [分支与提交](docs/branching-strategy.md)。`major` 只在破坏既有契约时使用，`minor` 用于新增一类能力面（新宿主、新 skill、改变默认行为的 flag），`patch` 用于修复、文档和内部调整；发布提交只改 `CHANGELOG.md` 与 `VERSION`，`--no-ff` 合入 `master` 后按 `v<x.y.z>` 打 tag。随后基于该 tag 创建正式 [GitHub Release](https://github.com/HobaoKing/SuperSpecFlow/releases)，说明新增、优化、修复、升级方式与已知限制。Tag 固定源码提交，Release 提供版本说明和源码下载入口；两者共同构成可追溯的发布。各版本变更记录见 [CHANGELOG](CHANGELOG.md)。
 
 提交忽略由具体仓库的 `.gitignore` 和仓库级校验负责，不放进可复用 skill、路由或 hook。
 
