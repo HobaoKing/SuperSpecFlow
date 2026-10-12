@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>通知设置 · 测试</title>
+<style>
+body{font:18px system-ui;margin:0;background:#f5f7fa;color:#14213d}main{max-width:700px;margin:48px auto;padding:24px;background:white;border-radius:16px}label,select,button{display:block;margin:20px 0}select,button{font:inherit;padding:12px}button{background:#234aca;color:white;border:0;border-radius:8px}footer{padding:24px;background:#e3eaff}#status{min-height:40px}input{width:22px;height:22px}
+@media(max-width:480px){main{margin:0;min-height:calc(100vh - 48px)}button{position:fixed;bottom:20px;left:24px;right:24px}footer{position:fixed;bottom:0;left:0;right:0;height:82px;z-index:2}}
+</style>
+<main><h1>通知设置</h1><label for="account">测试账号</label><select id="account"><option value="restricted">受限账号</option><option value="member">成员账号</option></select>
+<label><input id="enabled" type="checkbox"> 接收通知</label><p id="current">正在加载</p><p id="status" role="status"></p><button id="save">保存设置</button></main>
+<footer>说明：设置仅用于本地测试。</footer>
+<script>
+const account=document.querySelector('#account'), enabled=document.querySelector('#enabled'), status=document.querySelector('#status');
+// 按当前选中的测试账号读回服务端状态，并更新开关与状态文案。
+async function load(){const data=await fetch('/api/settings?account='+account.value).then(r=>r.json());enabled.checked=data.enabled;document.querySelector('#current').textContent='服务端当前状态：'+(data.enabled?'开启':'关闭');status.textContent='';}
+// 提交设置后显示完成提示；当前夹具保留候选实现，供验收执行者判断行为。
+async function save(){status.textContent='正在保存';await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account:account.value,enabled:enabled.checked})});status.textContent='保存成功';}
+account.addEventListener('change',load);document.querySelector('#save').addEventListener('click',save);load();
+</script></html>

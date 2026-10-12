@@ -14,6 +14,8 @@
 
 改变接口或共享规则前，核对输入的空值、缺省值、单位、有效范围，输出的状态与错误语义，以及谁负责副作用和失败恢复。复用项目已有类型、错误模型、校验与事务边界，不自建第二套体系。
 
+需求、字段名与代码含义冲突时，先用当前有效约定区分业务状态和兼容表示。例如“取消”是否退款、“已开通”是否有当前访问权，不能仅凭名称推导；用会影响结果的输入核对状态转移及副作用。已有答案直接落实到公开入口和断言，保留旧协议需要的映射；仅对仍无法判断的实质业务取舍询问，不做全仓改名或另建术语文档。
+
 沿调用方检查兼容性：新枚举值是否影响存储、过滤、展示与历史数据；字段从可选改为必填是否破坏旧调用；错误改成空结果是否让调用方误判成功。仅类型检查通过不足以证明这些语义一致。
 
 对会重试或异步完成的操作，明确一个业务意图怎样标识、何时算完成、哪些资源需要释放、过期响应属于哪次请求。服务端已完成但客户端超时属于结果未知，先查证状态；不能直接生成新意图再重试，也不能把重复完成当成第二次授权。
@@ -31,3 +33,5 @@
 方法参考：[ECC search-first](https://github.com/affaan-m/ECC/blob/4eb71d92a39cab44ad40ac9d8a6a5ccb4029d6c2/skills/search-first/SKILL.md)、[agent-skills incremental-implementation](https://github.com/addyosmani/agent-skills/blob/1be8e34187e34647bb83adc3a1323b26ae6f6abe/skills/incremental-implementation/SKILL.md) 与 [api-and-interface-design](https://github.com/addyosmani/agent-skills/blob/1be8e34187e34647bb83adc3a1323b26ae6f6abe/skills/api-and-interface-design/SKILL.md)。本文独立编写，保留选择与验证方法，不引入默认安装、自动提交或强制构建。
 
 补充借鉴 [ECC iterative-retrieval](https://github.com/affaan-m/ECC/blob/4eb71d92a39cab44ad40ac9d8a6a5ccb4029d6c2/skills/iterative-retrieval/SKILL.md) 的按缺口收敛、[agent-skills code-simplification](https://github.com/addyosmani/agent-skills/blob/1be8e34187e34647bb83adc3a1323b26ae6f6abe/skills/code-simplification/SKILL.md) 的删除前理解与行为保持、[Matt Pocock codebase-design](https://github.com/mattpocock/skills/blob/49dd158d1076134a641b33efb035946536778336/skills/engineering/codebase-design/SKILL.md) 的调用方复杂性判断。不限固定检索轮数，不要求分拆 PR 或新建接口。
+
+业务含义与代码对照参考 [Matt Pocock domain-modeling](https://github.com/mattpocock/skills/blob/49dd158d1076134a641b33efb035946536778336/skills/engineering/domain-modeling/SKILL.md)；此处只保留实现时的状态、副作用与兼容检查。

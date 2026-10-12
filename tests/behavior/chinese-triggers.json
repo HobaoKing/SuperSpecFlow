@@ -1,0 +1,22 @@
+{
+  "zh-fix": {"base": "build", "request": "下载次数都用完了还能点下载，直接处理一下，顺便确认没影响正常下载。", "expected": ["ssf-build"]},
+  "zh-review": {"base": "review", "request": "这段额度逻辑帮我挑毛病，先只说问题，别动文件。", "expected": ["ssf-review"]},
+  "zh-qa": {"base": "qa", "request": "查一下现在零次数、负次数和正常次数各是什么结果，只验一下，别修，也别开服务。", "expected": ["ssf-qa"]},
+  "zh-plan": {"base": "plan", "request": "先把零次数还能下载这件事怎么处理写到 notes/quota-plan.md，列清楚怎么知道修好了，这轮先不动实现。", "expected": ["ssf-plan"]},
+  "zh-think": {"base": "think", "request": "剩余次数等于零时该怎么设计比较合理？先聊取舍，不动代码也不写文档。", "expected": ["ssf-think"]},
+  "zh-git": {"base": "git", "request": "前面已经同意把 quota.py 这次修正存进本地版本记录，接着办完就好，别上传。notes.txt 是另一项已暂存工作，保留它。", "expected": ["ssf-git"]},
+  "zh-release-assess": {"base": "ship-assess", "request": "帮我判断现在这版能不能上测试环境，给出依据，这轮别真的上线。", "expected": ["ssf-ship"]},
+  "zh-plan-do": {"base": "plan-build", "request": "把零次数还能下载的处理安排写到 notes/quota-plan.md，然后接着修好并验一下，不用停下来等我。", "expected": ["ssf-plan", "ssf-build"]},
+  "zh-explain": {"base": "plain-question", "request": "大于零和大于等于零有什么区别？拿下载次数打个比方就行。", "expected": []},
+  "zh-wording": {"base": "plain-question", "request": "把“修复零额度仍可下载的问题”改成一句简短的提交说明。只回复这句话，不读写项目，也不要执行提交。", "expected": []},
+  "zh-fix-regression": {"base": "build", "request": "零次还让下载，帮我改掉；改完把现有测试过一遍就行。", "expected": ["ssf-build"]},
+  "zh-fix-test-first": {"base": "build", "request": "先用测试把零额度还能下载复现出来，再修好，最后确认有次数时照常能用。", "expected": ["ssf-build"]},
+  "zh-fix-recovery": {"base": "recovery-build", "request": "保存文件失败后重试就说没次数了，帮我修到能恢复；顺便自测失败不扣次数、成功只扣一次。", "expected": ["ssf-build"]},
+  "zh-qa-boundaries": {"base": "qa", "request": "帮我实际验一下下载次数的边界：负数、零、正常值。只给验收结果，别改实现。", "expected": ["ssf-qa"]},
+  "zh-qa-bug-report": {"base": "build", "request": "我怀疑零次还能下载。请跑一下现有测试确认，失败也只报告，这轮不要修。", "expected": ["ssf-qa"]},
+  "zh-qa-regression": {"base": "qa", "request": "代码已经改好了，这次单独做回归，确认零次和负数都拦住、正数仍能下载，不要再调整代码。", "expected": ["ssf-qa"]},
+  "zh-question-testing": {"base": "plain-question", "request": "“修完顺手自测”和“单独做专项验收”有什么区别？两句话解释就行。", "expected": []},
+  "zh-question-snippet": {"base": "plain-question", "request": "只看这段表达式 remaining >= 0：remaining 是 0 时为什么为真？如果业务要求零次不能下载，应该怎样理解这个边界？", "expected": []},
+  "zh-question-wording": {"base": "plain-question", "request": "把“修复下载额度并测试正常流程”改成一句更自然的中文，只回复改写后的句子。", "expected": []},
+  "zh-qa-then-fix": {"base": "build", "request": "先做一次独立验收，检查下载额度的零、负数、正数；如果确实有问题，这轮也授权你直接修复，再按原用例复验。", "expected": ["ssf-qa"], "allowed": ["ssf-qa", "ssf-build"]}
+}
