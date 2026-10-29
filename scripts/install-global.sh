@@ -211,7 +211,7 @@ copy_file_safe() {
   install_staged_capability "$src" "$target" "$manifest" F
 }
 
-# 重装目录前核对当前包标记与最新校验值；含软链或特殊文件时跳过，保留旧版校验兼容性。
+# 重装目录前核对归属标记与最新校验值；未修改能力在切换源码检出路径时平滑迁移归属，含软链或特殊文件时跳过。
 # $1 源目录，$2 安装目标，$3 宿主 manifest；暂存验证通过后同步整个目录并登记归属及最终读回。
 copy_dir_safe() {
   local src="$1"
@@ -227,8 +227,8 @@ copy_dir_safe() {
       return 0
     fi
     if current="$(dir_checksum "$target")" &&
-       [ -f "$marker" ] &&
-       grep -Fxq "$REPO_ROOT" "$marker" &&
+       [ -s "$marker" ] &&
+       [ ! -L "$marker" ] &&
        manifest_checksum_matches "$manifest" "D" "$current" "$target"; then
       : # 验证通过，旧目录仅在新内容暂存校验后替换。
     else
