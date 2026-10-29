@@ -1,6 +1,6 @@
 # SuperSpecFlow
 
-[最新 Release](https://github.com/HobaoKing/SuperSpecFlow/releases/latest) · [3.0.5 更新说明](https://github.com/HobaoKing/SuperSpecFlow/releases/tag/v3.0.5) · [完整变更记录](CHANGELOG.md)
+[最新 Release](https://github.com/HobaoKing/SuperSpecFlow/releases/latest) · [3.0.6 更新说明](https://github.com/HobaoKing/SuperSpecFlow/releases/tag/v3.0.6) · [完整变更记录](CHANGELOG.md)
 
 一个薄入口，加按需工程 skills。明确的小修复直接做；普通功能在会话里对齐目标后实现、验证；跨模块或跨会话工作只维护一份计划。
 
@@ -18,14 +18,13 @@
 
 会话授权持续有效，普通技术和测试选择由 agent 自主处理。提交、远端写入、发布、删除、权限、凭据和费用仍遵守实际授权范围。
 
-## 3.0.5 更新亮点
+## 3.0.6 更新亮点
 
-- **性能问题按证据优化**：从慢请求、列表查询、交互卡顿或资源增长选择测量入口，按相同输入和缓存条件比较收益，同时保留权限、租户、顺序与失败恢复等行为。
-- **业务含义先对齐**：需求、字段和代码冲突时，核对有效约定及边界场景，例如取消是否退款、历史开通是否代表当前访问权，保留必要的旧协议映射。
-- **自然语言入口更准确**：事实解释直接回答；实现附带的基础自测沿用 build，专项验收使用 QA；续接只读任务时，新增测试也受“不改文件”限制。
-- **评估证据更完整**：增加中文表达、连续意图切换、压缩续接、浏览器、契约、幂等、队列、回填、可观测性和过载恢复场景；独立核验器拒绝空跑或缺项，命令记录器保留失败、超时及输入摘要。
+- **专家方法落实到操作**：从任务相关的原始材料出发，检查遗漏、实际执行专业方法，并给出外部判据的结果或明确缺口。
+- **简单实现与范围控制**：输入在入口校验，内部使用约定类型；简单单次逻辑内联，异常按实际处理需要捕获。推测性加固先说明故障、概率依据及代码和维护成本，由用户决定是否加入。
+- **安装与门禁修复**：支持未修改技能跨源码路径重装，补齐技能体积预算、资源链接与 frontmatter 检查，修正并发评估器对合法持锁实现的误报。
 
-仍使用原有七个入口与安装方式。专项参考按需读取，评估工具供维护者选择运行，不进入普通任务的默认流程。3.0.5 从 3.0.3 升级，未发布 3.0.4；本次按维护者要求不重跑发布验证，历史演练的证据与限制见 [评估记录](docs/plans/skill-effectiveness.md)，不能据此宣称跨模型稳定收益或生产验收通过。
+仍使用原有七个入口与安装方式，无新增运行时依赖或数据迁移。专项参考按需读取，评估工具供维护者选择运行，不进入普通任务的默认流程。详细变更见 [变更记录](CHANGELOG.md)，实际评估与发布前检查见 [评估记录](docs/plans/skill-effectiveness.md)；有限合成场景不代表跨模型稳定收益、生产验收或第三方认证。
 
 ## 怎么知道 skill 有没有用
 
@@ -115,6 +114,8 @@ bash scripts/install-global.sh --all
 ## 维护
 
 `routing/default.routing.md` 是规则源，公开的 AGENTS / CLAUDE / GEMINI routing 文件与它一致。`skills/` 负责工程方法，`commands/` 提供命令入口，`templates/` 提供可选模板。
+
+本仓库 skill 的 `description` 使用单行无引号文本；包校验拒绝 YAML 块、多行续写及引用表示，再按字段值检查 1024 字节预算。该约定不依赖额外的 YAML 解析库。
 
 计划生成脚本与计划、QA、发布模板随所属 skill 安装，资源路径相对于该 skill 的 `SKILL.md`；单独调用不依赖宿主项目存在 `templates/` 或已接入全局规则。计划、QA 公共模板与 skill 的 assets 副本由包校验保持一致。`skills/ssf-ship/assets/release-checklist.md` 是遵循宿主机制的通用模板；`templates/release-checklist.md` 保留本项目固定发布步骤，与 `docs/release-policy.md` 共同约束本项目发布。
 

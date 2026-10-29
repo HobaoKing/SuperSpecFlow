@@ -1,0 +1,1 @@
+test_refresh_publishes_new_snapshot 在 CI 上偶发失败（日志见 README），本地大多能过。请查清原因并修复，给出可信的验证。

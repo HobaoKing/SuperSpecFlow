@@ -106,3 +106,19 @@ install_claude() {
   [ -L "$target" ]
   cmp "$HOME_DIR/before" "$HOME_DIR/user-command.md"
 }
+
+@test "跨源码检出路径重装时未修改的 skill 平滑迁移归属且不产生脑裂" {
+  install_claude
+  other_pack="$(ssf_make_tmp_repo_fixture)"
+  printf '\n# relocated checkout update\n' >> "$other_pack/skills/ssf-review/SKILL.md"
+  run env HOME="$HOME_DIR" bash "$other_pack/scripts/install-global.sh" --claude-only --yes
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"skipped"* ]]
+  grep -Fxq "$other_pack" "$HOME_DIR/.claude/superspecflow/pack-root"
+  grep -Fxq "$other_pack" "$HOME_DIR/.claude/skills/ssf-review/.superspecflow-installed"
+  grep -Fxq '# relocated checkout update' "$HOME_DIR/.claude/skills/ssf-review/SKILL.md"
+  run env HOME="$HOME_DIR" bash "$other_pack/scripts/doctor.sh" --claude-only
+  ssf_cleanup_tmp "$other_pack"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *'待处理项：0'* ]]
+}

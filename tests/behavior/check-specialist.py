@@ -28,6 +28,8 @@ def expected_checks(case):
                           "failure-counters", "recovery", "cache", "tenant-isolation", "privacy"},
         "overload-recovery": {"bounded-admission", "pending-idempotency", "cancel", "retry-after", "tick-budget",
                               "drained", "outcomes", "effects", "completed-idempotency", "backoff", "fairness"},
+        "flaky-refresh": {"initial-snapshot", "failed-fetch-preserves", "atomic-first-publish",
+                          "atomic-second-publish", "slow-fetch-completion", "unit-suite-passes"},
     }[case]
 
 
@@ -40,6 +42,7 @@ def input_errors(case, project):
         "backfill-ledger": ("store.py",),
         "observability": (),
         "overload-recovery": ("gateway.py",),
+        "flaky-refresh": (),
     }[case]
     origin = Path(__file__).with_name("specialist-fixtures") / case
     errors = []
@@ -341,17 +344,157 @@ def overload_checks():
     return results
 
 
+# 用受控拉取与独立读线程核对原子快照，允许读取等待持锁刷新完成，不额外要求非阻塞读取。
+def flaky_refresh_checks():
+    import re
+    import subprocess
+    from refresher import Refresher
+    results = {}
+    record(results, "initial-snapshot", lambda: Refresher(lambda: ["x"]).snapshot() == (0, None))
+
+    stage = {"step": 1}
+    entered1, release1 = threading.Event(), threading.Event()
+    entered2, release2 = threading.Event(), threading.Event()
+
+    # 按阶段返回受控生成器或抛出异常，仅通过公开构造参数驱动多次刷新。
+    def staged_fetch():
+        current = stage["step"]
+        if current == 1:
+            # 首次刷新在迭代条目时暂停，供测试线程观测是否提前暴露了半成品版本号。
+            def first_items():
+                entered1.set()
+                if not release1.wait(0.5):
+                    raise TimeoutError("first probe timeout")
+                yield "B "
+                yield " a"
+
+            return first_items()
+        if current == 2:
+            # 第二次刷新在迭代时暂停，确认不会出现新版本号配旧列表的错位快照。
+            def second_items():
+                entered2.set()
+                if not release2.wait(0.5):
+                    raise TimeoutError("second probe timeout")
+                yield " C "
+                yield "D"
+
+            return second_items()
+        if current == 3:
+            raise OSError("upstream unavailable")
+
+        # 第四阶段在迭代中途抛错，确认未完成规范化时不会提前递增版本号或污染已有快照。
+        def broken_items():
+            yield " E "
+            raise OSError("stream interrupted mid-iteration")
+
+        return broken_items()
+
+    refresher = Refresher(staged_fetch)
+    observations = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as readers:
+        for step, entered, release, before, after in (
+            (1, entered1, release1, (0, None), (1, ["b", "a"])),
+            (2, entered2, release2, (1, ["b", "a"]), (2, ["c", "d"])),
+        ):
+            stage["step"] = step
+            worker = refresher.refresh_async()
+            reached = entered.wait(0.5)
+            reading = readers.submit(refresher.snapshot)
+            try:
+                reading.result(timeout=0.01)
+            except concurrent.futures.TimeoutError:
+                pass  # 允许读取被刷新锁阻塞，主线程仍须释放拉取。
+            finally:
+                release.set()
+            worker.join(0.5)
+            observed = reading.result(timeout=0.5)
+            observations[step] = (reached and not worker.is_alive() and
+                                  observed in (before, after) and refresher.snapshot() == after)
+    record(results, "atomic-first-publish", lambda: observations[1])
+
+    # 在刷新线程逐行推进时由独立读线程调用 snapshot，确定性捕获锁外赋值或分次加锁造成的撕裂快照。
+    def line_step_atomic_publish():
+        import inspect
+        refresher_file = inspect.getsourcefile(Refresher)
+        probe = Refresher(lambda: ["V1 "])
+        torn = []
+        futures = []
+        pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        pool.submit(lambda: None).result()
+
+        # 刷新线程每推进一行源码，若读线程空闲则发起一次快照读取；持锁期间读线程自然阻塞至解锁。
+        def trace_lines(frame, event, _arg):
+            if event == "line" and frame.f_code.co_filename == refresher_file and frame.f_code.co_name != "snapshot":
+                if not futures or futures[-1].done():
+                    futures.append(pool.submit(probe.snapshot))
+                try:
+                    ver, val = futures[-1].result(timeout=0.003)
+                    if (ver, val) not in ((0, None), (1, ["v1"])):
+                        torn.append((ver, val))
+                except concurrent.futures.TimeoutError:
+                    pass
+            return trace_lines
+
+        threading.settrace(trace_lines)
+        try:
+            worker = probe.refresh_async()
+            worker.join(0.5)
+        finally:
+            threading.settrace(None)
+            for fut in futures:
+                try:
+                    ver, val = fut.result(timeout=0.5)
+                    if (ver, val) not in ((0, None), (1, ["v1"])):
+                        torn.append((ver, val))
+                except Exception as err:
+                    torn.append(err)
+            pool.shutdown(wait=True)
+        return not torn and probe.snapshot() == (1, ["v1"])
+
+    record(results, "atomic-second-publish",
+           lambda: observations[2] and line_step_atomic_publish())
+
+    stage["step"] = 3
+    refresher.refresh_async().join(0.5)
+    after_call_error = refresher.snapshot()
+    stage["step"] = 4
+    refresher.refresh_async().join(0.5)
+    after_iter_error = refresher.snapshot()
+    record(results, "failed-fetch-preserves",
+           lambda: after_call_error == (2, ["c", "d"]) and after_iter_error == (2, ["c", "d"]))
+
+    # 模拟慢于 10ms 的拉取，确认通过返回线程 join 后可稳定读到新快照。
+    def slow_fetch():
+        time.sleep(0.025)
+        return [" Slow "]
+
+    slow = Refresher(slow_fetch)
+    slow.refresh_async().join(0.5)
+    record(results, "slow-fetch-completion", lambda: slow.snapshot() == (1, ["slow"]))
+
+    suite = subprocess.run(
+        [sys.executable, "-B", "-m", "unittest", "discover", "-s", sys.path[0], "-v"],
+        cwd=sys.path[0], capture_output=True, text=True, timeout=10,
+    )
+    ran_match = re.search(r"^Ran (\d+) tests?\b", suite.stderr, re.M)
+    record(results, "unit-suite-passes",
+           lambda: suite.returncode == 0 and ran_match is not None and
+           int(ran_match.group(1)) >= 2 and "skipped=" not in suite.stderr)
+    return results
+
+
 # 一个进程只加载一个项目；候选主动退出也算未完成，避免零退出码掩盖未执行检查。
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("case", choices=("wire-api", "payment-retry", "queue-worker", "backfill-ledger",
-                                        "observability", "overload-recovery"))
+                                        "observability", "overload-recovery", "flaky-refresh"))
     parser.add_argument("project", type=Path)
     args = parser.parse_args()
     sys.path.insert(0, str(args.project.resolve()))
     checks = {"wire-api": wire_checks, "payment-retry": payment_checks,
               "queue-worker": queue_checks, "backfill-ledger": backfill_checks,
-              "observability": observability_checks, "overload-recovery": overload_checks}
+              "observability": observability_checks, "overload-recovery": overload_checks,
+              "flaky-refresh": flaky_refresh_checks}
     errors = input_errors(args.case, args.project)
     try:
         results = {} if errors else checks[args.case]()

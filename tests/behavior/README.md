@@ -32,10 +32,12 @@
 | wire-api | 计划后继续修复真实 JSON 的大 ID、缺省/null、错误与 v1 枚举；保持共享契约和消费者约束 |
 | payment-retry | 同键异载荷、并发、响应丢失、服务重建与七天重投递均守住一次业务意图；不同租户隔离 |
 | review-gates | 找出 CI 吞失败及 skip 掩盖原缺陷，反证等价参数化迁移；只审查不修复 |
+| review-state-kinds | 找出共用结算分支下 deactivate 误删记录、同值 replace 破坏幂等及未覆盖类型；不误报新增 archive；只审查不修复 |
 | queue-worker | 用用户端到端等待、队列年龄/积压检查持续与突发输入；不靠丢任务、超下游容量或改统计口径提速 |
 | backfill-ledger | 总数相同时仍核对唯一源键、金额与租户；有界分页、真实数据库中断续跑、新增记录和水位正确 |
 | observability | 用真实线程区分调用者、缓存、合并与下游调用，成功/失败/恢复计数守恒；不泄漏凭据、内容或异常原文 |
 | overload-recovery | 有界准入、满载明确拒绝、原键重试、限流等待、503 退避、取消、永久失败和恢复排空；不以模拟 tick 宣称真实延迟改善 |
+| flaky-refresh | 定位 version/value 非原子发布与测试固定 sleep 竞争，修复原子快照并消除脆弱等待 |
 
 核验实际文件、Git diff/log/index、测试输出及部署状态，并读取模型报告。把结果写入当前任务计划，记录使用的 skill 版本、环境、场景数及未覆盖范围，同时记录实际选用的入口、参考读取、验证次数和额外确认。优先定向检查本次行为变化，不为覆盖率重复全套模型采样；没有实际计量不报告 token 节省比例。失败先分析是规则、实现、fixture 还是模型偏离，再修复并复验；不能靠增加答案提示让原场景变绿。
 
@@ -118,6 +120,21 @@ python3 -B tests/behavior/create-fixtures.py /tmp/ssf-complex --case search-larg
 
 性能与业务语义方法比较复用 `--skills-from` 的旧版对照，按需选择 `performance-list`、`business-cancel`、`business-discuss`，用 `terse-build` 检查普通任务是否额外读取专项或创建流程文件。性能执行者实际运行 `benchmark.py`；评估者对原始实现和两组结果再用相同脚本交错复测，分别记录查询次数和耗时分布，核验脚本/Store 未改及行为保持。每次查询的 0.5 ms 是人为模拟往返，不得外推生产延迟；“夹具优化有效”与“新技能优于旧技能”分别判断。文本字符/字节增量、实际读取参考可以说明上下文负担，但没有宿主用量数据时不能换算为 token 或节省百分比。
 
+`performance-list` 的原实现为重复 ID 返回独立字典。评估者除比较返回值外，还应核对调用者修改一项时另一项是否保持；只对 JSON 或列表做值比较会漏掉批量优化引入的可变对象共享。以下探针从原始项目和每份候选的公开入口分别运行，不复制给执行者，不要求所有项目统一采用同一种对象所有权规则：
+
+```python
+store = Store()
+try:
+    rows = list_documents(store, 'alpha', [1, 1])
+    rows[0]['title'] = 'caller edit'
+    assert rows[1] == {'id': 1, 'title': 'alpha-1'}
+    assert list_documents(store, 'alpha', [1]) == [{'id': 1, 'title': 'alpha-1'}]
+finally:
+    store.close()
+```
+
+若检查是在查看产物后补充，单独标为追加观察，保留原先的主评分与失败样本；后续用同输入的新会话复验，不把一次发现差异当成技能的稳定增益。
+
 ## 五组专项验证
 
 `specialist-fixtures/` 保存原始项目，`specialist-cases.py` 读取其中的 request 和文件；`changes/` 仅在初始提交后应用，不以该目录复制给模型。契约、幂等、验证标准、队列/回填四组使用五个专项项目；第五组自然触发复用这些请求以及 `plain-question`、`terse-build`。总共七次独立模型执行即可覆盖本轮组合，不必为每个入口重复跑一遍。
@@ -129,6 +146,6 @@ python3 -B tests/behavior/create-fixtures.py /tmp/ssf-specialist --case wire-api
 python3 -B tests/behavior/check-specialist.py wire-api /tmp/ssf-specialist/wire-api
 ```
 
-核验器也支持 `payment-retry`、`queue-worker`、`backfill-ledger`，每个进程仅加载一个项目。它校验公开行为，不代替执行记录、只读范围、测量文件完整性、注释及读取有界性的复核。审查场景由评估者核对发现、反证误报，并比较项目原始文件及 diff；可在内存恢复跳过的测试或在 shell 执行器边界注入失败，不能在只读项目写入故障。
+核验器也支持 `payment-retry`、`queue-worker`、`backfill-ledger`、`observability`、`overload-recovery`、`flaky-refresh`，每个进程仅加载一个项目。它校验公开行为，不代替执行记录、只读范围、测量文件完整性、注释及读取有界性的复核。审查场景由评估者核对发现、反证误报，并比较项目原始文件及 diff；可在内存恢复跳过的测试或在 shell 执行器边界注入失败，不能在只读项目写入故障。
 
 队列时间是固定时钟的 tick，支付网关是受控替身，回填使用本机 SQLite；没有覆盖真实支付、分布式进程持久化、数据库集群和生产负载。重建 Service 不等于完整进程崩溃恢复。此批模型读取的是明确写出的项目契约，因此不能外推规格缺失时仍能自行发现所有规则。原始项目应在独立核验器中暴露预设缺陷；Bats 只验证这一事实和输入可比，不把生成及检查夹具冒充模型通过。

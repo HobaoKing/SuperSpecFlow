@@ -63,17 +63,16 @@ record_manifest() {
   mv "$tmp" "$manifest"
 }
 
-# 校验已记录目标可否安全移除：拒绝软链，目录还必须带当前包的归属标记且可完整校验。
-# $1 类型 F/D，$2 最新安装 checksum，$3 目标；返回 0 才允许删除，否则保留用户内容。
+# 校验已记录目标可否安全替换或移除：拒绝软链，目录还必须带非空归属标记且与最新清单校验值一致。
+# $1 类型 F/D，$2 最新安装 checksum，$3 目标；返回 0 才允许替换或删除，否则保留用户内容。
 owned_target_matches() {
   local kind="$1" checksum="$2" target="$3" current
   [ ! -L "$target" ] || return 1
   if [ "$kind" = F ] && [ -f "$target" ]; then
     current="$(file_checksum "$target")" || return 1
   elif [ "$kind" = D ] && [ -d "$target" ]; then
-    [ -f "$target/.superspecflow-installed" ] || return 1
+    [ -s "$target/.superspecflow-installed" ] || return 1
     [ ! -L "$target/.superspecflow-installed" ] || return 1
-    grep -Fxq "$REPO_ROOT" "$target/.superspecflow-installed" || return 1
     current="$(dir_checksum "$target")" || return 1
   else
     return 1
