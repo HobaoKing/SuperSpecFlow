@@ -4,6 +4,12 @@ All notable SuperSpecFlow package changes are recorded here.
 
 版本定档规则、发布流程与回滚方式见 [版本与发布策略](docs/release-policy.md)。未发布条目先记在下面的 `[Unreleased]` 段，发布时整体归档为带日期的版本段。
 
+## [Unreleased]
+
+### Fixed
+
+- 修正跨源码路径重装测试：核对实际安装结果，避免把正常提示中的 `skipped` 当作失败，并在 Bash 3.2 下显式返回失败；不改变 3.0.6 的安装行为或技能内容。
+
 ## [3.0.6] - 2026-10-29
 
 本补丁版本保留七个入口、安装位置、命令参数与按需流程，无新增运行时依赖或数据迁移。

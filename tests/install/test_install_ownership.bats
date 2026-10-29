@@ -107,13 +107,14 @@ install_claude() {
   cmp "$HOME_DIR/before" "$HOME_DIR/user-command.md"
 }
 
+# 正常提示也含 skipped，故核对整体安装结果；显式退出兼容 Bash 3.2 的 [[ ]] 失败语义。
 @test "跨源码检出路径重装时未修改的 skill 平滑迁移归属且不产生脑裂" {
   install_claude
   other_pack="$(ssf_make_tmp_repo_fixture)"
   printf '\n# relocated checkout update\n' >> "$other_pack/skills/ssf-review/SKILL.md"
   run env HOME="$HOME_DIR" bash "$other_pack/scripts/install-global.sh" --claude-only --yes
   [ "$status" -eq 0 ]
-  [[ "$output" != *"skipped"* ]]
+  [[ "$output" == *"Done. Installation verified."* ]] || return 1
   grep -Fxq "$other_pack" "$HOME_DIR/.claude/superspecflow/pack-root"
   grep -Fxq "$other_pack" "$HOME_DIR/.claude/skills/ssf-review/.superspecflow-installed"
   grep -Fxq '# relocated checkout update' "$HOME_DIR/.claude/skills/ssf-review/SKILL.md"
