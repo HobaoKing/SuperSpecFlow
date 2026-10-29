@@ -35,7 +35,7 @@ PY
 
 # 专项资料和未提交候选在有无技能组保持相同，避免评分说明或其他组产物泄漏。
 @test "专项对照包含相同契约故障候选且不包含评估者核验器" {
-  local case_args=(--case wire-api --case payment-retry --case review-gates --case queue-worker --case backfill-ledger --case observability --case overload-recovery)
+  local case_args=(--case wire-api --case payment-retry --case review-gates --case review-state-kinds --case queue-worker --case backfill-ledger --case observability --case overload-recovery --case flaky-refresh)
   "$PYTHON" -B "$CREATOR" "$BATS_TEST_TMPDIR/with" "${case_args[@]}" >/dev/null
   "$PYTHON" -B "$CREATOR" "$BATS_TEST_TMPDIR/without" --without-skills "${case_args[@]}" >/dev/null
   run env GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 "$PYTHON" -B - "$BATS_TEST_TMPDIR/with" "$BATS_TEST_TMPDIR/without" <<'PY'
@@ -55,6 +55,8 @@ for case in json.loads((left / 'requests.json').read_text()):
     assert subprocess.check_output(['git', '-C', str(projects[0]), 'diff']) == subprocess.check_output(['git', '-C', str(projects[1]), 'diff'])
 assert '|| true' in (left / 'review-gates/ci.sh').read_text()
 assert '@unittest.skip' in (left / 'review-gates/test_recovery.py').read_text()
+assert '"deactivate": _drop_target' in (left / 'review-state-kinds/approvals.py').read_text()
+assert subprocess.run([sys.executable, '-B', '-m', 'unittest', '-v'], cwd=left / 'review-state-kinds', capture_output=True).returncode == 0
 PY
   [ "$status" -eq 0 ]
 }
@@ -74,6 +76,7 @@ expected = {
     'backfill-ledger': ('historical-reconcile', 'history-isolation'),
     'observability': ('failure-counters', 'success-results'),
     'overload-recovery': ('drained', 'tick-budget'),
+    'flaky-refresh': ('atomic-first-publish', 'initial-snapshot'),
 }
 for case, (failure, control) in expected.items():
     outcome = subprocess.run([sys.executable, '-B', str(root / 'tests/behavior/check-specialist.py'), case,

@@ -44,6 +44,107 @@ class SpecialistChecks(unittest.TestCase):
         self.assertEqual(code, 0, result)
         self.assertIs(result["passed"], True)
 
+    # 拒绝半发布、迭代失败后改动状态与空跑测试；锁内或锁外规范化的合法原子发布都应通过。
+    def test_flaky_refresh_behavior_controls(self):
+        with tempfile.TemporaryDirectory() as directory:
+            project = Path(directory) / "flaky"
+            shutil.copytree(ROOT / "specialist-fixtures/flaky-refresh", project)
+            raw = subprocess.run([sys.executable, "-B", str(ROOT / "check-specialist.py"),
+                                  "flaky-refresh", str(project)], capture_output=True, text=True)
+            initial = json.loads(raw.stdout)
+            self.assertEqual(raw.returncode, 1)
+            self.assertIs(initial["checks"]["atomic-first-publish"]["passed"], False)
+            self.assertIs(initial["checks"]["initial-snapshot"]["passed"], True)
+            (project / "test_refresher.py").write_text(
+                (project / "test_refresher.py").read_text(encoding="utf-8").replace(
+                    "refresher.refresh_async()\n        time.sleep(0.01)",
+                    "refresher.refresh_async().join()",
+                ),
+                encoding="utf-8",
+            )
+            for label, body in (
+                ("value-outside-lock",
+                 "        try:\n            normalized = [item.strip().lower() for item in self._fetch()]\n"
+                 "        except Exception:\n            return\n"
+                 "        with self._lock:\n            self.version += 1\n"
+                 "        self.value = normalized\n"),
+                ("value-before-lock",
+                 "        try:\n            normalized = [item.strip().lower() for item in self._fetch()]\n"
+                 "        except Exception:\n            return\n"
+                 "        self.value = normalized\n"
+                 "        with self._lock:\n            self.version += 1\n"),
+                ("iter-error-after-version",
+                 "        try:\n            raw = self._fetch()\n"
+                 "        except Exception:\n            return\n"
+                 "        with self._lock:\n"
+                 "            self.version += 1\n"
+                 "            self.value = [item.strip().lower() for item in raw]\n"),
+            ):
+                with self.subTest(defect=label):
+                    (project / "refresher.py").write_text(
+                        "import threading\n\nclass Refresher:\n"
+                        "    def __init__(self, fetch):\n"
+                        "        self._fetch = fetch\n        self._lock = threading.Lock()\n"
+                        "        self.version = 0\n        self.value = None\n"
+                        "    def refresh_async(self):\n"
+                        "        thread = threading.Thread(target=self._run, daemon=True)\n"
+                        "        thread.start()\n        return thread\n"
+                        "    def _run(self):\n" + body +
+                        "    def snapshot(self):\n"
+                        "        with self._lock:\n            return self.version, self.value\n",
+                        encoding="utf-8",
+                    )
+                    bad = subprocess.run([sys.executable, "-B", str(ROOT / "check-specialist.py"),
+                                          "flaky-refresh", str(project)], capture_output=True, text=True)
+                    self.assertEqual(bad.returncode, 1, bad.stdout)
+                    self.assertIs(json.loads(bad.stdout)["passed"], False)
+            (project / "refresher.py").write_text(
+                "import threading\n\nclass Refresher:\n"
+                "    def __init__(self, fetch):\n"
+                "        self._fetch = fetch\n        self._lock = threading.Lock()\n"
+                "        self.version = 0\n        self.value = None\n"
+                "    def refresh_async(self):\n"
+                "        thread = threading.Thread(target=self._run, daemon=True)\n"
+                "        thread.start()\n        return thread\n"
+                "    def _run(self):\n"
+                "        try:\n"
+                "            normalized = [item.strip().lower() for item in self._fetch()]\n"
+                "        except Exception:\n            return\n"
+                "        with self._lock:\n"
+                "            self.version += 1\n            self.value = normalized\n"
+                "    def snapshot(self):\n"
+                "        with self._lock:\n            return self.version, self.value\n",
+                encoding="utf-8",
+            )
+            saved_tests = (project / "test_refresher.py").read_text(encoding="utf-8")
+            (project / "test_refresher.py").write_text("import unittest\n", encoding="utf-8")
+            empty_suite = subprocess.run([sys.executable, "-B", str(ROOT / "check-specialist.py"),
+                                          "flaky-refresh", str(project)], capture_output=True, text=True)
+            self.assertEqual(empty_suite.returncode, 1)
+            self.assertIs(json.loads(empty_suite.stdout)["checks"]["unit-suite-passes"]["passed"], False)
+            (project / "test_refresher.py").write_text(saved_tests, encoding="utf-8")
+            fixed = subprocess.run([sys.executable, "-B", str(ROOT / "check-specialist.py"),
+                                    "flaky-refresh", str(project)], capture_output=True, text=True)
+            self.assertEqual(fixed.returncode, 0, fixed.stdout)
+            self.assertIs(json.loads(fixed.stdout)["passed"], True)
+
+            # 读取允许等待持锁刷新完成；核验器不能因自己延迟释放拉取而制造失败。
+            source = (project / "refresher.py").read_text(encoding="utf-8")
+            (project / "refresher.py").write_text(source.replace(
+                "        try:\n"
+                "            normalized = [item.strip().lower() for item in self._fetch()]\n"
+                "        except Exception:\n            return\n"
+                "        with self._lock:\n",
+                "        with self._lock:\n"
+                "            try:\n"
+                "                normalized = [item.strip().lower() for item in self._fetch()]\n"
+                "            except Exception:\n                return\n",
+            ), encoding="utf-8")
+            blocking = subprocess.run([sys.executable, "-B", str(ROOT / "check-specialist.py"),
+                                       "flaky-refresh", str(project)], capture_output=True, text=True, timeout=15)
+            self.assertEqual(blocking.returncode, 0, blocking.stdout)
+            self.assertIs(json.loads(blocking.stdout)["passed"], True)
+
     # 候选模块主动以零退出也属于评估未完成，必须返回结构化失败，不能冒充命令成功。
     def test_candidate_exit_is_incomplete(self):
         code, result = self.run_queue({"worker.py": "raise SystemExit(0)\n"})
