@@ -4,7 +4,9 @@ All notable SuperSpecFlow package changes are recorded here.
 
 版本定档规则、发布流程与回滚方式见 [版本与发布策略](docs/release-policy.md)。未发布条目先记在下面的 `[Unreleased]` 段，发布时整体归档为带日期的版本段。
 
-## [Unreleased]
+## [3.1.0] - 2026-11-26
+
+原有路由、七个技能和命令沿用 3.0.6。新增工具由使用者在目标项目中手动调用。
 
 ### Added
 
@@ -15,6 +17,11 @@ All notable SuperSpecFlow package changes are recorded here.
 
 - 修正证据记录器超时测试对 Python 启动速度的依赖，覆盖已有输出及尚未输出两种情况。
 - 修正跨源码路径重装测试的成功断言，兼容 Bash 3.2 的失败退出行为。
+
+### Validation
+
+- macOS 常规和带空格临时目录各通过 175 项测试。包校验、CI 同参数 ShellCheck 与 Git 空白检查均通过。
+- 用实际 Codex CLI 完成两遍审查及一次同会话历史复核，核对三次调用均为只读。临时宿主的升级和恢复均通过 doctor。
 
 ## [3.0.6] - 2026-10-29
 
