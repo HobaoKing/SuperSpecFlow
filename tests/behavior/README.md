@@ -73,6 +73,57 @@ python3 tests/behavior/create-fixtures.py /tmp/ssf-baseline --without-skills --c
 
 本目录的 Bats 测试只验证生成器输入可比、缺陷 fixture 存在与目录保护，不执行模型。未做真实对照时，报告“评估准备完成，模型效果未验证”。
 
+### 比较原生 Codex、发布版和当前工作区
+
+`--without-skills` 适合只比较技能目录。评估整套工作流时使用 `--codex-native` 或 `--codex-pack PACK`。前者准备空宿主，后者冻结指定可信检出的运行资源，在本组 `home/.codex` 下用正式安装器生成规则和技能。各组使用当前生成器中的同一套业务输入。以下命令从 SSF 仓库根目录运行，只准备临时材料。
+
+```bash
+trial=$(mktemp -d)
+mkdir "$trial/release"
+git archive v3.0.6 | tar -xf - -C "$trial/release"
+cases=(--case review-workspace --case tablet-entry --case terse-build)
+python3 -B tests/behavior/create-fixtures.py "$trial/native" --codex-native "${cases[@]}"
+python3 -B tests/behavior/create-fixtures.py "$trial/released" --codex-pack "$trial/release" "${cases[@]}"
+python3 -B tests/behavior/create-fixtures.py "$trial/candidate" --codex-pack "$PWD" "${cases[@]}"
+```
+
+用支持 `debug prompt-input` 的 Codex 核对模型实际可见的入口。三组都应出现相同的项目约定；原生组应无 SSF 技能、规则引用或正文，两个整包组应能发现本组的七个技能和全局规则入口。可见输入可能只列出规则文件路径。判断执行时是否读到正文，要再看该会话的实际读取。每组使用自己的 HOME、CODEX_HOME、项目 cwd 和全新上下文，保留相同的非 SSF 配置、工具、模型、推理预算与授权。实际执行时只提供原始用户请求，评分材料留在项目外。没有合适的模型连接时可完成输入核对，模型表现记为未测。
+
+评估减少返工时，先冻结代码、任务和按根因划分的判据。用独立原生会话筛出确有首轮遗漏的样本，再为正式三组各建新会话。候选用两次模型调用时，分别记下第一次模型输出、自动补查后的首次交付、每次人工提醒及各轮实际耗时。按具体触发和用户后果计分。原生或上版发现的独立问题在候选中消失即记回退；各组都漏掉的真实故障仍记失败。相邻分支的新发现单列。已有报告的逐项复核在独立首轮之后执行。用来调整过规则的题转为回归题，保留试改失败的原始成绩。
+
+```bash
+for arm in native released candidate; do
+  group="$trial/$arm"
+  (cd "$group/review-workspace" && env HOME="$group/home" CODEX_HOME="$group/home/.codex" \
+    GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 codex debug prompt-input) > "$trial/$arm-prompt.json"
+done
+```
+
+如果各组已有授权可用的相同推理连接，下面以一个离线样本为例从其独立 Git 目录运行，原始 JSON 事件留在项目之外。对只审查样本使用 `read-only`，对实现样本使用 `workspace-write`；同一任务的各组使用相同设置。复审在对应首轮会话内续接。
+
+```bash
+group="$trial/candidate"
+scenario=terse-build
+python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' \
+  "$group/requests.json" "$scenario" > "$trial/request.txt"
+(cd "$group/$scenario" && env HOME="$group/home" CODEX_HOME="$group/home/.codex" \
+  GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 \
+  codex exec --skip-git-repo-check --sandbox workspace-write --json - < "$trial/request.txt") \
+  > "$trial/candidate-terse-events.jsonl"
+```
+
+| 离线样本 | 首轮与复验判据 |
+|---|---|
+| review-workspace | 排队后切工作区可能读错草稿；先完成计算再切换，回调可能覆盖当前界面。按创建方缓存仍正确。第二轮由评估者仅修正读取草稿的归属，再请同一执行者复审；应分清已修与仍存的问题，保留用户认可的缓存显示策略。 |
+| tablet-entry | 双端分别检查在线、离线时的设置入口、原提示锚点和文案，核对未提交的无关文件。此样本只模拟导航与显示逻辑。 |
+| terse-build | 负数、零、正数的公开行为正确；不引入无关改动、额外计划或确认。 |
+
+真实返工任务在执行前从历史修复、回归测试或可复现现象确定必查问题，评分材料留在执行组之外。逐项比较首轮答案：原生与候选都遗漏，记录为候选漏检失败；原生找到而候选遗漏，记录为回退；候选独立找回原生漏项，记录为该项收益。偏题发现或耗时改善不能冲抵漏项，全部已知问题都找到才算该样本首轮通过。后来得到提醒才补齐的只记入纠正轮，并标明提醒是否点出了场景。
+
+回退时先看各组工具实际返回了什么，再比对答案中保留了哪些结论。若怀疑某项规则引导了取舍，可重跑原规则，并只移除该项引导做对照。修改后按问题逐项核对原生和上一候选已经找到的内容；相同的总分可能掩盖新遗漏。用过的题保留作回归，新题则在给三组作答前冻结候选、输入和判据。
+
+逐任务记录首轮遗漏、误报、用户实际需要纠正的次数和从开始到可交付的耗时。评估者预先安排的第二轮不计作用户纠正。各组原始回答、实际 diff 与测试输出可匿名对照；未运行的组留空。真实任务收尾后可在其起点快照上沿用相同判据。命令证据工具会用所选宿主的 HOME 和 CODEX_HOME 启动子进程，绑定冻结包、全局规则及 SSF 技能。旧目录对照继续沿用原有环境。评估设计参考 [Anthropic skill-creator 的基线比较](https://github.com/anthropics/skills/blob/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills/skill-creator/SKILL.md#L169-L231)。
+
 ## 中文触发与原始证据
 
 `chinese-triggers.json` 的二十个自然请求覆盖七入口、组合和普通问答负例，包括修复附带自测、测试先行修复、失败恢复、只验不修、已修后的独立回归、带代码的解释及含工程词语的改写。`--case zh-fix` 等名称生成相同底层项目，`expected` 只保留在评估侧；组合场景的 `allowed` 表示允许按授权续接的入口，不把明确要求“验收后修复”的合理组合误判为串用。不要分词或用英文关键词计分；新上下文读取 catalog 和原请求后，以实际读取、操作及产物核验选择。未执行的样本明确写未验证，单次观察不能当稳定触发率。
