@@ -27,12 +27,22 @@ def snapshot(root):
     return result
 
 
-# 绑定本次请求及技能实际字节，不仅信任 fixture.json 中自述的版本号。
+# 绑定请求与实际输入。宿主对照额外核对冻结包、全局规则与 SSF 技能；不采集账号、日志或会话。
 def inputs(fixture, case):
     requests = json.loads((fixture / "requests.json").read_text())
     result = {name: hashlib.sha256((fixture / name).read_bytes()).hexdigest()
               for name in ("fixture.json", "requests.json", "catalog.md")}
     result["skills"] = snapshot(fixture / "skills")
+    if json.loads((fixture / "fixture.json").read_text()).get("mode") in ("codex-native", "codex-pack"):
+        host = fixture / "home/.codex"
+        result["codex_home"] = str(host)
+        result["codex_rules"] = {
+            name: hashlib.sha256((host / name).read_bytes()).hexdigest()
+            for name in ("AGENTS.md", "AGENTS.override.md", "superspecflow/AGENTS.global.md")
+            if (host / name).is_file()
+        }
+        result["codex_skills"] = {path.name: snapshot(path) for path in (host / "skills").glob("ssf-*")}
+        result["frozen_pack"] = snapshot(fixture / "pack")
     result["request"] = requests[case]
     return result
 
@@ -43,7 +53,7 @@ def command_files(command):
             for value in command if Path(value).is_absolute() and Path(value).is_file()}
 
 
-# 输出目录必须新建且位于输入之外；无 shell 执行，超时终止整个命令进程组并保留已写日志。
+# 输出目录须新建且位于输入之外。宿主组用所绑定的独立 HOME 和 CODEX_HOME 执行；超时回收进程组并保留日志。
 def capture(args):
     fixture, output = args.fixture.resolve(), args.output.resolve()
     project = fixture / args.case
@@ -59,11 +69,14 @@ def capture(args):
                "command_files": command_files(command),
                "started_at": datetime.now(timezone.utc).isoformat(), "exit_code": None,
                "status": "spawn_error", "error": None}
+    environment = dict(os.environ, GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1")
+    if "codex_home" in bound_inputs:
+        environment.update(HOME=str(fixture / "home"), CODEX_HOME=bound_inputs["codex_home"])
     start = time.monotonic()
     with (output / "stdout.bin").open("wb") as stdout, (output / "stderr.bin").open("wb") as stderr:
         try:
             process = subprocess.Popen(command, cwd=project, stdout=stdout, stderr=stderr, start_new_session=True,
-                                       env=dict(os.environ, GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1"))
+                                       env=environment)
             try:
                 receipt["exit_code"] = process.wait(timeout=args.timeout)
                 receipt["status"] = "completed" if process.returncode == 0 else "nonzero"

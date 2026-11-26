@@ -25,8 +25,25 @@ def git(project, *args):
     ).strip()
 
 
+# 在新建组目录内准备独立宿主；原生组留空，整包组冻结运行资源并用正式安装器接入。
+# 仅把安装结果写入本组 home；来源应是评估者选定的可信 SSF 检出。
+def prepare_codex_home(destination, pack):
+    home = destination / "home"
+    (home / ".codex").mkdir(parents=True)
+    if pack is None:
+        return
+    frozen = destination / "pack"
+    for name in ("routing", "skills", "scripts", "templates"):
+        shutil.copytree(pack / name, frozen / name)
+    shutil.copyfile(pack / "VERSION", frozen / "VERSION")
+    subprocess.run(["bash", str(frozen / "scripts/install-global.sh"), "--codex-only", "--yes"],
+                   env=dict(os.environ, HOME=str(home), CODEX_HOME=str(home / ".codex")),
+                   stdout=subprocess.DEVNULL, check=True)
+
+
 # 在不存在的目录内生成所选场景；可指定旧版 skills 或不提供技能作为对照，不运行模型。
-# 对照只改变可用技能，保留请求和项目输入；缺口场景先提交原始输入，再还原约定的未提交工作。
+# 目录对照只改变可用技能，宿主对照另备完整安装或空宿主；两者都保留请求和项目输入。
+# 缺口场景先提交原始输入，再还原约定的未提交工作。
 # 版本用内容摘要标记，不把 fixture 生成当成行为通过；附加输入来自仓库内固定定义与测试资源。
 def main():
     source = Path(__file__).resolve().parents[2]
@@ -59,36 +76,66 @@ def main():
     selection = parser.add_mutually_exclusive_group()
     selection.add_argument("--skills-from", type=Path, default=source / "skills", help="对照所用的 skills 目录")
     selection.add_argument("--without-skills", action="store_true", help="不提供技能的对照组")
+    selection.add_argument("--codex-pack", type=Path, metavar="PACK", help="冻结可信源码包并安装至本组独立 Codex 宿主")
+    selection.add_argument("--codex-native", action="store_true", help="准备无 SSF 的独立 Codex 宿主")
     parser.add_argument("--case", action="append", choices=prompts, dest="cases", help="只生成指定场景，可重复")
     args = parser.parse_args()
     if args.cases:
         prompts = {name: prompts[name] for name in dict.fromkeys(args.cases)}
-    entries = [] if args.without_skills else sorted(args.skills_from.glob("ssf-*/SKILL.md"))
-    if not args.without_skills and not entries:
+    host_comparison = args.codex_pack is not None or args.codex_native
+    copy_skills = not host_comparison and not args.without_skills
+    entries = sorted(args.skills_from.glob("ssf-*/SKILL.md")) if copy_skills else []
+    if copy_skills and not entries:
         parser.error("skills 目录中没有 ssf-*/SKILL.md")
     destination = Path(args.destination).absolute()
     # 输出不得位于输入 skills 内，否则 copytree 会递归包含自身输出。
-    if not args.without_skills and args.skills_from.resolve() in (destination.resolve(), *destination.resolve().parents):
+    if copy_skills and args.skills_from.resolve() in (destination.resolve(), *destination.resolve().parents):
         parser.error("输出目录不能位于输入 skills 目录内")
+    if args.codex_pack is not None:
+        pack = args.codex_pack.resolve()
+        if not (pack / "scripts/install-global.sh").is_file():
+            parser.error("缺少所选源码包的安装器")
+        if pack in (destination.resolve(), *destination.resolve().parents):
+            parser.error("宿主对照输出须位于源码包之外")
     destination.mkdir(parents=True, exist_ok=False)
+    if host_comparison:
+        try:
+            prepare_codex_home(destination, args.codex_pack)
+        except (OSError, subprocess.CalledProcessError):
+            shutil.rmtree(destination)
+            raise
     catalog = []
     digest = hashlib.sha256()
+    skill_root = destination / "skills"
+    if args.codex_pack:
+        skill_root = destination / "pack/skills"
+        entries = sorted(skill_root.glob("ssf-*/SKILL.md"))
     for entry in entries:
-        target = destination / "skills" / entry.parent.name
-        shutil.copytree(entry.parent, target)
-        description = next(line for line in entry.read_text().splitlines() if line.startswith("description:"))
-        catalog.append(f"- {entry.parent.name}: {description[len('description:'):].strip()} — {target / 'SKILL.md'}")
+        target = skill_root / entry.parent.name
+        if copy_skills:
+            shutil.copytree(entry.parent, target)
+            description = next(line for line in entry.read_text().splitlines() if line.startswith("description:"))
+            catalog.append(f"- {entry.parent.name}: {description[len('description:'):].strip()} — {target / 'SKILL.md'}")
         for resource in sorted(target.rglob("*")):
             if resource.is_file():
-                digest.update(str(resource.relative_to(destination / "skills")).encode() + b"\0")
+                digest.update(str(resource.relative_to(skill_root)).encode() + b"\0")
                 digest.update(resource.read_bytes() + b"\0")
+    if host_comparison:
+        catalog = ["由本组独立宿主发现可用技能。"]
     write(destination / "catalog.md", "# 可用 skills\n\n" + ("\n".join(catalog) if catalog else "本组不提供额外 skills。") + "\n")
-    write(destination / "fixture.json", json.dumps({
-        "mode": "without-skills" if args.without_skills else "with-skills",
+    mode = "without-skills" if args.without_skills else "with-skills"
+    if host_comparison:
+        mode = "codex-native" if args.codex_native else "codex-pack"
+    manifest = {
+        "mode": mode,
         "skills_sha256": digest.hexdigest() if entries else None,
         "cases": list(prompts),
         "model_execution": "not_run",
-    }, ensure_ascii=False, indent=2) + "\n")
+    }
+    if args.codex_pack:
+        routing = destination / "pack/routing/AGENTS.routing.md"
+        manifest["routing_sha256"] = hashlib.sha256(routing.read_bytes()).hexdigest()
+    write(destination / "fixture.json", json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
     for name, prompt in prompts.items():
         project = destination / name
         project.mkdir()

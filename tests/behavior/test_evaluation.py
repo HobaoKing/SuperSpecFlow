@@ -1,12 +1,16 @@
 """评估基础设施的故障敏感性测试；不执行模型。"""
 import importlib.util
 import json
+import os
+import runpy
 from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parent
@@ -217,17 +221,41 @@ class EvidenceChecks(unittest.TestCase):
         self.assertEqual((output / "receipt.json").read_bytes(), original)
         self.assertEqual(json.loads((self.fixture / "fixture.json").read_text())["model_execution"], "not_run")
 
-    # 执行失败与超时保留日志及状态；不能因为曾写过成功文本就判定命令完成。
+    # CLI 记录已输出内容的非零退出，也允许子进程在输出首字节前就超时。
     def test_failure_and_timeout(self):
-        for command, timeout, status in (("print('partial'); raise SystemExit(7)", 5, "nonzero"),
-                                         ("import time; print('partial', flush=True); time.sleep(10)", .2, "timeout")):
+        for command, timeout, status, expected in (
+            ("print('partial'); raise SystemExit(7)", 5, "nonzero", b"partial\n"),
+            ("import time; time.sleep(60)", .2, "timeout", b""),
+        ):
             with self.subTest(status=status):
                 code, output, receipt = self.capture(command, timeout)
                 self.assertNotEqual(code, 0)
                 self.assertEqual(receipt["status"], status)
-                self.assertIn("partial", (output / "stdout.bin").read_text())
+                self.assertEqual((output / "stdout.bin").read_bytes(), expected)
                 self.assertNotEqual(self.verify(output)[0], 0)
                 shutil.rmtree(output)
+
+    # 等子进程写出首行并自行暂停，再进入真实的限时等待，验证超时不会清空已写字节。
+    def test_timeout_keeps_written_output(self):
+        wait = subprocess.Popen.wait
+
+        # 仅在首次限时等待前同步；超时后的回收仍走原有 wait。
+        def wait_after_output(process, timeout=None):
+            if timeout is not None:
+                _, status = os.waitpid(process.pid, os.WUNTRACED)
+                self.assertTrue(os.WIFSTOPPED(status))
+            return wait(process, timeout=timeout)
+
+        output = self.root / "evidence"
+        command = "import os, signal; print('partial', flush=True); os.kill(os.getpid(), signal.SIGSTOP)"
+        args = SimpleNamespace(fixture=self.fixture, case="sample", output=output, timeout=.2,
+                               command=[sys.executable, "-B", "-c", command])
+        capture = runpy.run_path(str(ROOT / "capture-evidence.py"))["capture"]
+        with patch.object(subprocess.Popen, "wait", wait_after_output):
+            self.assertEqual(capture(args), 1)
+        self.assertEqual(json.loads((output / "receipt.json").read_text())["status"], "timeout")
+        self.assertEqual((output / "stdout.bin").read_bytes(), b"partial\n")
+        self.assertNotEqual(self.verify(output)[0], 0)
 
     # 摘要能检测意外改写、丢日志及输入变化；不声称提供防恶意伪造能力。
     def test_missing_tampered_and_stale_evidence(self):

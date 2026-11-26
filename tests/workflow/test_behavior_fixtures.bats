@@ -105,6 +105,48 @@ PY
   [ "$status" -eq 0 ]
 }
 
+# 两个真实宿主目录各自运行；源码快照与宿主规则不进入业务项目，原生组不发现 SSF。
+@test "Codex 整包和原生组使用独立宿主并冻结同一任务" {
+  local pack="$BATS_TEST_TMPDIR/pack arm" native="$BATS_TEST_TMPDIR/native"
+  "$PYTHON" -B "$CREATOR" "$pack" --codex-pack "$REPO_ROOT" --case terse-build
+  "$PYTHON" -B "$CREATOR" "$native" --codex-native --case terse-build
+  cmp "$pack/requests.json" "$native/requests.json"
+  "$PYTHON" -B - "$pack" "$native" <<'PYTHON'
+from pathlib import Path
+import hashlib, json, sys
+pack, native = map(Path, sys.argv[1:])
+candidate = json.loads((pack / "fixture.json").read_text())
+control = json.loads((native / "fixture.json").read_text())
+assert candidate["mode"] == "codex-pack" and control["mode"] == "codex-native"
+assert candidate["model_execution"] == control["model_execution"] == "not_run"
+assert candidate["routing_sha256"] == hashlib.sha256((pack / "pack/routing/AGENTS.routing.md").read_bytes()).hexdigest()
+assert candidate["skills_sha256"] and control["skills_sha256"] is None
+PYTHON
+  diff -r -x .git "$pack/terse-build" "$native/terse-build"
+  [ -d "$native/home/.codex" ]
+  [ ! -e "$native/home/.codex/AGENTS.md" ]
+  [ ! -e "$native/home/.codex/skills" ]
+  [ ! -e "$native/pack" ]
+  [ ! -e "$pack/skills" ]
+  cmp "$pack/home/.codex/skills/ssf-review/SKILL.md" "$REPO_ROOT/skills/ssf-review/SKILL.md"
+  cmp "$pack/pack/routing/default.routing.md" "$REPO_ROOT/routing/default.routing.md"
+  run env HOME="$pack/home" bash "$pack/pack/scripts/doctor.sh" --codex-only
+  [ "$status" -eq 0 ]
+  local recorder="$REPO_ROOT/tests/behavior/capture-evidence.py" arm receipt physical
+  for arm in "$native" "$pack"; do
+    receipt="$BATS_TEST_TMPDIR/$(basename "$arm")-receipt"
+    env CODEX_HOME="$BATS_TEST_TMPDIR/outside" "$PYTHON" -B "$recorder" run "$arm" terse-build "$receipt" -- \
+      "$PYTHON" -B -c 'import os; print(os.environ["HOME"]); print(os.environ["CODEX_HOME"])'
+    physical="$(cd "$arm/home" && pwd -P)"
+    [ "$(cat "$receipt/stdout.bin")" = "$(printf '%s\n%s' "$physical" "$physical/.codex")" ]
+  done
+  "$PYTHON" -B "$REPO_ROOT/tests/behavior/capture-evidence.py" verify "$receipt"
+  printf 'changed routing\n' >> "$pack/home/.codex/superspecflow/AGENTS.global.md"
+  run "$PYTHON" -B "$REPO_ROOT/tests/behavior/capture-evidence.py" verify "$receipt"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *'"inputs_current": false'* ]]
+}
+
 @test "旧版 skills 对照摘要随内容变化且不改变项目输入" {
   cp -R "$REPO_ROOT/skills" "$BATS_TEST_TMPDIR/old-skills"
   printf '\nprevious instructions\n' >> "$BATS_TEST_TMPDIR/old-skills/ssf-build/SKILL.md"
