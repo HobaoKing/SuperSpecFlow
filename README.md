@@ -1,6 +1,6 @@
 # SuperSpecFlow
 
-[最新 Release](https://github.com/HobaoKing/SuperSpecFlow/releases/latest) · [3.0.6 更新说明](https://github.com/HobaoKing/SuperSpecFlow/releases/tag/v3.0.6) · [完整变更记录](CHANGELOG.md)
+[最新 Release](https://github.com/HobaoKing/SuperSpecFlow/releases/latest) · [3.1.0 更新说明](https://github.com/HobaoKing/SuperSpecFlow/releases/tag/v3.1.0) · [完整变更记录](CHANGELOG.md)
 
 一个薄入口，加按需工程 skills。明确的小修复直接做；普通功能在会话里对齐目标后实现、验证；跨模块或跨会话工作只维护一份计划。
 
@@ -18,13 +18,21 @@
 
 会话授权持续有效，普通技术和测试选择由 agent 自主处理。提交、远端写入、发布、删除、权限、凭据和费用仍遵守实际授权范围。
 
-## 3.0.6 更新亮点
+## 3.1.0 可选工具
 
-- **专家方法落实到操作**：从任务相关的原始材料出发，检查遗漏、实际执行专业方法，并给出外部判据的结果或明确缺口。
-- **简单实现与范围控制**：输入在入口校验，内部使用约定类型；简单单次逻辑内联，异常按实际处理需要捕获。推测性加固先说明故障、概率依据及代码和维护成本，由用户决定是否加入。
-- **安装与门禁修复**：支持未修改技能跨源码路径重装，补齐技能体积预算、资源链接与 frontmatter 检查，修正并发评估器对合法持锁实现的误报。
+日常任务继续使用 3.0.6 的路由和七个技能入口。需要保留逐遍意见时，可在目标项目目录手动运行两遍审查工具。它使用 Python 3 和已配置的 Codex CLI，在同一会话中只读检查两次，将两份回答的原文保存在本地报告中。
 
-仍使用原有七个入口与安装方式，无新增运行时依赖或数据迁移。专项参考按需读取，评估工具供维护者选择运行，不进入普通任务的默认流程。详细变更见 [变更记录](CHANGELOG.md)，实际评估与发布前检查见 [评估记录](docs/plans/skill-effectiveness.md)；有限合成场景不代表跨模型稳定收益、生产验收或第三方认证。
+```bash
+review="$HOME/.superspecflow/scripts/review-passes.py"
+python3 "$review" --output ../review-001 < 任务.txt
+python3 "$review" --resume ../review-001 --check-previous 上版审查.md
+```
+
+上例使用快捷安装的默认检出路径。从本地源码安装或自定义安装目录时，将 `review` 指向对应检出中的 [scripts/review-passes.py](scripts/review-passes.py)。
+
+`--output` 使用新目录。新审查也可以带多个 `--check-previous`，支持 Markdown、纯文本和 JSON 字符串数组。工具先校验历史文件，保存两遍独立交付后，再用一次调用逐项复核并归档原件。`--resume` 须在首次审查的项目目录使用，只接收历史报告。已有旧报告缺少项目目录记录时，可以把原文传给新审查。
+
+维护者可用同一任务、模型和权限比较原生 Codex、发布版与候选版，核对首轮遗漏、纠正次数和耗时。[对照评估说明](tests/behavior/README.md#比较原生-codex发布版和当前工作区)
 
 ## 怎么知道 skill 有没有用
 
@@ -40,7 +48,7 @@
 |---|---|
 | 已安装且与当前源码一致 | `bash scripts/doctor.sh --codex-only`（也支持 `--claude-only` / `--antigravity-only` / `--all`） |
 | 本次确实使用 | 会话实际读取的 `SKILL.md`、采用的方法与对应工具操作；一句“已启用”本身不算执行证明 |
-| 是否改善结果 | 相同输入下比较缺陷修复、回归、误报、授权越界及不必要操作，见 [行为验证](tests/behavior/README.md) |
+| 是否改善结果 | 用相同任务比较原生宿主、已发布整包与候选整包，核对首轮漏项、误报、用户纠正次数和交付耗时，见 [行为验证](tests/behavior/README.md#比较原生-codex发布版和当前工作区) |
 
 诊断只读，不自动安装或修复，不发送遥测。源码改进不会自动同步到已安装副本；只有同步安装并被会话实际读取后才能采用新规则。没有真实对照数据，不宣称技能提高了多少质量或节省了多少 token。
 

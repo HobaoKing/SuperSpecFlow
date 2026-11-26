@@ -38,3 +38,5 @@ Copyright (c) 2026 Matt Pocock。完整上游 MIT 授权随两个参考目录的
 2026-10-12 补充：独立编写的 `ssf-build/references/performance.md` 参考上述 Addy 固定修订的 `skills/performance-optimization/SKILL.md`，采用按症状测量、同条件比较和收益/代价取舍；think 的方案判断与 build 的契约检查参考上述 Matt 固定修订的 `skills/engineering/domain-modeling/SKILL.md`，采用业务术语辨析、边界场景与代码对照。未复制脚本或整套正文，不引入通用性能预算、默认术语文档/ADR 或额外入口。
 
 2026-10-12 评估设施补充：参考 [agent-skills 的检查项完整性校验](https://github.com/addyosmani/agent-skills/blob/1be8e34187e34647bb83adc3a1323b26ae6f6abe/scripts/run-evals.js) 和 [gstack 的原始命令证据绑定](https://github.com/garrytan/gstack/blob/e23f7b807ff4788f6d7c90af2ab82960bd8c5851/lib/qa-evidence.ts)，在 `tests/behavior/` 独立实现严格结果汇总、固定输入保护、命令输出记录与陈旧证据检测。没有复制上游实现、英语分词评分、遥测或模型调用框架；中文触发通过独立自然请求及实际操作核验。评估工具仅按需运行，不进入七技能默认上下文。
+
+3.1.0 的可选审查工具参考 [gstack 的历史发现核对](https://github.com/garrytan/gstack/blob/e6dd567349e85506127c2f4cf69a0392923c032c/review/SKILL.md#L696-L735)，对照评估参考 [Anthropic skill-creator 的基线比较](https://github.com/anthropics/skills/blob/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills/skill-creator/SKILL.md#L169-L231)。脚本与离线场景均为本地实现。
